@@ -1,4 +1,7 @@
-Flask==1.0.2
-flask_restplus==0.11.0
-pymongo==3.6.1
-segtok==1.5.5
+certifi==2020.12.5
+click==7.1.2
+Flask==1.1.2
+itsdangerous==1.1.0
+Jinja2==2.11.3
+MarkupSafe==1.1.1
+Werkzeug==1.0.1
