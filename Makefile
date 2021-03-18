@@ -1,5 +1,5 @@
 
-.PHONY: env style quality final clean max.txt
+.PHONY: env style quality final clean
 
 VENV = diachronic-env
 export VIRTUAL_ENV := $(abspath ${VENV})
