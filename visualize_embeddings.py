@@ -25,9 +25,9 @@ if not load_from_cache:
     print(sorted_words_counts[:100])
     new_words = []
     for tups in sorted_words_counts:
-        if tups[0] not in stopwords and tups[0] not in ['neural','language','models','data', 'model','using','results','show']:
+        if tups[0] not in stopwords:
             new_words.append(tups[0])
-            if len(new_words) == 4:
+            if len(new_words) == 10:
                 break
     print(new_words)
     
@@ -77,7 +77,7 @@ else:
            
 
 
-type='umap'
+type='tsne'
 if type=='pca':
     pca = PCA(2, random_state=42)
     compass_embeddings = pca.fit_transform(compass_vectors)
@@ -98,7 +98,7 @@ sorted_unique_cs = (sorted_unique_years - np.min(sorted_unique_years))/(np.max(s
 year_to_color = dict(zip(sorted_unique_years, sorted_unique_cs))
 fig = plt.figure(figsize=(10, 10)) 
 
-sc = plt.scatter(embeddings[:, 0], embeddings[:, 1], c = list(map(year_to_color.get, list(map(int, years)))), alpha=0.5)
+sc = plt.scatter(embeddings[:, 0], embeddings[:, 1], c = list(map(year_to_color.get, list(map(int, years)))), alpha=0.5, cmap='Spectral')
 ax = plt.gca()
 for i, txt in enumerate(all_words):
     ax.annotate(txt, (embeddings[i,0], embeddings[i,1]))
