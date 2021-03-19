@@ -171,6 +171,16 @@ def main():
 					author_name = ""
 					for elem in node.iter():
 						if not elem.tag==node.tag:
+							
+							# if elem.tag == "title":
+							# 	title_in_lower = innertext(elem)
+							# 	if "proceedings" in title_in_lower:
+							# 		continue
+
+							if elem.tag == "language":
+								if elem.text != "eng":
+									continue
+							
 							if elem.tag == "author":
 								continue
 							elif elem.tag == "first":
