@@ -5,8 +5,75 @@ from tqdm.auto import tqdm
 import xml.etree.ElementTree as ET
 import json
 
+import nltk
+from nltk.corpus import stopwords 
+from nltk.tokenize import word_tokenize
+from nltk.stem import WordNetLemmatizer
+
+import inflect
+inflect_engine = inflect.engine()
+
+nltk.download('stopwords')
+nltk.download('punkt')
+nltk.download('wordnet')
+
+lemmatizer = WordNetLemmatizer()
+
+def to_lower_case(text):
+	return text.lower()
+
+def remove_extra_whitespace(text):
+	return " ".join(text.split())
+
+def remove_stopwords(text):
+	stop_words = set(stopwords.words("english")) 
+	word_tokens = word_tokenize(text) 
+	filtered_text = [word for word in word_tokens if word not in stop_words]
+	return " ".join(filtered_text)
+
+def remove_punctuation(text):
+	for punct in "/-'":
+		text = text.replace(punct, " ")
+	
+	for punct in "&":
+		text = text.replace(punct, "and")
+
+	for punct in '?!.,"#$%\'()*+-/:;<=>@[\\]^_`{|}~' + '“”’':
+		text = text.replace(punct, "")
+	return text
+
+def convert_number(text): 
+	# split string into list of words 
+	temp_str = text.split() 
+	# initialise empty list 
+	new_string = [] 
+  
+	for word in temp_str: 
+		# if word is a digit, convert the digit 
+		# to numbers and append into the new_string list 
+		if word.isdigit(): 
+			temp = inflect_engine.number_to_words(word) 
+			new_string.append(temp) 
+
+		# append the word as it is 
+		else: 
+			new_string.append(word) 
+
+	# join the words of new_string to form a string 
+	temp_str = ' '.join(new_string) 
+	return temp_str
+
+def lemmatise(text):
+	word_tokens = word_tokenize(text) 
+	# provide context i.e. part-of-speech 
+	lemmas = [lemmatizer.lemmatize(word, pos='v') for word in word_tokens]
+	lemmas = " ".join(lemmas) 
+	return lemmas
+
+def preprocess(text):
+	return lemmatise(convert_number(remove_punctuation(remove_stopwords(to_lower_case(text)))))
+
 def innertext(elt):
-	# return (elt.text or '')
 	return (elt.text or '') +(''.join(innertext(e)+(e.tail or '') for e in elt) or '')
 
 def main():
@@ -115,6 +182,8 @@ def main():
 								paper_dict["authors"].append(author_name)
 							else:
 								paper_dict[elem.tag] = innertext(elem)
+								if elem.tag == "abstract":
+									paper_dict["preprocessed_abstract"] = preprocess(paper_dict["abstract"])
 					
 					all_conf[year][publisher][booktitle]["papers"].append(paper_dict)
 
