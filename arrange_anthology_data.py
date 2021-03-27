@@ -5,73 +5,106 @@ from tqdm.auto import tqdm
 import xml.etree.ElementTree as ET
 import json
 
+import re, string, unicodedata
+
+import contractions
+
+from bs4 import BeautifulSoup
+
 import nltk
 from nltk.corpus import stopwords 
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 
 import inflect
-inflect_engine = inflect.engine()
 
 nltk.download('stopwords')
 nltk.download('punkt')
 nltk.download('wordnet')
 
-lemmatizer = WordNetLemmatizer()
+lemmatiser = WordNetLemmatizer()
+inflect_engine = inflect.engine()
 
 def to_lower_case(text):
 	return text.lower()
 
-def remove_extra_whitespace(text):
-	return " ".join(text.split())
+# noise removal
+def strip_html(text):
+	soup = BeautifulSoup(text, "html.parser")
+	return soup.get_text()
 
-def remove_stopwords(text):
-	stop_words = set(stopwords.words("english")) 
-	word_tokens = word_tokenize(text) 
-	filtered_text = [word for word in word_tokens if word not in stop_words]
-	return " ".join(filtered_text)
+def replace_contractions(text):
+	"""Replace contractions in string of text"""
+	return contractions.fix(text)
 
-def remove_punctuation(text):
-	for punct in "/-'":
-		text = text.replace(punct, " ")
-	
-	for punct in "&":
-		text = text.replace(punct, "and")
+# tokenisation
+def tokenise(text):
+	words = word_tokenize(text)
+	return words
 
-	for punct in '?!.,"#$%\'()*+-/:;<=>@[\\]^_`{|}~' + '“”’':
-		text = text.replace(punct, "")
-	return text
+# normalisation
+def remove_non_ascii(words):
+	"""Remove non-ASCII characters from list of tokenized words"""
+	new_words = []
+	for word in words:
+		new_word = unicodedata.normalize('NFKD', word).encode('ascii', 'ignore').decode('utf-8', 'ignore')
+		new_words.append(new_word)
+	return new_words
 
-def convert_number(text): 
-	# split string into list of words 
-	temp_str = text.split() 
-	# initialise empty list 
-	new_string = [] 
-  
-	for word in temp_str: 
-		# if word is a digit, convert the digit 
-		# to numbers and append into the new_string list 
-		if word.isdigit(): 
-			temp = inflect_engine.number_to_words(word) 
-			new_string.append(temp) 
+def remove_punctuation(words):
+	"""Remove punctuation from list of tokenized words"""
+	new_words = []
+	for word in words:
+		new_word = re.sub(r'[^\w\s]', '', word)
+		if new_word != '':
+			new_words.append(new_word)
+	return new_words
 
-		# append the word as it is 
-		else: 
-			new_string.append(word) 
+def replace_numbers(words):
+	"""Replace all interger occurrences in list of tokenized words with textual representation"""
+	new_words = []
+	for word in words:
+		if word.isdigit():
+			new_word = inflect_engine.number_to_words(word)
+			new_words.append(new_word)
+		else:
+			new_words.append(word)
+	return new_words
 
-	# join the words of new_string to form a string 
-	temp_str = ' '.join(new_string) 
-	return temp_str
+def remove_stopwords(words):
+    """Remove stop words from list of tokenized words"""
+    new_words = []
+    for word in words:
+        if word not in stopwords.words('english'):
+            new_words.append(word)
+    return new_words
 
-def lemmatise(text):
-	word_tokens = word_tokenize(text) 
-	# provide context i.e. part-of-speech 
-	lemmas = [lemmatizer.lemmatize(word, pos='v') for word in word_tokens]
-	lemmas = " ".join(lemmas) 
-	return lemmas
+def lemmatise_verbs(words):
+    """Lemmatize verbs in list of tokenized words"""
+    lemmas = []
+    for word in words:
+        lemma = lemmatiser.lemmatize(word, pos='v')
+        lemmas.append(lemma)
+    return lemmas
 
 def preprocess(text):
-	return lemmatise(convert_number(remove_punctuation(remove_stopwords(to_lower_case(text)))))
+	text = to_lower_case(text)
+
+	# noise removal
+	text = replace_contractions(strip_html(text))
+
+	# tokenisation
+	words = tokenise(text)
+
+	# normalisation
+	words = remove_non_ascii(words)
+	words = remove_punctuation(words)
+	words = replace_numbers(words)
+	words = remove_stopwords(words)
+	words = lemmatise_verbs(words)
+
+	return " ".join(words)
+
 
 def innertext(elt):
 	return (elt.text or '') +(''.join(innertext(e)+(e.tail or '') for e in elt) or '')
