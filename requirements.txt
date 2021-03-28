@@ -16,6 +16,7 @@ pathspec==0.8.1
 pycodestyle==2.7.0
 pyflakes==2.3.0
 regex==2020.11.13
+tika==1.24
 toml==0.10.2
 tqdm==4.59.0
 typed-ast==1.4.2
