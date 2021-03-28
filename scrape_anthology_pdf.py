@@ -289,6 +289,7 @@ def main():
                                         ):
                                             if (
                                                 paragraph_content.text.strip()
+                                                .strip(".")
                                                 .replace(" ", "")
                                                 .lower()
                                                 == "abstract"
