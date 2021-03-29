@@ -351,26 +351,19 @@ def main():
 
                                         abstract_text = ""
                                         for line_no in range(len(abstract_text_lines)):
-                                            abstract_text_lines[
-                                                line_no
-                                            ] = abstract_text_lines[line_no].strip()
+                                            abstract_text_lines[line_no] = (
+                                                abstract_text_lines[line_no]
+                                                .strip()
+                                                .replace("\xad", "-")
+                                                .replace("\u00ad", "-")
+                                                .replace("\N{SOFT HYPHEN}", "-")
+                                                .replace("\xa0", " ")
+                                            )
                                             if line_no == 0:
                                                 abstract_text = abstract_text_lines[
                                                     line_no
                                                 ]
                                             else:
-                                                abstract_text = abstract_text.replace(
-                                                    "\xad", "-"
-                                                )
-                                                abstract_text = abstract_text.replace(
-                                                    "\u00ad", "-"
-                                                )
-                                                abstract_text = abstract_text.replace(
-                                                    "\N{SOFT HYPHEN}", "-"
-                                                )
-                                                abstract_text = abstract_text.replace(
-                                                    "\xa0", " "
-                                                )
                                                 if abstract_text[-1] == "-":
                                                     abstract_text = (
                                                         abstract_text[:-1]
