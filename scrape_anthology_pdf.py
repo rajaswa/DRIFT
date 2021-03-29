@@ -295,31 +295,43 @@ def main():
                                         for idx, paragraph_content in enumerate(
                                             paragraphs_content
                                         ):
-                                            if (
+                                            paragraph_content_text = (
                                                 paragraph_content.text.strip()
                                                 .strip(".")
                                                 .replace(" ", "")
                                                 .lower()
-                                                == "abstract"
-                                            ):
+                                            )
+
+                                            if paragraph_content_text == "abstract":
                                                 break
                                             if (
-                                                paragraph_content.text.strip()
-                                                .strip(".")
-                                                .replace(" ", "")
-                                                .lower()
+                                                paragraph_content_text
                                                 == "résumé-abstract"
                                             ):
                                                 flag_for_abs_format = 1
+                                                break
+                                            if (
+                                                paragraph_content_text[:9]
+                                                == "abstract:"
+                                                and len(paragraph_content_text) > 9
+                                            ) or (
+                                                paragraph_content_text[:8] == "abstract"
+                                                and len(paragraph_content_text) > 8
+                                            ):
+                                                flag_for_abs_format = 2
                                                 break
 
                                         if flag_for_abs_format == 0:
                                             abstract_text = paragraphs_content[
                                                 idx + 1
                                             ].text.strip()
-                                        else:
+                                        elif flag_for_abs_format == 1:
                                             abstract_text = paragraphs_content[
                                                 idx + 2
+                                            ].text.strip()
+                                        else:
+                                            abstract_text = paragraphs_content[
+                                                idx
                                             ].text.strip()
 
                                         # basic preprocessing
