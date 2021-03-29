@@ -262,7 +262,10 @@ def main():
                                 if elem.tag == "url":
 
                                     paper_url = innertext(elem)
-                                    if not (paper_url.startswith("http") or paper_url.startswith("www")):
+                                    if not (
+                                        paper_url.startswith("http")
+                                        or paper_url.startswith("www")
+                                    ):
                                         paper_url = (
                                             "https://www.aclweb.org/anthology/"
                                             + paper_url
@@ -288,7 +291,7 @@ def main():
                                         paragraphs_content = BeautifulSoup(
                                             parsed_content["content"]
                                         ).find_all("p")
-
+                                        flag_for_abs_format = 0
                                         for idx, paragraph_content in enumerate(
                                             paragraphs_content
                                         ):
@@ -300,9 +303,24 @@ def main():
                                                 == "abstract"
                                             ):
                                                 break
-                                        abstract_text = paragraphs_content[
-                                            idx + 1
-                                        ].text.strip()
+                                            if (
+                                                paragraph_content.text.strip()
+                                                .strip(".")
+                                                .replace(" ", "")
+                                                .lower()
+                                                == "résumé-abstract"
+                                            ):
+                                                flag_for_abs_format = 1
+                                                break
+
+                                        if flag_for_abs_format == 0:
+                                            abstract_text = paragraphs_content[
+                                                idx + 1
+                                            ].text.strip()
+                                        else:
+                                            abstract_text = paragraphs_content[
+                                                idx + 2
+                                            ].text.strip()
 
                                         # basic preprocessing
                                         abstract_text_lines = abstract_text.split("\n")
