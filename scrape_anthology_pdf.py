@@ -368,6 +368,9 @@ def main():
                                                 abstract_text = abstract_text.replace(
                                                     "\N{SOFT HYPHEN}", "-"
                                                 )
+                                                abstract_text = abstract_text.replace(
+                                                    "\xa0", " "
+                                                )
                                                 if abstract_text[-1] == "-":
                                                     abstract_text = (
                                                         abstract_text[:-1]
