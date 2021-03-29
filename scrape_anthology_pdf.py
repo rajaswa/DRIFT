@@ -260,11 +260,16 @@ def main():
                                 paper_dict[elem.tag] = innertext(elem)
 
                                 if elem.tag == "url":
-                                    paper_url = (
-                                        "https://www.aclweb.org/anthology/"
-                                        + innertext(elem)
-                                        + ".pdf"
-                                    )
+
+                                    paper_url = innertext(elem)
+                                    if not (paper_url.startswith("http") or paper_url.startswith("www")):
+                                        paper_url = (
+                                            "https://www.aclweb.org/anthology/"
+                                            + paper_url
+                                        )
+                                    if not (paper_url.endswith(".pdf")):
+                                        paper_url = paper_url + ".pdf"
+
                                     try:
                                         _buffer = StringIO()
                                         data = parser.from_file(
@@ -341,8 +346,8 @@ def main():
                             paper_dict
                         )
 
-    with open(json_save_path, "w") as f:
-        json.dump(all_conf, f)
+        with open(json_save_path, "w") as f:
+            json.dump(all_conf, f)
 
 
 if __name__ == "__main__":
