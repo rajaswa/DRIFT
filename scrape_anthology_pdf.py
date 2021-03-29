@@ -359,6 +359,15 @@ def main():
                                                     line_no
                                                 ]
                                             else:
+                                                abstract_text = abstract_text.replace(
+                                                    "\xad", "-"
+                                                )
+                                                abstract_text = abstract_text.replace(
+                                                    "\u00ad", "-"
+                                                )
+                                                abstract_text = abstract_text.replace(
+                                                    "\N{SOFT HYPHEN}", "-"
+                                                )
                                                 if abstract_text[-1] == "-":
                                                     abstract_text = (
                                                         abstract_text[:-1]
