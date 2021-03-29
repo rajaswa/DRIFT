@@ -297,7 +297,6 @@ def main():
                                         ):
                                             paragraph_content_text = (
                                                 paragraph_content.text.strip()
-                                                .strip(".")
                                                 .replace(" ", "")
                                                 .lower()
                                             )
@@ -311,12 +310,21 @@ def main():
                                                 flag_for_abs_format = 1
                                                 break
                                             if (
-                                                paragraph_content_text[:9]
-                                                == "abstract:"
-                                                and len(paragraph_content_text) > 9
-                                            ) or (
-                                                paragraph_content_text[:8] == "abstract"
-                                                and len(paragraph_content_text) > 8
+                                                (
+                                                    paragraph_content_text[:9]
+                                                    == "abstract:"
+                                                    and len(paragraph_content_text) > 9
+                                                )
+                                                or (
+                                                    paragraph_content_text[:8]
+                                                    == "abstract"
+                                                    and len(paragraph_content_text) > 8
+                                                )
+                                                or (
+                                                    paragraph_content_text[:9]
+                                                    == "abstract."
+                                                    and len(paragraph_content_text) > 9
+                                                )
                                             ):
                                                 flag_for_abs_format = 2
                                                 break
