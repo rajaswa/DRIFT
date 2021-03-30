@@ -160,7 +160,7 @@ def main():
 
     # find the paths all XML files
     lst_of_xml_files = glob.glob("acl-anthology/data/xml/*.xml")
-
+    lst_of_xml_files.sort()
     all_conf = {}
 
     for path in tqdm(lst_of_xml_files):
