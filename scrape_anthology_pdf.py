@@ -160,14 +160,15 @@ def main():
 
     # find the paths all XML files
     lst_of_xml_files = glob.glob("acl-anthology/data/xml/*.xml")
+    # lst_of_xml_files = ["acl-anthology/data/xml/W14.xml"]
     lst_of_xml_files.sort()
     all_conf = {}
 
     for path in tqdm(lst_of_xml_files):
         with open(path) as xml_file:
             xml = xml_file.read()
-            if xml.find("<abstract>") == -1:
-                continue
+            # if xml.find("<abstract>") == -1:
+            #     continue
             tree = ET.fromstring(xml)
 
             for vol_node in tree.iter("volume"):
