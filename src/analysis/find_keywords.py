@@ -18,7 +18,7 @@ def freq_top_k(text, top_k=200, n=1):
 
     if top_k < len(sorted_gram_count_tuple):
         sorted_gram_count_mapping = dict(
-            itertools.islice(sorted_gram_count_mapping.items(), top_k)
+            islice(sorted_gram_count_mapping.items(), top_k)
         )
 
     return sorted_gram_count_mapping
@@ -33,7 +33,7 @@ def norm_freq_top_k(text, top_k=200, n=1):
 
     if top_k < len(sorted_gram_count_tuple):
         sorted_gram_count_mapping = dict(
-            itertools.islice(sorted_gram_count_mapping.items(), top_k)
+            islice(sorted_gram_count_mapping.items(), top_k)
         )
 
     return sorted_gram_count_mapping
