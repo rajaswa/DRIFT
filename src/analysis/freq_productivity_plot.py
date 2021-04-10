@@ -1,8 +1,10 @@
 import matplotlib.pyplot as plt
 import nltk
-from nltk import ngrams
 import numpy as np
+from nltk import ngrams
+
 from src.analysis.utils.statistical_measures import plot_freq, plot_prod
+
 
 def plot_freq(word, year_wise_word_count_mappings):
     years = []
