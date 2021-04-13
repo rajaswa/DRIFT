@@ -3,10 +3,8 @@ import nltk
 import numpy as np
 from nltk import ngrams
 
-from src.analysis.utils.statistical_measures import plot_freq, plot_prod
 
-
-def plot_freq(word, year_wise_word_count_mappings):
+def plot_freq(word, year_wise_word_count_mappings, save_path):
     years = []
     freqs = []
     for year in year_wise_word_count_mappings:
@@ -17,14 +15,15 @@ def plot_freq(word, year_wise_word_count_mappings):
             freqs.append(0)
         years.append(year)
 
+    plt.clf()
     plt.plot(years, freqs)
     plt.title("Frequency Plot")
     plt.xlabel("Years")
     plt.ylabel("Frequencies")
-    plt.show()
+    plt.savefig(save_path)
 
 
-def plot_prod(word, year_wise_prods_mappings):
+def plot_prod(word, year_wise_prods_mappings, save_path):
     years = []
     prods = []
     for year in year_wise_prods_mappings:
@@ -34,9 +33,9 @@ def plot_prod(word, year_wise_prods_mappings):
         else:
             prods.append(0)
         years.append(year)
-
-    plt.plot(years, freqs)
+    plt.clf()
+    plt.plot(years, prods)
     plt.title("Productivity Plot")
     plt.xlabel("Years")
     plt.ylabel("Productivities")
-    plt.show()
+    plt.savefig(save_path)
