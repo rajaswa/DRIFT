@@ -1,9 +1,10 @@
 import numpy as np
 from gensim.models.word2vec import Word2Vec
 from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.manifold import TSNE
+import matplotlib.pyplot as plt
 
-
-def compute_similarity_matrix(model_path, keywords):
+def compute_similarity_matrix_keywords(model_path, keywords):
     keywords_size = len(keywords)
 
     model = Word2Vec.load(model_path)
@@ -15,9 +16,53 @@ def compute_similarity_matrix(model_path, keywords):
 
             sim_matrix[i][j] = cosine_similarity(
                 row_word_embedding.reshape(1, -1), column_word_embedding.reshape(1, -1)
-            )[0]
+            )[0][0]
 
     return sim_matrix
+
+
+def compute_similarity_matrix(model_path=None, save_load_path=None):
+    
+    assert model_path is not None or save_load_path is not None, "One of model_path and save_load_path should not be None"
+    
+    if model_path is not None:
+        model = Word2Vec.load(model_path)
+        model_vocab = list(model.vocab)
+        vocab_size = len(model_vocab)
+        sim_matrix = np.ones(vocab_size, vocab_size)
+
+        for i in range(vocab_size):
+            for j in range(i+1, vocab_size-1):
+                row_word_embedding = model.wv[model_vocab[i]]
+                column_word_embedding = model.wv[model_vocab[j]]
+
+                sim_matrix[i][j] = cosine_similarity(row_word_embedding.reshape(1,-1), column_word_embedding.reshape(1,-1))[0][0]
+
+        if save_load_path is not None:
+            if not os.path.exists(save_load_path):
+                os.makedirs(save_load_path)
+            vocab_path = os.path.join(save_load_path, "vocab.json")
+            sim_path = os.path.join(save_load_path, "sim.npy")
+
+            with open(vocab_path, "w") as vocab_json:
+                json.dump(model_vocab, vocab_json)
+
+            with open(sim_path, 'wb') as sim_npy:
+                np.save(sim_npy, sim_matrix)
+
+    elif save_load_path is not None:
+        if not os.path.exists(save_load_path):
+            os.makedirs(save_load_path)
+        vocab_path = os.path.join(save_load_path, "vocab.json")
+        sim_path = os.path.join(save_load_path, "sim.npy")
+
+        with open(vocab_path, "r") as vocab_json:
+            model_vocab = json.load(vocab_json)
+
+        with open(sim_path, 'rb') as sim_npy:
+            sim_matrix = np.load(sim_npy)
+
+    return model_vocab,sim_matrix
 
 
 def compute_acceleration_matrix(sim_matrix_1, sim_matrix_2):
@@ -41,3 +86,47 @@ def top_k_acceleration(keywords, acceleration_matrix, k=10):
         )
 
     return word_pairs
+
+def plot_tsne(model_path, word_pair, top_unigrams, save_path):
+    year_model = Word2Vec.load(model_path)
+
+    # fit t-SNE on compass word embeddings
+    train_words = top_unigrams
+    train_words.extend(word_pair)
+    train_embs = []
+    for word in train_words:
+        train_embs.append(year_model.wv[word])
+
+    tsne = TSNE(n_components=2, init="pca", random_state=42)
+    red_embs = tsne.fit_transform(train_embs)
+
+    x = []
+    y = []
+
+    for ele in red_embs:
+        x.append(ele[0])
+        y.append(ele[1])
+    plt.clf()
+    plt.figure(figsize=(16, 16)) 
+    for i in range(len(x)-2):
+        plt.scatter(x[i],y[i], s=0)
+        plt.annotate(train_words[i],
+                    xy=(x[i], y[i]),
+                    xytext=(5, 2),
+                    textcoords='offset points',
+                    ha='right',
+                    va='bottom')
+    for i in range(len(x)-2, len(x)):
+        plt.scatter(x[i],y[i], s=0)
+        plt.annotate(train_words[i],
+                    xy=(x[i], y[i]),
+                    xytext=(5, 2),
+                    textcoords='offset points',
+                    ha='right',
+                    va='bottom',
+                    # fontstyle='oblique',
+                    fontweight='bold',
+                    # fontsize='large',
+                    color='red')
+
+    plt.savefig(save_path)

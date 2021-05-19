@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from gensim.models.word2vec import Word2Vec
 from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.manifold import TSNE
 
 
 def find_most_similar_words(
