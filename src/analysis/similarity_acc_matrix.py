@@ -1,40 +1,57 @@
+import json
+import os
+
+import matplotlib.pyplot as plt
 import numpy as np
 from gensim.models.word2vec import Word2Vec
-from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.manifold import TSNE
-import matplotlib.pyplot as plt
+from sklearn.metrics.pairwise import cosine_similarity
 from tqdm.auto import tqdm
-import os
-import json
 
-def compute_similarity_matrix_keywords(keywords=None, model_path=None,save_load_path=None, all_model_vectors=False):
-    assert model_path is not None or save_load_path is not None, "One of model_path and save_load_path should not be None"
-    
+
+def compute_similarity_matrix_keywords(
+    keywords=None, model_path=None, save_load_path=None, all_model_vectors=False
+):
+    assert (
+        model_path is not None or save_load_path is not None
+    ), "One of model_path and save_load_path should not be None"
+
     if model_path is not None:
         model = Word2Vec.load(model_path)
-        
+
         if all_model_vectors:
             keywords = list(model.wv.vocab.keys())
-        
-        word_embs = np.array([model.wv[keyword] if keyword in model.wv.vocab else np.mean([model.wv[word_loop] for word_loop in model.wv.vocab], axis=0) for keyword in keywords])
+
+        word_embs = np.array(
+            [
+                model.wv[keyword]
+                if keyword in model.wv.vocab
+                else np.mean(
+                    [model.wv[word_loop] for word_loop in model.wv.vocab], axis=0
+                )
+                for keyword in keywords
+            ]
+        )
         sim_matrix = cosine_similarity(word_embs, word_embs)
-        
+
         if save_load_path is not None:
-            print(f"COMPUTING SIMILARITY MATRIX FOR {model_path} AND SAVING AT {save_load_path}")
+            print(
+                f"COMPUTING SIMILARITY MATRIX FOR {model_path} AND SAVING AT {save_load_path}"
+            )
             if not os.path.exists(save_load_path):
                 os.makedirs(save_load_path)
-            
+
             vocab_path = os.path.join(save_load_path, "vocab.json")
             sim_path = os.path.join(save_load_path, "sim.npy")
-            
+
             with open(vocab_path, "w") as vocab_json:
                 json.dump(keywords, vocab_json)
 
-            with open(sim_path, 'wb') as sim_npy:
-                np.save(sim_npy, sim_matrix)                  
+            with open(sim_path, "wb") as sim_npy:
+                np.save(sim_npy, sim_matrix)
 
     elif save_load_path is not None:
-        
+
         print(f"LOADING SIMILARITY MATRIX FROM {save_load_path}")
         if not os.path.exists(save_load_path):
             os.makedirs(save_load_path)
@@ -44,7 +61,7 @@ def compute_similarity_matrix_keywords(keywords=None, model_path=None,save_load_
         with open(vocab_path, "r") as vocab_json:
             keywords = json.load(vocab_json)
 
-        with open(sim_path, 'rb') as sim_npy:
+        with open(sim_path, "rb") as sim_npy:
             sim_matrix = np.load(sim_npy)
 
     return keywords, sim_matrix
@@ -72,6 +89,7 @@ def top_k_acceleration(keywords, acceleration_matrix, k=10):
 
     return word_pairs
 
+
 def plot_tsne(model_path, word_pair, top_unigrams, save_path):
     year_model = Word2Vec.load(model_path)
 
@@ -92,26 +110,30 @@ def plot_tsne(model_path, word_pair, top_unigrams, save_path):
         x.append(ele[0])
         y.append(ele[1])
     plt.clf()
-    plt.figure(figsize=(16, 16)) 
-    for i in range(len(x)-2):
-        plt.scatter(x[i],y[i], s=0)
-        plt.annotate(train_words[i],
-                    xy=(x[i], y[i]),
-                    xytext=(5, 2),
-                    textcoords='offset points',
-                    ha='right',
-                    va='bottom')
-    for i in range(len(x)-2, len(x)):
-        plt.scatter(x[i],y[i], s=0)
-        plt.annotate(train_words[i],
-                    xy=(x[i], y[i]),
-                    xytext=(5, 2),
-                    textcoords='offset points',
-                    ha='right',
-                    va='bottom',
-                    # fontstyle='oblique',
-                    fontweight='bold',
-                    # fontsize='large',
-                    color='red')
+    plt.figure(figsize=(16, 16))
+    for i in range(len(x) - 2):
+        plt.scatter(x[i], y[i], s=0)
+        plt.annotate(
+            train_words[i],
+            xy=(x[i], y[i]),
+            xytext=(5, 2),
+            textcoords="offset points",
+            ha="right",
+            va="bottom",
+        )
+    for i in range(len(x) - 2, len(x)):
+        plt.scatter(x[i], y[i], s=0)
+        plt.annotate(
+            train_words[i],
+            xy=(x[i], y[i]),
+            xytext=(5, 2),
+            textcoords="offset points",
+            ha="right",
+            va="bottom",
+            # fontstyle='oblique',
+            fontweight="bold",
+            # fontsize='large',
+            color="red",
+        )
 
     plt.savefig(save_path)

@@ -1,8 +1,9 @@
+import json
+import os
+
 import nltk
 import numpy as np
 from nltk import FreqDist, ngrams
-import os
-import json
 
 
 def find_freq(text, n=1):
@@ -20,12 +21,16 @@ def find_norm_freq(text, n=1):
 
 
 def find_productivity(words, text, n=2, save_load_path=None, overwrite=False):
-    if save_load_path is not None and os.path.isfile(save_load_path) and not(overwrite):
+    if (
+        save_load_path is not None
+        and os.path.isfile(save_load_path)
+        and not (overwrite)
+    ):
         print(f"Loading Productivity Dictionary from {save_load_path}")
         with open(save_load_path, "r") as prod_f:
             word_prod_mapping = json.load(prod_f)
         return word_prod_mapping
-    
+
     fdist = find_freq(text=text, n=n)
     ngrams_lst = list(fdist.keys())
     prods = {}
@@ -49,5 +54,5 @@ def find_productivity(words, text, n=2, save_load_path=None, overwrite=False):
 
     print(f"Saving Productivity Dictionary at {save_load_path}")
     with open(save_load_path, "w") as prod_f:
-        json.dump(prods,prod_f, indent=4)
+        json.dump(prods, prod_f, indent=4)
     return prods

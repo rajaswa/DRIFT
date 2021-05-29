@@ -1,6 +1,9 @@
 import platform
+
 from flask import Flask, request
+
 from src.scripts import *
+
 
 app = Flask(__name__)
 

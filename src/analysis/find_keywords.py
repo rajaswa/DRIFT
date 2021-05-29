@@ -1,12 +1,12 @@
+import json
 import operator
-from itertools import islice
 import os
+from itertools import islice
 
 import matplotlib.pyplot as plt
 import nltk
 import numpy as np
 from nltk import ngrams
-import json
 
 from src.analysis.utils import *
 
@@ -26,7 +26,11 @@ def save_freq_dict(text, save_path, n=1):
 
 
 def freq_top_k(text, save_load_path=None, top_k=200, n=1, overwrite=False):
-    if save_load_path is not None and os.path.isfile(save_load_path) and not(overwrite):
+    if (
+        save_load_path is not None
+        and os.path.isfile(save_load_path)
+        and not (overwrite)
+    ):
         print("Loading Frequency Dictionary from {save_load_path}")
         with open(save_load_path, "r") as freq_dict:
             sorted_gram_count_mapping = json.load(freq_dict)
@@ -56,9 +60,13 @@ def save_norm_freq_dict(text, save_path=None, n=1):
 
 
 def norm_freq_top_k(text, save_load_path=None, top_k=200, n=1, overwrite=False):
-    if save_load_path is not None and os.path.isfile(save_load_path) and not(overwrite):
+    if (
+        save_load_path is not None
+        and os.path.isfile(save_load_path)
+        and not (overwrite)
+    ):
         print(f"Loading Normalised Frequency Dictionary from {save_load_path}")
-        
+
         with open(save_load_path, "r") as norm_freq_dict:
             sorted_gram_count_mapping = json.load(norm_freq_dict)
     else:
