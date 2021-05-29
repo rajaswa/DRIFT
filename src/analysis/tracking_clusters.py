@@ -25,13 +25,10 @@ def k_means_clustering(keywords, model_path, save_path, k_opt=None, k_max=10):
 	keywords = [keyword for keyword in keywords if keyword in model.wv.vocab]
 	X = [model.wv[keyword] for keyword in keywords]
 
-	t = time.time()
 	if k_opt is None:
 		silhouette_scores = []
 		t = time.time()
 		results = Parallel(n_jobs=-1)(delayed(kmeans_parallel)(X,n_clusters,25) for n_clusters in tqdm(range(2, k_max+1)))
-		print(results)
-		print(time.time()-t)
 		k_opt = 2 + silhouette_scores.index(max(silhouette_scores))
 	
 	kmeans = KMeansClusterer(k_opt, distance=nltk.cluster.util.cosine_distance, repeats=25)
