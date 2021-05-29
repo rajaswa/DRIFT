@@ -6,6 +6,7 @@ from gensim.models.word2vec import Word2Vec
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.manifold import TSNE
 from operator import itemgetter
+from sklearn.metrics.pairwise import cosine_similarity
 from src.analysis.utils import *
 
 def find_most_similar_words(
@@ -21,12 +22,12 @@ def find_most_similar_words(
         else:
             word_vectors.append(np.zeros(year_model.wv["paper"].shape))
     word_vectors = np.array(word_vectors)   
-    word_vectors = word_vectors/np.linalg.norm(word_vectors,axis=1)[:,None]
+    # word_vectors = word_vectors/np.linalg.norm(word_vectors,axis=1)[:,None]
     
     compass_vectors = compass_model.wv.vectors
-    compass_vectors = compass_vectors/np.linalg.norm(compass_vectors,axis=1)[:,None]
+    # compass_vectors = compass_vectors/np.linalg.norm(compass_vectors,axis=1)[:,None]
 
-    top_sims = np.argsort(np.abs(np.matmul(word_vectors, compass_vectors.T)), axis=1)
+    top_sims = np.argsort(cosine_similarity(word_vectors, compass_vectors), axis=1)
     top_sims = top_sims[:,-top_k:]
     
     compass_words = list(compass_model.wv.vocab.keys())
@@ -50,30 +51,24 @@ def find_most_drifted_words(words, year_model_paths, compass_model_path, top_k=1
     for year1_stats, year2_stats in zip(year_wise_stats[:-1], year_wise_stats[1:]):
         
         common_words = [intersection(year1_stats[1][k], year2_stats[1][k]) for k in range(len(year1_stats[1]))]
-        print(len(common_words))
-        
-        print(year1_stats[1][0])
-        print(year2_stats[1][0])
-        print(common_words[0])
-        
 
         scores = [scores[k]-len(common_words[k])+top_k for k in range(len(words))]
         for l,word_wise_common_words in enumerate(common_words):
-            print(year1_stats[1])
-            print(year2_stats[1])
-            year1_common_indices = [year1_stats[1].index(ele) for ele in word_wise_common_words]
-            year2_common_indices = [year2_stats[1].index(ele) for ele in word_wise_common_words]
-            year1_common_sims = [top_sims[l][year1_common_indices[k]] for k in range(len(year1_common_indices))]
-            year2_common_sims = [top_sims[l][year2_common_indices[k]] for k in range(len(year2_common_indices))]
-            scores[l] += sum([abs(x1 - x2) for (x1, x2) in zip(year1_common_sims, year2_common_sims)])
+            # print(year1_stats[1])
+            # print(year2_stats[1])
+            year1_common_indices = [year1_stats[1][l].index(ele) for ele in word_wise_common_words]
+            year2_common_indices = [year2_stats[1][l].index(ele) for ele in word_wise_common_words]
+            year1_common_sims = [year1_stats[2][l][year1_common_indices[k]] for k in range(len(year1_common_indices))]
+            year2_common_sims = [year2_stats[2][l][year2_common_indices[k]] for k in range(len(year2_common_indices))]
+            scores[l] += abs(sum([x1 - x2 for (x1, x2) in zip(year1_common_sims, year2_common_sims)]))
 
     top_most_drifted_indices = np.argsort(scores)[-top_most_drifted_k:]
 
-    return [word[k] for k in top_most_drifted_indices]
+    return [words[k] for k in top_most_drifted_indices]
 
 
 def plot_semantic_drift(
-    words, year_model_path, compass_model_path, save_path, top_k=10
+    word, year_model_path, compass_model_path, save_path, top_k=10
 ):
     compass_model = Word2Vec.load(compass_model_path)
 

@@ -144,26 +144,12 @@ for model_path in model_paths:
 
 
 acc_matrix = compute_acceleration_matrix(sim_matrices_year_wise[list(sim_matrices_year_wise.keys())[0]],sim_matrices_year_wise[list(sim_matrices_year_wise.keys())[-1]])
+print("PAIRS WITH HIGHEST ACCELERATION: ")
 print(top_k_acceleration(keywords=list(compass_unigrams.keys()), acceleration_matrix=acc_matrix, k=10))
 
 # Clustering
-compass_unigrams_new = freq_top_k(text=compass_text, save_load_path=COMPASS_UNIGRAMS_PATH, top_k=5000, n=1, overwrite=False)
-key_kmean, label_kmean = k_means_clustering(keywords=list(compass_unigrams_new.keys()), model_path=model_paths[0], save_path="temp", k_max=10)
+# compass_unigrams_new = freq_top_k(text=compass_text, save_load_path=COMPASS_UNIGRAMS_PATH, top_k=5000, n=1, overwrite=False)
+# key_kmean, label_kmean = k_means_clustering(keywords=list(compass_unigrams_new.keys()), model_path=model_paths[0], save_path="temp", k_max=10)
 
-
-# find_most_similar_words(list(compass_unigrams.keys()), year_model_path="models/2017.model", top_k=10, compass_model_path="models/compass.model")
+print("MOST DRIFTED WORDS: ")
 print(find_most_drifted_words(list(compass_unigrams.keys()), ["models/2017.model","models/2018.model"], "models/compass.model", top_k=10, top_most_drifted_k=5))
-# for ele in keywords_for_sim_matrix_temp:
-# 	keywords_for_sim_matrix += ele.split(" ")
-# keywords_for_sim_matrix = list(set(keywords_for_sim_matrix))
-# # print(keywords_for_sim_matrix)
-
-# sim_1 = compute_similarity_matrix_keywords(model_path="models/2017.model", keywords=keywords_for_sim_matrix)
-# sim_2 = compute_similarity_matrix_keywords(model_path="models/2018.model", keywords=keywords_for_sim_matrix)
-
-# acc = compute_acceleration_matrix(sim_1, sim_2)
-
-# prs = top_k_acceleration(keywords_for_sim_matrix, acc, 40)
-# top_unigrams = list(compass_unigrams.keys())
-# plot_tsne("models/2017.model", (prs[0][0], prs[0][1]), top_unigrams, "1.svg")
-# plot_tsne("models/2018.model", (prs[0][0], prs[0][1]), top_unigrams, "2.svg")
