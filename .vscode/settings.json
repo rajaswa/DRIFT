@@ -12,7 +12,7 @@
     ],
     "autoDocstring.docstringFormat": "google",
     "autoDocstring.generateDocstringOnEnter": true,
-    "python.pythonPath": "/home/crocoder/Desktop/Diachronic Analysis/diachronic-analysis-acl-anthology/diachronic-env/bin/python3",
+    "python.pythonPath": "diachronic-env/bin/python3",
     "python.testing.promptToConfigure": false,
     "python.testing.pytestEnabled": false,
     "python.testing.unittestEnabled": false,
