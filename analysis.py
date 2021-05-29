@@ -148,8 +148,8 @@ print("PAIRS WITH HIGHEST ACCELERATION: ")
 print(top_k_acceleration(keywords=list(compass_unigrams.keys()), acceleration_matrix=acc_matrix, k=10))
 
 # Clustering
-# compass_unigrams_new = freq_top_k(text=compass_text, save_load_path=COMPASS_UNIGRAMS_PATH, top_k=5000, n=1, overwrite=False)
-# key_kmean, label_kmean = k_means_clustering(keywords=list(compass_unigrams_new.keys()), model_path=model_paths[0], save_path="temp", k_max=10)
+compass_unigrams_new = freq_top_k(text=compass_text, save_load_path=COMPASS_UNIGRAMS_PATH, top_k=5000, n=1, overwrite=False)
+key_kmean, label_kmean = k_means_clustering(keywords=list(compass_unigrams_new.keys()), model_path=model_paths[0], save_path="temp", k_max=10)
 
 print("MOST DRIFTED WORDS: ")
 print(find_most_drifted_words(list(compass_unigrams.keys()), ["models/2017.model","models/2018.model"], "models/compass.model", top_k=10, top_most_drifted_k=5))
