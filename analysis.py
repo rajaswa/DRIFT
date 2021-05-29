@@ -7,6 +7,7 @@ from tqdm.auto import tqdm
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--folder", type=str, default="./data/files")
+parser.add_argument("--model_folder", type=str, default="./models")
 parser.add_argument("--cache_folder", type=str, default="./cache")
 parser.add_argument("--output_folder", type=str, default="./outputs")
 parser.add_argument("--keyword_method", type=str, choices=["freq", "norm_freq"], default="norm_freq")
@@ -15,6 +16,7 @@ parser.add_argument("--truncate_popular", type=int, default=200)
 args = parser.parse_args()
 
 FOLDER = args.folder
+MODEL_FOLDER = args.model_folder
 CACHE_FOLDER = args.cache_folder
 OUTPUT_FOLDER = args.output_folder
 KEYWORD_METHOD = args.keyword_method
@@ -127,9 +129,30 @@ print(f"Making Frequency Plots for Trigrams and Saving at {TRIGRAM_KEYWORD_PLOT_
 for word in compass_trigrams:
 	plot_freq(word=word, year_wise_word_count_mappings=year_wise_trigram_mappings, save_path=os.path.join(TRIGRAM_KEYWORD_PLOT_SAVE_PATH,f"{word}.svg"), keyword_type=KEYWORD_METHOD)
 print()
-# keywords_for_sim_matrix_temp = list(compass_bigrams.keys())
-# keywords_for_sim_matrix = []
 
+# COMPUTE AND SAVE THE SIMILARITY MATRICES FOR EVERY YEAR
+model_paths = glob.glob(os.path.join(MODEL_FOLDER, "*.model"))
+SIM_MATRIX_SAVE_PATH = os.path.join("outputs", "sim_matrices")
+model_paths.sort()
+
+sim_matrices_year_wise = {}
+for model_path in model_paths:
+	SIM_MATRIX_YEAR_SAVE_PATH = os.path.join(SIM_MATRIX_SAVE_PATH, os.path.split(model_path)[1].split(".")[0])
+	model_vocab, model_sim_matrix = compute_similarity_matrix_keywords(keywords=list(compass_unigrams.keys()), model_path=model_path, save_load_path=SIM_MATRIX_YEAR_SAVE_PATH)
+	# print(model_sim_matrix)
+	sim_matrices_year_wise[os.path.split(SIM_MATRIX_YEAR_SAVE_PATH)[1]] = model_sim_matrix 
+
+
+acc_matrix = compute_acceleration_matrix(sim_matrices_year_wise[list(sim_matrices_year_wise.keys())[0]],sim_matrices_year_wise[list(sim_matrices_year_wise.keys())[-1]])
+print(top_k_acceleration(keywords=list(compass_unigrams.keys()), acceleration_matrix=acc_matrix, k=10))
+
+# Clustering
+compass_unigrams_new = freq_top_k(text=compass_text, save_load_path=COMPASS_UNIGRAMS_PATH, top_k=5000, n=1, overwrite=False)
+key_kmean, label_kmean = k_means_clustering(keywords=list(compass_unigrams_new.keys()), model_path=model_paths[0], save_path="temp", k_max=10)
+
+
+# find_most_similar_words(list(compass_unigrams.keys()), year_model_path="models/2017.model", top_k=10, compass_model_path="models/compass.model")
+print(find_most_drifted_words(list(compass_unigrams.keys()), ["models/2017.model","models/2018.model"], "models/compass.model", top_k=10, top_most_drifted_k=5))
 # for ele in keywords_for_sim_matrix_temp:
 # 	keywords_for_sim_matrix += ele.split(" ")
 # keywords_for_sim_matrix = list(set(keywords_for_sim_matrix))

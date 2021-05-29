@@ -5,80 +5,80 @@ import numpy as np
 from gensim.models.word2vec import Word2Vec
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.manifold import TSNE
-
+from operator import itemgetter
+from src.analysis.utils import *
 
 def find_most_similar_words(
-    word, year_model_path, compass_model, top_k=10, compass_model_path=None
+    words, year_model_path, compass_model_path, top_k=10,
 ):
     year_model = Word2Vec.load(year_model_path)
+    compass_model = Word2Vec.load(compass_model_path)
 
-    assert (compass_model is None) ^ (
-        compass_model_path is None
-    ), "one of compass_model and compass_model_path should not be None"
+    word_vectors = []
+    for word in words:
+        if word in year_model.wv.vocab:
+            word_vectors.append(year_model.wv[word])
+        else:
+            word_vectors.append(np.zeros(year_model.wv["paper"].shape))
+    word_vectors = np.array(word_vectors)   
+    word_vectors = word_vectors/np.linalg.norm(word_vectors,axis=1)[:,None]
+    
+    compass_vectors = compass_model.wv.vectors
+    compass_vectors = compass_vectors/np.linalg.norm(compass_vectors,axis=1)[:,None]
 
-    if compass_model is None:
-        compass_model = Word2Vec.load(compass_model_path)
+    top_sims = np.argsort(np.abs(np.matmul(word_vectors, compass_vectors.T)), axis=1)
+    top_sims = top_sims[:,-top_k:]
+    
+    compass_words = list(compass_model.wv.vocab.keys())
 
-    assert word in year_model.wv.vocab, str(word) + " out of vocabulary"
+    most_sim_words = []
 
-    word_embedding = year_model.wv[word]
+    for i in range(top_sims.shape[0]):
+        sim_words = []
+        for j in range(top_sims[i].shape[0]):
+            sim_words.append(compass_words[top_sims[i][j]])
+        most_sim_words.append(sim_words)
+    
+    return word_vectors, most_sim_words, top_sims
 
-    sim_dict = {}
-    for word_compare in compass_model.wv.vocab:
-        word_compare_embedding = compass_model.wv[word_compare]
-        sim = cosine_similarity(
-            word_embedding.reshape(1, -1), word_compare_embedding.reshape(1, -1)
-        )[0]
-        sim_dict[word_compare] = (sim, word_compare_embedding)
+def find_most_drifted_words(words, year_model_paths, compass_model_path, top_k=10, top_most_drifted_k=5):
+    year_wise_stats = []
+    for year_model_path in year_model_paths:
+        year_wise_stats.append(find_most_similar_words(words,year_model_path, compass_model_path, top_k))
+    
+    scores = [0 for i in range(len(words))]
+    for year1_stats, year2_stats in zip(year_wise_stats[:-1], year_wise_stats[1:]):
+        
+        common_words = [intersection(year1_stats[1][k], year2_stats[1][k]) for k in range(len(year1_stats[1]))]
+        print(len(common_words))
+        
+        print(year1_stats[1][0])
+        print(year2_stats[1][0])
+        print(common_words[0])
+        
 
-    sorted_sim_tuple = sorted(
-        sim_dict.items(), key=operator.itemgetter(1), reverse=True
-    )
-    sim_dict = {k: v for k, v in sorted_sim_tuple}
+        scores = [scores[k]-len(common_words[k])+top_k for k in range(len(words))]
+        for l,word_wise_common_words in enumerate(common_words):
+            print(year1_stats[1])
+            print(year2_stats[1])
+            year1_common_indices = [year1_stats[1].index(ele) for ele in word_wise_common_words]
+            year2_common_indices = [year2_stats[1].index(ele) for ele in word_wise_common_words]
+            year1_common_sims = [top_sims[l][year1_common_indices[k]] for k in range(len(year1_common_indices))]
+            year2_common_sims = [top_sims[l][year2_common_indices[k]] for k in range(len(year2_common_indices))]
+            scores[l] += sum([abs(x1 - x2) for (x1, x2) in zip(year1_common_sims, year2_common_sims)])
 
-    if top_k < len(sorted_sim_tuple):
-        sim_dict = dict(islice(sim_dict.items(), top_k))
+    top_most_drifted_indices = np.argsort(scores)[-top_most_drifted_k:]
 
-    return sim_dict, word_embedding
+    return [word[k] for k in top_most_drifted_indices]
 
 
 def plot_semantic_drift(
-    word, year_model_paths, compass_model_path, save_path, top_k=10
+    words, year_model_path, compass_model_path, save_path, top_k=10
 ):
     compass_model = Word2Vec.load(compass_model_path)
 
-    sim_dicts = []
-    word_embeddings = []
-    for year_model_path in year_model_paths:
-        sim_dict, word_embedding = find_most_similar_words(
-            word, year_model_path, compass_model, top_k
-        )
-        sim_dicts.append(sim_dict)
-        word_embeddings.append(word_embedding)
 
-    # fit t-SNE on compass word embeddings
-    train_embs = []
-    for word in compass_model.wv.vocab:
-        train_embs.append(compass_model.wv[word])
 
-    tsne = TSNE(n_components=2, init="pca", random_state=42)
-    tsne.fit(train_embs)
-
-    words = []
-    x = []
-    y = []
-
-    for i, sim_dict, word_embedding in enumerate(zip(sim_dicts, word_embeddings)):
-        words.append(word + "_" + str(i))
-        red_emb = tsne.transform([word_embedding])
-        x.append(red_emb[0][0])
-        y.append(red_emb[0][1])
-
-        for sim_word in sim_dict:
-            words.append(sim_word)
-            red_emb = tsne.transform([sim_dict[sim_word][1]])
-            x.append(red_emb[0][0])
-            y.append(red_emb[0][1])
 
     plt.figure(figsize=(16, 16))
     for i in range(len(x)):

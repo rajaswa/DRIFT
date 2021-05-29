@@ -3,35 +3,70 @@ from gensim.models.word2vec import Word2Vec
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt
+from tqdm.auto import tqdm
+import os
+import json
 
-def compute_similarity_matrix_keywords(model_path, keywords):
+def compute_similarity_matrix_keywords(keywords, model_path=None,save_load_path=None):
+    assert model_path is not None or save_load_path is not None, "One of model_path and save_load_path should not be None"
+
     keywords_size = len(keywords)
+    if model_path is not None:
+        model = Word2Vec.load(model_path)
+        sim_matrix = np.ones((keywords_size, keywords_size))
+        
+        for i in range(keywords_size):
+            for j in range(i + 1, keywords_size - 1):
+                row_word_embedding = model.wv[keywords[i]]
+                column_word_embedding = model.wv[keywords[j]]
 
-    model = Word2Vec.load(model_path)
-    sim_matrix = np.ones((keywords_size, keywords_size))
-    for i in range(keywords_size):
-        for j in range(i + 1, keywords_size - 1):
-            row_word_embedding = model.wv[keywords[i]]
-            column_word_embedding = model.wv[keywords[j]]
+                sim_matrix[i][j] = cosine_similarity(
+                    row_word_embedding.reshape(1, -1), column_word_embedding.reshape(1, -1)
+                )[0][0]
+        
+        if save_load_path is not None:
+            print(f"COMPUTING SIMILARITY MATRIX FOR {model_path} AND SAVING AT {save_load_path}")
+            if not os.path.exists(save_load_path):
+                os.makedirs(save_load_path)
+            
+            vocab_path = os.path.join(save_load_path, "vocab.json")
+            sim_path = os.path.join(save_load_path, "sim.npy")
+            
+            with open(vocab_path, "w") as vocab_json:
+                json.dump(keywords, vocab_json)
 
-            sim_matrix[i][j] = cosine_similarity(
-                row_word_embedding.reshape(1, -1), column_word_embedding.reshape(1, -1)
-            )[0][0]
+            with open(sim_path, 'wb') as sim_npy:
+                np.save(sim_npy, sim_matrix)                  
 
-    return sim_matrix
+    elif save_load_path is not None:
+        
+        print(f"LOADING SIMILARITY MATRIX FROM {save_load_path}")
+        if not os.path.exists(save_load_path):
+            os.makedirs(save_load_path)
+        vocab_path = os.path.join(save_load_path, "vocab.json")
+        sim_path = os.path.join(save_load_path, "sim.npy")
+
+        with open(vocab_path, "r") as vocab_json:
+            keywords = json.load(vocab_json)
+
+        with open(sim_path, 'rb') as sim_npy:
+            sim_matrix = np.load(sim_npy)
 
 
-def compute_similarity_matrix(model_path=None, save_load_path=None):
+    return keywords, sim_matrix
+
+
+def compute_similarity_matrix(keywords,model_path=None, save_load_path=None):
     
     assert model_path is not None or save_load_path is not None, "One of model_path and save_load_path should not be None"
     
     if model_path is not None:
         model = Word2Vec.load(model_path)
-        model_vocab = list(model.vocab)
+        model_vocab = list(model.wv.vocab)
         vocab_size = len(model_vocab)
-        sim_matrix = np.ones(vocab_size, vocab_size)
+        sim_matrix = np.ones((vocab_size, vocab_size))
 
-        for i in range(vocab_size):
+        for i in tqdm(range(vocab_size)):
             for j in range(i+1, vocab_size-1):
                 row_word_embedding = model.wv[model_vocab[i]]
                 column_word_embedding = model.wv[model_vocab[j]]
@@ -39,6 +74,7 @@ def compute_similarity_matrix(model_path=None, save_load_path=None):
                 sim_matrix[i][j] = cosine_similarity(row_word_embedding.reshape(1,-1), column_word_embedding.reshape(1,-1))[0][0]
 
         if save_load_path is not None:
+            print(f"COMPUTING SIMILARITY MATRIX FOR {model_path} AND SAVING AT {save_load_path}")
             if not os.path.exists(save_load_path):
                 os.makedirs(save_load_path)
             vocab_path = os.path.join(save_load_path, "vocab.json")
@@ -51,6 +87,7 @@ def compute_similarity_matrix(model_path=None, save_load_path=None):
                 np.save(sim_npy, sim_matrix)
 
     elif save_load_path is not None:
+        print(f"LOADING SIMILARITY MATRIX FROM {save_load_path}")
         if not os.path.exists(save_load_path):
             os.makedirs(save_load_path)
         vocab_path = os.path.join(save_load_path, "vocab.json")
@@ -66,6 +103,7 @@ def compute_similarity_matrix(model_path=None, save_load_path=None):
 
 
 def compute_acceleration_matrix(sim_matrix_1, sim_matrix_2):
+    # print(sim_matrix_1)
     return sim_matrix_2 - sim_matrix_1
 
 
