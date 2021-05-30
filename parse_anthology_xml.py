@@ -55,8 +55,9 @@ def main():
                     year = innertext(year)
 
                 if year not in all_conf:
-                    all_conf[year] = {}
+                    all_conf[year] = []
 
+                common_info_dict = {}
                 # publisher
                 publisher = vol_node.find(".//publisher")
                 if publisher is None:
@@ -72,8 +73,9 @@ def main():
                 else:
                     publisher = innertext(publisher)
 
-                if publisher not in all_conf[year]:
-                    all_conf[year][publisher] = {}
+                # if publisher not in all_conf[year]:
+                #     all_conf[year][publisher] = {}
+                common_info_dict["publisher"] = publisher
 
                 # booktitle
                 booktitle = vol_node.find(".//booktitle")
@@ -90,20 +92,21 @@ def main():
                 else:
                     booktitle = innertext(booktitle)
 
-                if booktitle not in all_conf[year][publisher]:
-                    all_conf[year][publisher][booktitle] = {}
+                # if booktitle not in all_conf[year][publisher]:
+                #     all_conf[year][publisher][booktitle] = {}
+                common_info_dict["book_title"] = booktitle
 
                 month = vol_node.find(".//month")
                 if month is not None:
-                    all_conf[year][publisher][booktitle]["month"] = innertext(month)
+                    common_info_dict["month"] = innertext(month)
                 else:
-                    all_conf[year][publisher][booktitle]["month"] = None
+                    common_info_dict["month"] = None
 
                 url = vol_node.find(".//url")
                 if url is not None:
-                    all_conf[year][publisher][booktitle]["url"] = innertext(url)
+                    common_info_dict["url"] = innertext(url)
                 else:
-                    all_conf[year][publisher][booktitle]["url"] = None
+                    common_info_dict["url"] = None
 
                 all_conf[year][publisher][booktitle]["papers"] = []
 
