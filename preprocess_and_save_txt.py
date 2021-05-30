@@ -1,7 +1,7 @@
 import json
 import os
 
-from src.utils.preprocess import preprocess
+from src.utils.preprocess import preprocess_text
 
 
 def preprocess_and_save(
@@ -20,7 +20,7 @@ def preprocess_and_save(
                 if text_key not in paper.keys():
                     continue
                 else:
-                    contents.append(preprocess(paper[text_key]))
+                    contents.append(preprocess_text(paper[text_key]))
         if contents != []:
             with open(os.path.join(save_dir, f"{year}.txt"), "w") as f:
                 f.write(" ".join(contents).lower())
