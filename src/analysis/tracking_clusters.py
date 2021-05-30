@@ -7,7 +7,6 @@ import seaborn as sns
 from gensim.models.word2vec import Word2Vec
 from joblib import Parallel, delayed
 from nltk.cluster import KMeansClusterer
-from numba import jit, prange
 from sklearn.manifold import TSNE
 from sklearn.metrics import silhouette_score
 from sklearn.metrics.pairwise import cosine_distances

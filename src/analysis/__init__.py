@@ -1,4 +1,4 @@
-from src.analysis.find_keywords import *
+from src.analysis.compute_statistical_measures import *
 from src.analysis.freq_productivity_plot import *
 from src.analysis.semantic_drift import *
 from src.analysis.similarity_acc_matrix import *
