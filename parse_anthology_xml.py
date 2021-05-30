@@ -61,11 +61,13 @@ def main():
                 if year not in all_conf:
                     all_conf[year] = []
 
+                publisher_keys = []
+                booktitle_keys = []
                 common_info_dict = {}
                 # publisher
                 publisher = vol_node.find(".//publisher")
+                
                 if publisher is None:
-                    publisher_keys = list(all_conf[year].keys())
                     max_anon = -1
                     for publisher_key in publisher_keys:
                         if publisher_key.startswith("anonymous"):
@@ -79,9 +81,11 @@ def main():
 
                 # if publisher not in all_conf[year]:
                 #     all_conf[year][publisher] = {}
+                publisher_keys.append(publisher)
                 common_info_dict["publisher"] = publisher
 
                 # booktitle
+                
                 booktitle = vol_node.find(".//booktitle")
                 if booktitle is None:
                     booktitle_keys = list(all_conf[year][publisher].keys())
@@ -98,6 +102,7 @@ def main():
 
                 # if booktitle not in all_conf[year][publisher]:
                 #     all_conf[year][publisher][booktitle] = {}
+                booktitle_keys.append(booktitle)
                 common_info_dict["book_title"] = booktitle
 
                 month = vol_node.find(".//month")
