@@ -3,17 +3,21 @@ import glob
 import json
 import os
 import xml.etree.ElementTree as ET
+
 from googletrans import Translator
 from tqdm.auto import tqdm
 
 from src.utils.preprocess import preprocess
 
+
 translator = Translator()
+
 
 def innertext(elt):
     return (elt.text or "") + (
         "".join(innertext(e) + (e.tail or "") for e in elt) or ""
     )
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -108,7 +112,7 @@ def main():
                 else:
                     common_info_dict["url"] = None
 
-                all_conf[year][publisher][booktitle]["papers"] = []
+                # all_conf[year][publisher][booktitle]["papers"] = []
 
                 for node in vol_node.iter("paper"):
                     paper_dict = {}
@@ -141,14 +145,12 @@ def main():
                                     ):
                                         lang_flag = 0
                                         break
-                                    paper_dict["preprocessed_abstract"] = preprocess(
-                                        paper_dict["abstract"]
-                                    )
+                                    # paper_dict["preprocessed_abstract"] = preprocess(
+                                    #     paper_dict["abstract"]
+                                    # )
 
                     if lang_flag == 1:
-                        all_conf[year][publisher][booktitle]["papers"].append(
-                            paper_dict
-                        )
+                        all_conf[year].append(paper_dict.update(common_info_dict))
 
     with open(json_save_path, "w") as f:
         json.dump(all_conf, f)
