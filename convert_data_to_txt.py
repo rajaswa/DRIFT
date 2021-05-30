@@ -1,9 +1,7 @@
 import json
-import numpy as np
 
 with open("../data/acl_anthology.json") as f:
     data = json.load(f)
-
 
 dic = {}
 all_abstracts = []

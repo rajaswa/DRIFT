@@ -1,6 +1,7 @@
 import os
-from twec.twec import TWEC
 import time
+
+from twec.twec import TWEC
 
 
 aligner = TWEC(size=300, siter=10, diter=10, workers=4)
