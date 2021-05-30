@@ -31,7 +31,7 @@ def k_means_clustering(keywords, model_path, save_path, k_opt=None, k_max=10):
     if k_opt is None:
         silhouette_scores = []
         t = time.time()
-        results = Parallel(n_jobs=-1)(
+        silhouette_scores = Parallel(n_jobs=-1)(
             delayed(kmeans_parallel)(X, n_clusters, 25)
             for n_clusters in tqdm(range(2, k_max + 1))
         )
