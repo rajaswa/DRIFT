@@ -7,8 +7,6 @@ import xml.etree.ElementTree as ET
 from googletrans import Translator
 from tqdm.auto import tqdm
 
-from src.utils.preprocess import preprocess
-
 
 translator = Translator()
 
@@ -66,7 +64,7 @@ def main():
                 common_info_dict = {}
                 # publisher
                 publisher = vol_node.find(".//publisher")
-                
+
                 if publisher is None:
                     max_anon = -1
                     for publisher_key in publisher_keys:
@@ -85,7 +83,7 @@ def main():
                 common_info_dict["publisher"] = publisher
 
                 # booktitle
-                
+
                 booktitle = vol_node.find(".//booktitle")
                 if booktitle is None:
                     booktitle_keys = list(all_conf[year][publisher].keys())

@@ -94,7 +94,7 @@ def lemmatise_verbs(words):
     return lemmas
 
 
-def preprocess(text):
+def preprocess_text(text):
     text = to_lower_case(text)
 
     # noise removal
