@@ -2,15 +2,16 @@ import argparse
 import glob
 import json
 import os
-from parse_anthology_pdf import preprocess
 import xml.etree.ElementTree as ET
-
-from googletrans import Translator
-from tqdm.auto import tqdm
 from io import StringIO
-from tika import parser
+
 from bs4 import BeautifulSoup
+from googletrans import Translator
+from tika import parser
+from tqdm.auto import tqdm
+
 from src.utils.preprocess import preprocess_text
+
 
 translator = Translator()
 
@@ -20,57 +21,38 @@ def innertext(elt):
         "".join(innertext(e) + (e.tail or "") for e in elt) or ""
     )
 
+
 def get_abstract_from_pdf(paper_url):
     _buffer = StringIO()
-    data = parser.from_file(
-        paper_url, xmlContent=True
-    )
+    data = parser.from_file(paper_url, xmlContent=True)
     xhtml_data = BeautifulSoup(data["content"])
 
-    page_1_content = xhtml_data.find_all(
-        "div", attrs={"class": "page"}
-    )[0]
+    page_1_content = xhtml_data.find_all("div", attrs={"class": "page"})[0]
     _buffer.write(str(page_1_content))
-    parsed_content = parser.from_buffer(
-        _buffer.getvalue(), xmlContent=True
-    )
+    parsed_content = parser.from_buffer(_buffer.getvalue(), xmlContent=True)
     _buffer.truncate()
-    paragraphs_content = BeautifulSoup(
-        parsed_content["content"]
-    ).find_all("p")
+    paragraphs_content = BeautifulSoup(parsed_content["content"]).find_all("p")
     flag_for_abs_format = 0
 
-    for idx, paragraph_content in enumerate(
-        paragraphs_content
-    ):
-        paragraph_content_text = (
-            paragraph_content.text.strip()
-            .replace(" ", "")
-            .lower()
-        )
+    for idx, paragraph_content in enumerate(paragraphs_content):
+        paragraph_content_text = paragraph_content.text.strip().replace(" ", "").lower()
 
         if paragraph_content_text == "abstract":
             break
-        if (
-            paragraph_content_text
-            == "résumé-abstract"
-        ):
+        if paragraph_content_text == "résumé-abstract":
             flag_for_abs_format = 1
             break
         if (
             (
-                paragraph_content_text[:9]
-                == "abstract:"
+                paragraph_content_text[:9] == "abstract:"
                 and len(paragraph_content_text) > 9
             )
             or (
-                paragraph_content_text[:8]
-                == "abstract"
+                paragraph_content_text[:8] == "abstract"
                 and len(paragraph_content_text) > 8
             )
             or (
-                paragraph_content_text[:9]
-                == "abstract."
+                paragraph_content_text[:9] == "abstract."
                 and len(paragraph_content_text) > 9
             )
         ):
@@ -78,23 +60,16 @@ def get_abstract_from_pdf(paper_url):
             break
 
     if flag_for_abs_format == 0:
-        abstract_text = paragraphs_content[
-            idx + 1
-        ].text.strip()
+        abstract_text = paragraphs_content[idx + 1].text.strip()
     elif flag_for_abs_format == 1:
-        abstract_text = paragraphs_content[
-            idx + 2
-        ].text.strip()
+        abstract_text = paragraphs_content[idx + 2].text.strip()
     else:
-        abstract_text = paragraphs_content[
-            idx
-        ].text.strip()
+        abstract_text = paragraphs_content[idx].text.strip()
 
     # basic preprocessing
     abstract_text_lines = abstract_text.split("\n")
     abstract_text_lines = [
-        abstract_text_line.strip()
-        for abstract_text_line in abstract_text_lines
+        abstract_text_line.strip() for abstract_text_line in abstract_text_lines
     ]
 
     abstract_text = ""
@@ -108,22 +83,14 @@ def get_abstract_from_pdf(paper_url):
             .replace("\xa0", " ")
         )
         if line_no == 0:
-            abstract_text = abstract_text_lines[
-                line_no
-            ]
+            abstract_text = abstract_text_lines[line_no]
         else:
             if abstract_text[-1] == "-":
-                abstract_text = (
-                    abstract_text[:-1]
-                    + abstract_text_lines[line_no]
-                )
+                abstract_text = abstract_text[:-1] + abstract_text_lines[line_no]
             else:
-                abstract_text = (
-                    abstract_text
-                    + " "
-                    + abstract_text_lines[line_no]
-                )
+                abstract_text = abstract_text + " " + abstract_text_lines[line_no]
     return abstract_text
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -135,15 +102,15 @@ def main():
     )
     parser.add_argument(
         "--preprocess",
-        action='store_true',
+        action="store_true",
         default=False,
-        help="Whether to use preprocess abstract during JSON creation."
+        help="Whether to use preprocess abstract during JSON creation.",
     )
     parser.add_argument(
         "--use_pdf",
-        action='store_true',
+        action="store_true",
         default=False,
-        help="Whether to use PDF to get the abstract instead of the XML."
+        help="Whether to use PDF to get the abstract instead of the XML.",
     )
     args = parser.parse_args()
     json_save_path = args.json_save_path
@@ -264,7 +231,9 @@ def main():
                                     paper_dict[elem.tag] = innertext(elem)
                                     if elem.tag == "abstract":
                                         if (
-                                            translator.detect(paper_dict["abstract"]).lang
+                                            translator.detect(
+                                                paper_dict["abstract"]
+                                            ).lang
                                             != "en"
                                         ):
                                             lang_flag = 0
@@ -292,12 +261,16 @@ def main():
                                             paper_url = paper_url + ".pdf"
 
                                             try:
-                                                abstract_text = get_abstract_from_pdf(paper_url)
+                                                abstract_text = get_abstract_from_pdf(
+                                                    paper_url
+                                                )
                                                 paper_dict["abstract"] = abstract_text
                                             except Exception as e:
                                                 continue
                                 if args.preprocess:
-                                    paper_dict['preprocessed_abstract'] = preprocess(paper_dict['abstract'])
+                                    paper_dict[
+                                        "preprocessed_abstract"
+                                    ] = preprocess_text(paper_dict["abstract"])
 
                     if lang_flag == 1:
                         all_conf[year].append(paper_dict.update(common_info_dict))
