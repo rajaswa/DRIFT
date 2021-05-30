@@ -1,10 +1,7 @@
-import json
-import os
-from itertools import islice
-
 import numpy as np
 from nltk import FreqDist, ngrams
-
+from itertools import islice
+import streamlit as st
 
 def find_freq(text, n=1, sort=False):
     ngrams_lst = list(ngrams(text.split(), n))
@@ -50,3 +47,19 @@ def find_productivity(words, text, n=2):
         prods[word] = prod
 
     return prods
+
+@st.cache
+def freq_top_k(
+    text, top_k=200, n=1, normalize=False
+):
+    if normalize:
+        sorted_gram_count_mapping = find_norm_freq(text, n=n, sort=True)
+    else:
+        sorted_gram_count_mapping = find_freq(text, n=n, sort=True)
+
+    if top_k < len(sorted_gram_count_mapping):
+        sorted_gram_count_mapping = dict(
+            islice(sorted_gram_count_mapping.items(), top_k)
+        )
+
+    return sorted_gram_count_mapping

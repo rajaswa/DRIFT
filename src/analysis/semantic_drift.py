@@ -60,8 +60,6 @@ def find_most_drifted_words(
         # We add top_k because
         scores = [scores[k] - len(common_words[k]) + top_k for k in range(len(words))]
         for idx, word_wise_common_words in enumerate(common_words):
-            # print(year1_stats[1])
-            # print(year2_stats[1])
             year1_common_indices = [
                 year1_stats[1][idx].index(ele) for ele in word_wise_common_words
             ]
