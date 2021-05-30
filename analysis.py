@@ -168,16 +168,16 @@ for text_file_path in text_file_paths:
             overwrite=False,
         )
 
-    WORD_CLOUD_PATH = os.path.join(OUTPUT_FOLDER, "wordclouds")
-    if not os.path.exists(WORD_CLOUD_PATH):
-        os.makedirs(WORD_CLOUD_PATH)
-    WORD_CLOUD_YEAR_PATH = os.path.join(WORD_CLOUD_PATH, f"{year}.svg")
-    print(f"Making the Word Cloud for {year} and saving at {WORD_CLOUD_YEAR_PATH}")
-    make_word_cloud(
-        corpus=year_text,
-        save_path=WORD_CLOUD_YEAR_PATH,
-        truncate_popular=TRUNCATE_POPULAR,
-    )
+    # WORD_CLOUD_PATH = os.path.join(OUTPUT_FOLDER, "wordclouds")
+    # if not os.path.exists(WORD_CLOUD_PATH):
+    #     os.makedirs(WORD_CLOUD_PATH)
+    # WORD_CLOUD_YEAR_PATH = os.path.join(WORD_CLOUD_PATH, f"{year}.svg")
+    # print(f"Making the Word Cloud for {year} and saving at {WORD_CLOUD_YEAR_PATH}")
+    # make_word_cloud(
+    #     corpus=year_text,
+    #     save_path=WORD_CLOUD_YEAR_PATH,
+    #     truncate_popular=TRUNCATE_POPULAR,
+    # )
 
     prod_path = os.path.join(CACHE_FOLDER, "productivities")
     if not os.path.exists(prod_path):
