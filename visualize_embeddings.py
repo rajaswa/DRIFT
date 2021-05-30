@@ -3,6 +3,7 @@ import pickle as pkl
 from pickle import UnpicklingError
 
 import numpy as np
+
 # import umap.umap_ as umap
 from gensim.models.word2vec import Word2Vec
 from sklearn.decomposition import PCA
@@ -16,6 +17,7 @@ import nltk
 from nltk.corpus import stopwords
 
 from viz import plotly_scatter_embeddings
+
 
 if not os.path.exists(".cache"):
     os.makedirs(".cache")

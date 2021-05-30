@@ -47,7 +47,7 @@ def plotly_scatter_embeddings(
         sorted_unique_colors = (sorted_unique_years - np.min(sorted_unique_years)) / (
             np.max(sorted_unique_years) - np.min(sorted_unique_years)
         )
-       
+
         year_to_color_map = dict(zip(sorted_unique_years, sorted_unique_colors))
 
     fig = go.Figure(

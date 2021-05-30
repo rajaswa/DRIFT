@@ -1,26 +1,22 @@
-import os
 import argparse
 import glob
-from tqdm.auto import tqdm
-import xml.etree.ElementTree as ET
 import json
-
+import os
 import re
 import string
 import unicodedata
-
-from googletrans import Translator
+import xml.etree.ElementTree as ET
 
 import contractions
-
-from bs4 import BeautifulSoup
-
-import nltk
-from nltk.corpus import stopwords
-from nltk.tokenize import word_tokenize
-from nltk.stem import WordNetLemmatizer
-
 import inflect
+import nltk
+from bs4 import BeautifulSoup
+from googletrans import Translator
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
+from nltk.tokenize import word_tokenize
+from tqdm.auto import tqdm
+
 
 translator = Translator()
 
@@ -81,7 +77,7 @@ def remove_non_ascii(words):
 
 
 def replace_numbers(words):
-    """Replace all interger occurrences in list of tokenized words with textual representation"""
+    """Replace all integer occurrences in list of tokenized words with textual representation"""
     new_words = []
     for word in words:
         if word.isdigit():

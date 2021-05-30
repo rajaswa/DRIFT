@@ -1,5 +1,6 @@
 import json
 
+
 with open("../data/acl_anthology.json") as f:
     data = json.load(f)
 
