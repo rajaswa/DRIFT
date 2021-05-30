@@ -5,6 +5,7 @@ from itertools import islice
 
 from ..utils import find_productivity, save_json
 
+
 def compute_productivity(words, text, save_load_path=None, overwrite=False):
     if (
         save_load_path is not None

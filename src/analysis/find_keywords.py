@@ -49,4 +49,3 @@ def norm_freq_top_k(text, save_load_path=None, top_k=200, n=1, overwrite=False):
         save_json(sorted_gram_count_mapping, save_load_path)
 
     return sorted_gram_count_mapping
-

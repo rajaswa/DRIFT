@@ -7,7 +7,9 @@ from gensim.models.word2vec import Word2Vec
 from sklearn.manifold import TSNE
 from sklearn.metrics.pairwise import cosine_similarity
 from tqdm.auto import tqdm
+
 from ..utils import save_json, save_npy
+
 
 def compute_similarity_matrix_keywords(
     keywords=None, model_path=None, save_load_path=None, all_model_vectors=False
