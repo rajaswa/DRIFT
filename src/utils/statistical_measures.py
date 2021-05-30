@@ -1,37 +1,41 @@
 import json
 import os
 
-import nltk
 import numpy as np
 from nltk import FreqDist, ngrams
 
 
-def find_freq(text, n=1):
+def find_freq(text, n=1, sort=False):
     ngrams_lst = list(ngrams(text.split(), n))
     gram_count_mapping = dict(FreqDist(ngrams_lst))
     gram_count_mapping = {" ".join(k): v for k, v in gram_count_mapping.items()}
+    if sort:
+        sorted_gram_count_tuple = sorted(
+            gram_count_mapping.items(), key=lambda x: x[1], reverse=True
+        )
+        gram_count_mapping = {k: v for k, v in sorted_gram_count_tuple}
     return gram_count_mapping
 
 
-def find_norm_freq(text, n=1):
-    gram_count_mapping = find_freq(text=text, n=n)
+def find_norm_freq(text, n=1, sort=False):
+    gram_count_mapping = find_freq(text=text, n=n, sort=sort)
     norm_factor = sum(list(gram_count_mapping.values()))
     gram_count_mapping = {k: v / norm_factor for k, v in gram_count_mapping.items()}
     return gram_count_mapping
 
 
-def find_productivity(words, text, n=2, save_load_path=None, overwrite=False):
+def find_productivity(words, text, n=2, sort=False, save_load_path=None, overwrite=False):
     if (
         save_load_path is not None
         and os.path.isfile(save_load_path)
-        and not (overwrite)
+        and not overwrite
     ):
         print(f"Loading Productivity Dictionary from {save_load_path}")
         with open(save_load_path, "r") as prod_f:
             word_prod_mapping = json.load(prod_f)
         return word_prod_mapping
 
-    fdist = find_freq(text=text, n=n)
+    fdist = find_freq(text=text, n=n, sort=sort)
     ngrams_lst = list(fdist.keys())
     prods = {}
     for word in words:
@@ -48,7 +52,8 @@ def find_productivity(words, text, n=2, save_load_path=None, overwrite=False):
             f_m_i = fdist[ngrams_lst_having_word[i]]
             f_m_is.append(f_m_i)
 
-        p_m_is = [i / sum(f_m_is) for i in f_m_is]
+        total_f_m_i = sum(f_m_is)
+        p_m_is = [i / total_f_m_i for i in f_m_is]
         prod = -np.sum(np.multiply(np.log2(p_m_is), p_m_is))
         prods[word] = prod
 

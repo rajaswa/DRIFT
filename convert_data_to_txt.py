@@ -1,7 +1,7 @@
 import json
 
 
-with open("../data/acl_anthology.json") as f:
+with open("../acl_anthology.json") as f:
     data = json.load(f)
 
 dic = {}
@@ -14,10 +14,10 @@ for year in data:
                 if "language" in paper and paper["language"] != "eng":
                     continue
                 else:
-                    if "abstract" not in paper.keys():
+                    if "preprocessed_abstract" not in paper.keys():
                         continue
                     else:
-                        abstracts.append(paper["abstract"])
+                        abstracts.append(paper["preprocessed_abstract"])
     if abstracts != []:
         with open(f"./data/{year}.txt", "w") as f:
             f.write(" ".join(abstracts).lower())

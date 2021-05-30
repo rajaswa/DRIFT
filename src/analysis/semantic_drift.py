@@ -1,13 +1,8 @@
-import operator
-from operator import itemgetter
-
-import matplotlib.pyplot as plt
 import numpy as np
 from gensim.models.word2vec import Word2Vec
-from sklearn.manifold import TSNE
 from sklearn.metrics.pairwise import cosine_similarity
 
-from src.analysis.utils import *
+from src.utils import intersection
 
 
 def find_most_similar_words(
@@ -89,20 +84,3 @@ def find_most_drifted_words(
     top_most_drifted_indices = np.argsort(scores)[-top_most_drifted_k:]
 
     return [words[k] for k in top_most_drifted_indices]
-
-
-def plot_semantic_drift(word, year_model_path, compass_model_path, save_path, top_k=10):
-    compass_model = Word2Vec.load(compass_model_path)
-
-    plt.figure(figsize=(16, 16))
-    for i in range(len(x)):
-        plt.scatter(x[i], y[i])
-        plt.annotate(
-            words,
-            xy=(x[i], y[i]),
-            xytext=(5, 2),
-            textcoords="offset points",
-            ha="right",
-            va="bottom",
-        )
-    plt.savefig(save_path)

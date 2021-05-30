@@ -1,12 +1,4 @@
-import os
-
-import matplotlib.pyplot as plt
-import nltk
-import numpy as np
-from nltk import ngrams
-
-
-def plot_freq(word, year_wise_word_count_mappings, save_path, keyword_type):
+def plot_freq(word, year_wise_word_count_mappings):
     years = []
     freqs = []
     for year in year_wise_word_count_mappings:
@@ -16,21 +8,10 @@ def plot_freq(word, year_wise_word_count_mappings, save_path, keyword_type):
         else:
             freqs.append(0)
         years.append(year)
-
-    plt.clf()
-    plt.plot(years, freqs)
-    if keyword_type == "freq":
-        plt.title(f"{word} Frequency Plot")
-        plt.ylabel("Frequencies")
-    elif keyword_type == "norm_freq":
-        plt.title(f"{word} Normalised Frequency Plot")
-        plt.ylabel("Normalised Frequencies")
-    plt.xlabel("Years")
-
-    plt.savefig(save_path)
+    return years, freqs
 
 
-def plot_prod(word, year_wise_prods_mappings, save_path):
+def get_freq_info(word, year_wise_prods_mappings):
     years = []
     prods = []
     for year in year_wise_prods_mappings:
@@ -40,9 +21,4 @@ def plot_prod(word, year_wise_prods_mappings, save_path):
         else:
             prods.append(0)
         years.append(year)
-    plt.clf()
-    plt.plot(years, prods)
-    plt.title("Productivity Plot")
-    plt.xlabel("Years")
-    plt.ylabel("Productivities")
-    plt.savefig(save_path)
+    return years, prods
