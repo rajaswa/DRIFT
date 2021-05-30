@@ -1,8 +1,8 @@
 import json
 import os
+from itertools import islice
 
 import numpy as np
-from itertools import islice
 from nltk import FreqDist, ngrams
 
 
@@ -25,12 +25,10 @@ def find_norm_freq(text, n=1, sort=False):
     return gram_count_mapping
 
 
-def find_productivity(words, text, n=2, sort=False, save_load_path=None, overwrite=False):
-    if (
-        save_load_path is not None
-        and os.path.isfile(save_load_path)
-        and not overwrite
-    ):
+def find_productivity(
+    words, text, n=2, sort=False, save_load_path=None, overwrite=False
+):
+    if save_load_path is not None and os.path.isfile(save_load_path) and not overwrite:
         print(f"Loading Productivity Dictionary from {save_load_path}")
         with open(save_load_path, "r") as prod_f:
             word_prod_mapping = json.load(prod_f)

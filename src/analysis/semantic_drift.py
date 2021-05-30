@@ -23,7 +23,7 @@ def find_most_similar_words(
     word_vectors = np.array(word_vectors)
 
     compass_vectors = compass_model.wv.vectors
-    
+
     top_sims = np.argsort(cosine_similarity(word_vectors, compass_vectors), axis=1)
     top_sims = top_sims[:, -top_k:]
 

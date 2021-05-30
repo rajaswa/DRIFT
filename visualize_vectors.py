@@ -5,7 +5,6 @@ import numpy as np
 import umap.umap_ as umap
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
-
 from viz import plotly_scatter_embeddings
 
 
