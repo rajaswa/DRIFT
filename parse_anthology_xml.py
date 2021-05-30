@@ -6,7 +6,7 @@ import xml.etree.ElementTree as ET
 from googletrans import Translator
 from tqdm.auto import tqdm
 
-from .utils.preprocess import preprocess
+from src.utils.preprocess import preprocess
 
 translator = Translator()
 
