@@ -1,2 +1,2 @@
 from .misc import *
-from .statistical_measures import *
+from .statistics import *
