@@ -11,16 +11,26 @@ nltk.download("wordnet")
 
 
 def pyplot_scatter_embeddings(
-    x, y, color_by_values, text_annot=None, color_map=None, save_path=None, color_bar_label="Years",
+    x,
+    y,
+    color_by_values,
+    text_annot=None,
+    color_map=None,
+    save_path=None,
+    color_bar_label="Years",
 ):
     if color_map is None:
-        sorted_unique_color_values = np.array(sorted(np.unique(list(map(int, color_by_values)))))
-
-        sorted_unique_color_values_rescaled = (sorted_unique_color_values - np.min(sorted_unique_color_values)) / (
-            np.max(sorted_unique_color_values) - np.min(sorted_unique_color_values)
+        sorted_unique_color_values = np.array(
+            sorted(np.unique(list(map(int, color_by_values))))
         )
 
-        value_to_color_map = dict(zip(sorted_unique_color_values, sorted_unique_color_values_rescaled))
+        sorted_unique_color_values_rescaled = (
+            sorted_unique_color_values - np.min(sorted_unique_color_values)
+        ) / (np.max(sorted_unique_color_values) - np.min(sorted_unique_color_values))
+
+        value_to_color_map = dict(
+            zip(sorted_unique_color_values, sorted_unique_color_values_rescaled)
+        )
 
     fig = plt.figure(figsize=(10, 10))
 
@@ -31,12 +41,14 @@ def pyplot_scatter_embeddings(
         alpha=0.5,
         cmap="Spectral",
     )
-    
+
     if text_annot is not None:
         ax = plt.gca()
         for i, txt in enumerate(text_annot):
             ax.annotate(txt, (x[i], y[i]))
-    cbar = plt.colorbar(sc, ticks=sorted_unique_color_values_rescaled + 1 / 12, label=color_bar_label)
+    cbar = plt.colorbar(
+        sc, ticks=sorted_unique_color_values_rescaled + 1 / 12, label=color_bar_label
+    )
     cbar.ax.set_yticklabels(sorted_unique_color_values)
     cbar.ax.axes.tick_params(length=0)
     if save_path:
@@ -45,7 +57,7 @@ def pyplot_scatter_embeddings(
     return fig
 
 
-def plotly_scatter(x, y, color_by_values, text_annot = None,  save_path=None):
+def plotly_scatter(x, y, color_by_values, text_annot=None, save_path=None):
 
     fig = px.scatter(
         x=x,

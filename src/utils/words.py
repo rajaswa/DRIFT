@@ -7,6 +7,7 @@ from gensim.models.word2vec import Word2Vec
 from nltk.corpus import stopwords
 from tqdm.auto import tqdm
 
+
 def load_word_embedding(model_path, word):
     model = Word2Vec.load(model_path)
     return model.wv[word]
@@ -27,6 +28,7 @@ def get_all_word_counts(file_path="./data/compass", sort=True, remove_stopwords=
     if sort:
         word_counts = sorted(word_counts.items(), key=lambda x: x[1], reverse=True)
     return word_counts
+
 
 def get_vectors(word_list, models_dir, skip_models_list=[]):
     years = []

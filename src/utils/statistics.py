@@ -1,8 +1,10 @@
-import numpy as np
-from nltk import FreqDist, ngrams
-from itertools import islice
-import streamlit as st
 import os
+from itertools import islice
+
+import numpy as np
+import streamlit as st
+from nltk import FreqDist, ngrams
+
 
 def find_freq(text, n=1, sort=False):
     ngrams_lst = list(ngrams(text.split(), n))
@@ -21,6 +23,7 @@ def find_norm_freq(text, n=1, sort=False):
     norm_factor = sum(list(gram_count_mapping.values()))
     gram_count_mapping = {k: v / norm_factor for k, v in gram_count_mapping.items()}
     return gram_count_mapping
+
 
 def find_productivity(words, text, n=2):
     fdist = find_freq(text=text, n=n, sort=True)
@@ -47,9 +50,8 @@ def find_productivity(words, text, n=2):
 
     return prods
 
-def freq_top_k(
-    text, top_k=200, n=1, normalize=False
-):
+
+def freq_top_k(text, top_k=200, n=1, normalize=False):
     if normalize:
         sorted_gram_count_mapping = find_norm_freq(text, n=n, sort=True)
     else:
