@@ -1,3 +1,6 @@
+import json
+
+import numpy as np
 import umap.umap_ as umap
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
@@ -43,3 +46,15 @@ def reduce_dimensions(
     else:
         raise NotImplementedError(f"No implementation found for `typ`: {typ}.")
     return embeddings
+
+
+def save_json(dict_obj, save_path):
+    if save_path is not None:
+        with open(save_path, "w") as json_f:
+            json.dump(dict_obj, json_f, indent=4)
+
+
+def save_npy(arr, save_path):
+    if save_path is not None:
+        with open(save_path, "wb") as npy_f:
+            np.save(npy_f, arr)

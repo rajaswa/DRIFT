@@ -25,16 +25,9 @@ def find_norm_freq(text, n=1, sort=False):
     return gram_count_mapping
 
 
-def find_productivity(
-    words, text, n=2, sort=False, save_load_path=None, overwrite=False
-):
-    if save_load_path is not None and os.path.isfile(save_load_path) and not overwrite:
-        print(f"Loading Productivity Dictionary from {save_load_path}")
-        with open(save_load_path, "r") as prod_f:
-            word_prod_mapping = json.load(prod_f)
-        return word_prod_mapping
+def find_productivity(words, text, n=2):
 
-    fdist = find_freq(text=text, n=n, sort=sort)
+    fdist = find_freq(text=text, n=n, sort=True)
     ngrams_lst = list(fdist.keys())
     prods = {}
     for word in words:
@@ -56,66 +49,4 @@ def find_productivity(
         prod = -np.sum(np.multiply(np.log2(p_m_is), p_m_is))
         prods[word] = prod
 
-    print(f"Saving Productivity Dictionary at {save_load_path}")
-    with open(save_load_path, "w") as prod_f:
-        json.dump(prods, prod_f, indent=4)
     return prods
-
-
-def freq_top_k(text, save_load_path=None, top_k=200, n=1, overwrite=False):
-    if (
-        save_load_path is not None
-        and os.path.isfile(save_load_path)
-        and not (overwrite)
-    ):
-        print("Loading Frequency Dictionary from {save_load_path}")
-        with open(save_load_path, "r") as freq_dict:
-            sorted_gram_count_mapping = json.load(freq_dict)
-    else:
-        print("Computing Frequency Dictionary and Saving at {save_load_path}")
-        gram_count_mapping = find_freq(text=text, n=n)
-        sorted_gram_count_tuple = sorted(
-            gram_count_mapping.items(), key=operator.itemgetter(1), reverse=True
-        )
-        sorted_gram_count_mapping = {k: v for k, v in sorted_gram_count_tuple}
-        if save_load_path is not None:
-            with open(save_load_path, "w") as freq_json:
-                json.dump(sorted_gram_count_mapping, freq_json, indent=4)
-
-        if top_k < len(sorted_gram_count_mapping):
-            sorted_gram_count_mapping = dict(
-                islice(sorted_gram_count_mapping.items(), top_k)
-            )
-
-    return sorted_gram_count_mapping
-
-
-def norm_freq_top_k(text, save_load_path=None, top_k=200, n=1, overwrite=False):
-    if (
-        save_load_path is not None
-        and os.path.isfile(save_load_path)
-        and not (overwrite)
-    ):
-        print(f"Loading Normalised Frequency Dictionary from {save_load_path}")
-
-        with open(save_load_path, "r") as norm_freq_dict:
-            sorted_gram_count_mapping = json.load(norm_freq_dict)
-    else:
-        print(
-            f"Computing Normalised Frequency Dictionary and Saving at {save_load_path}"
-        )
-        gram_count_mapping = find_norm_freq(text=text, n=n)
-        sorted_gram_count_tuple = sorted(
-            gram_count_mapping.items(), key=operator.itemgetter(1), reverse=True
-        )
-        sorted_gram_count_mapping = {k: v for k, v in sorted_gram_count_tuple}
-        if save_load_path is not None:
-            with open(save_load_path, "w") as norm_freq_json:
-                json.dump(sorted_gram_count_mapping, norm_freq_json, indent=4)
-
-        if top_k < len(sorted_gram_count_mapping):
-            sorted_gram_count_mapping = dict(
-                islice(sorted_gram_count_mapping.items(), top_k)
-            )
-
-    return sorted_gram_count_mapping

@@ -3,7 +3,7 @@ import operator
 import os
 from itertools import islice
 
-from ..utils import find_freq, find_norm_freq
+from ..utils import find_freq, find_norm_freq, save_json
 
 
 def freq_top_k(text, save_load_path=None, top_k=200, n=1, overwrite=False):
@@ -12,30 +12,18 @@ def freq_top_k(text, save_load_path=None, top_k=200, n=1, overwrite=False):
         and os.path.isfile(save_load_path)
         and not (overwrite)
     ):
-        print("Loading Frequency Dictionary from {save_load_path}")
+        print(f"Loading Frequency Dictionary from {save_load_path}")
         with open(save_load_path, "r") as freq_dict:
             sorted_gram_count_mapping = json.load(freq_dict)
     else:
         sorted_gram_count_mapping = find_freq(text, n=n, sort=True)
 
-    if top_k < len(sorted_gram_count_mapping):
-        sorted_gram_count_mapping = dict(
-            islice(sorted_gram_count_mapping.items(), top_k)
-        )
-
-    return sorted_gram_count_mapping
-
-
-def save_norm_freq_dict(text, save_path=None, n=1):
-    print(f"Computing Normalised Frequency Dictionary and Saving at {save_path}")
-    gram_count_mapping = find_norm_freq(text=text, n=n)
-    sorted_gram_count_tuple = sorted(
-        gram_count_mapping.items(), key=operator.itemgetter(1), reverse=True
-    )
-    sorted_gram_count_mapping = {k: v for k, v in sorted_gram_count_tuple}
-    if save_path is not None:
-        with open(save_path, "w") as norm_freq_json:
-            json.dump(sorted_gram_count_mapping, norm_freq_json, indent=4)
+        if top_k < len(sorted_gram_count_mapping):
+            sorted_gram_count_mapping = dict(
+                islice(sorted_gram_count_mapping.items(), top_k)
+            )
+        print(f"Saving Frequency Dictionary at {save_load_path}")
+        save_json(sorted_gram_count_mapping, save_load_path)
 
     return sorted_gram_count_mapping
 
@@ -51,11 +39,14 @@ def norm_freq_top_k(text, save_load_path=None, top_k=200, n=1, overwrite=False):
         with open(save_load_path, "r") as norm_freq_dict:
             sorted_gram_count_mapping = json.load(norm_freq_dict)
     else:
-        sorted_gram_count_mapping = save_norm_freq_dict(text, save_load_path, n)
+        sorted_gram_count_mapping = find_norm_freq(text, n=n, sort=True)
 
-    if top_k < len(sorted_gram_count_mapping):
-        sorted_gram_count_mapping = dict(
-            islice(sorted_gram_count_mapping.items(), top_k)
-        )
+        if top_k < len(sorted_gram_count_mapping):
+            sorted_gram_count_mapping = dict(
+                islice(sorted_gram_count_mapping.items(), top_k)
+            )
+        print(f"Saving Norm Frequency Dictionary at {save_load_path}")
+        save_json(sorted_gram_count_mapping, save_load_path)
 
     return sorted_gram_count_mapping
+
