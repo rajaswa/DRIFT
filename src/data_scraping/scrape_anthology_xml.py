@@ -77,7 +77,7 @@ def remove_non_ascii(words):
 
 
 def replace_numbers(words):
-    """Replace all interger occurrences in list of tokenized words with textual representation"""
+    """Replace all integer occurrences in list of tokenized words with textual representation"""
     new_words = []
     for word in words:
         if word.isdigit():

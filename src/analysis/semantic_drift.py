@@ -1,13 +1,8 @@
-import operator
-from operator import itemgetter
-
-import matplotlib.pyplot as plt
 import numpy as np
 from gensim.models.word2vec import Word2Vec
-from sklearn.manifold import TSNE
 from sklearn.metrics.pairwise import cosine_similarity
 
-from src.analysis.utils import *
+from src.utils import intersection
 
 
 def find_most_similar_words(
@@ -56,31 +51,32 @@ def find_most_drifted_words(
 
     scores = [0 for i in range(len(words))]
     for year1_stats, year2_stats in zip(year_wise_stats[:-1], year_wise_stats[1:]):
-
+        # Find the intersection of similar words between two years
         common_words = [
             intersection(year1_stats[1][k], year2_stats[1][k])
             for k in range(len(year1_stats[1]))
         ]
-
+        # Common words means less drift, so subtract the number of common_words
+        # We add top_k because
         scores = [scores[k] - len(common_words[k]) + top_k for k in range(len(words))]
-        for l, word_wise_common_words in enumerate(common_words):
+        for idx, word_wise_common_words in enumerate(common_words):
             # print(year1_stats[1])
             # print(year2_stats[1])
             year1_common_indices = [
-                year1_stats[1][l].index(ele) for ele in word_wise_common_words
+                year1_stats[1][idx].index(ele) for ele in word_wise_common_words
             ]
             year2_common_indices = [
-                year2_stats[1][l].index(ele) for ele in word_wise_common_words
+                year2_stats[1][idx].index(ele) for ele in word_wise_common_words
             ]
             year1_common_sims = [
-                year1_stats[2][l][year1_common_indices[k]]
+                year1_stats[2][idx][year1_common_indices[k]]
                 for k in range(len(year1_common_indices))
             ]
             year2_common_sims = [
-                year2_stats[2][l][year2_common_indices[k]]
+                year2_stats[2][idx][year2_common_indices[k]]
                 for k in range(len(year2_common_indices))
             ]
-            scores[l] += abs(
+            scores[idx] += abs(
                 sum([x1 - x2 for (x1, x2) in zip(year1_common_sims, year2_common_sims)])
             )
 
