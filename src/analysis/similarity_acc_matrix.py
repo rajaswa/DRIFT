@@ -7,7 +7,7 @@ from gensim.models.word2vec import Word2Vec
 from sklearn.manifold import TSNE
 from sklearn.metrics.pairwise import cosine_similarity
 from tqdm.auto import tqdm
-
+from ..utils import save_json, save_npy
 
 def compute_similarity_matrix_keywords(
     keywords=None, model_path=None, save_load_path=None, all_model_vectors=False
@@ -43,12 +43,8 @@ def compute_similarity_matrix_keywords(
 
             vocab_path = os.path.join(save_load_path, "vocab.json")
             sim_path = os.path.join(save_load_path, "sim.npy")
-
-            with open(vocab_path, "w") as vocab_json:
-                json.dump(keywords, vocab_json)
-
-            with open(sim_path, "wb") as sim_npy:
-                np.save(sim_npy, sim_matrix)
+            save_json(keywords, vocab_path)
+            save_npy(sim_matrix, sim_path)
 
     elif save_load_path is not None:
 
@@ -90,50 +86,50 @@ def top_k_acceleration(keywords, acceleration_matrix, k=10):
     return word_pairs
 
 
-def plot_tsne(model_path, word_pair, top_unigrams, save_path):
-    year_model = Word2Vec.load(model_path)
+# def plot_tsne(model_path, word_pair, top_unigrams, save_path):
+#     year_model = Word2Vec.load(model_path)
 
-    # fit t-SNE on compass word embeddings
-    train_words = top_unigrams
-    train_words.extend(word_pair)
-    train_embs = []
-    for word in train_words:
-        train_embs.append(year_model.wv[word])
+#     # fit t-SNE on compass word embeddings
+#     train_words = top_unigrams
+#     train_words.extend(word_pair)
+#     train_embs = []
+#     for word in train_words:
+#         train_embs.append(year_model.wv[word])
 
-    tsne = TSNE(n_components=2, init="pca", random_state=42)
-    red_embs = tsne.fit_transform(train_embs)
+#     tsne = TSNE(n_components=2, init="pca", random_state=42)
+#     red_embs = tsne.fit_transform(train_embs)
 
-    x = []
-    y = []
+#     x = []
+#     y = []
 
-    for ele in red_embs:
-        x.append(ele[0])
-        y.append(ele[1])
-    plt.clf()
-    plt.figure(figsize=(16, 16))
-    for i in range(len(x) - 2):
-        plt.scatter(x[i], y[i], s=0)
-        plt.annotate(
-            train_words[i],
-            xy=(x[i], y[i]),
-            xytext=(5, 2),
-            textcoords="offset points",
-            ha="right",
-            va="bottom",
-        )
-    for i in range(len(x) - 2, len(x)):
-        plt.scatter(x[i], y[i], s=0)
-        plt.annotate(
-            train_words[i],
-            xy=(x[i], y[i]),
-            xytext=(5, 2),
-            textcoords="offset points",
-            ha="right",
-            va="bottom",
-            # fontstyle='oblique',
-            fontweight="bold",
-            # fontsize='large',
-            color="red",
-        )
+#     for ele in red_embs:
+#         x.append(ele[0])
+#         y.append(ele[1])
+#     plt.clf()
+#     plt.figure(figsize=(16, 16))
+#     for i in range(len(x) - 2):
+#         plt.scatter(x[i], y[i], s=0)
+#         plt.annotate(
+#             train_words[i],
+#             xy=(x[i], y[i]),
+#             xytext=(5, 2),
+#             textcoords="offset points",
+#             ha="right",
+#             va="bottom",
+#         )
+#     for i in range(len(x) - 2, len(x)):
+#         plt.scatter(x[i], y[i], s=0)
+#         plt.annotate(
+#             train_words[i],
+#             xy=(x[i], y[i]),
+#             xytext=(5, 2),
+#             textcoords="offset points",
+#             ha="right",
+#             va="bottom",
+#             # fontstyle='oblique',
+#             fontweight="bold",
+#             # fontsize='large',
+#             color="red",
+#         )
 
-    plt.savefig(save_path)
+#     plt.savefig(save_path)

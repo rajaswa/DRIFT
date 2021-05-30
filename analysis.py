@@ -182,74 +182,73 @@ for text_file_path in text_file_paths:
     prod_path = os.path.join(CACHE_FOLDER, "productivities")
     if not os.path.exists(prod_path):
         os.makedirs(prod_path)
-    year_wise_word_prod_mappings[year] = find_productivity(
+    year_wise_word_prod_mappings[year] = compute_productivity(
         words=list(compass_unigrams.keys()),
         text=year_text,
-        n=2,
         save_load_path=os.path.join(prod_path, f"{year}.json"),
     )
     print()
 
-UNIGRAM_KEYWORD_PLOT_SAVE_PATH = os.path.join(
-    OUTPUT_FOLDER, "freq_norm_plots", "unigrams"
-)
-BIGRAM_KEYWORD_PLOT_SAVE_PATH = os.path.join(
-    OUTPUT_FOLDER, "freq_norm_plots", "bigrams"
-)
-TRIGRAM_KEYWORD_PLOT_SAVE_PATH = os.path.join(
-    OUTPUT_FOLDER, "freq_norm_plots", "trigrams"
-)
+# UNIGRAM_KEYWORD_PLOT_SAVE_PATH = os.path.join(
+#     OUTPUT_FOLDER, "freq_norm_plots", "unigrams"
+# )
+# BIGRAM_KEYWORD_PLOT_SAVE_PATH = os.path.join(
+#     OUTPUT_FOLDER, "freq_norm_plots", "bigrams"
+# )
+# TRIGRAM_KEYWORD_PLOT_SAVE_PATH = os.path.join(
+#     OUTPUT_FOLDER, "freq_norm_plots", "trigrams"
+# )
 
-if not os.path.exists(UNIGRAM_KEYWORD_PLOT_SAVE_PATH):
-    os.makedirs(UNIGRAM_KEYWORD_PLOT_SAVE_PATH)
-if not os.path.exists(BIGRAM_KEYWORD_PLOT_SAVE_PATH):
-    os.makedirs(BIGRAM_KEYWORD_PLOT_SAVE_PATH)
-if not os.path.exists(TRIGRAM_KEYWORD_PLOT_SAVE_PATH):
-    os.makedirs(TRIGRAM_KEYWORD_PLOT_SAVE_PATH)
+# if not os.path.exists(UNIGRAM_KEYWORD_PLOT_SAVE_PATH):
+#     os.makedirs(UNIGRAM_KEYWORD_PLOT_SAVE_PATH)
+# if not os.path.exists(BIGRAM_KEYWORD_PLOT_SAVE_PATH):
+#     os.makedirs(BIGRAM_KEYWORD_PLOT_SAVE_PATH)
+# if not os.path.exists(TRIGRAM_KEYWORD_PLOT_SAVE_PATH):
+#     os.makedirs(TRIGRAM_KEYWORD_PLOT_SAVE_PATH)
 
-UNIGRAM_PROD_PLOT_SAVE_PATH = os.path.join(OUTPUT_FOLDER, "prod_plots", "unigrams")
+# UNIGRAM_PROD_PLOT_SAVE_PATH = os.path.join(OUTPUT_FOLDER, "prod_plots", "unigrams")
 
-if not os.path.exists(UNIGRAM_PROD_PLOT_SAVE_PATH):
-    os.makedirs(UNIGRAM_PROD_PLOT_SAVE_PATH)
+# if not os.path.exists(UNIGRAM_PROD_PLOT_SAVE_PATH):
+#     os.makedirs(UNIGRAM_PROD_PLOT_SAVE_PATH)
 
-print(
-    f"Making Frequency and Productivity Plots for Unigrams and Saving at {UNIGRAM_KEYWORD_PLOT_SAVE_PATH} AND {UNIGRAM_PROD_PLOT_SAVE_PATH}"
-)
-for word in compass_unigrams:
-    plot_freq(
-        word=word,
-        year_wise_word_count_mappings=year_wise_unigram_mappings,
-        save_path=os.path.join(UNIGRAM_KEYWORD_PLOT_SAVE_PATH, f"{word}.svg"),
-        keyword_type=KEYWORD_METHOD,
-    )
-    plot_prod(
-        word=word,
-        year_wise_prods_mappings=year_wise_word_prod_mappings,
-        save_path=os.path.join(UNIGRAM_PROD_PLOT_SAVE_PATH, f"{word}.svg"),
-    )
+# print(
+#     f"Making Frequency and Productivity Plots for Unigrams and Saving at {UNIGRAM_KEYWORD_PLOT_SAVE_PATH} AND {UNIGRAM_PROD_PLOT_SAVE_PATH}"
+# )
+# for word in compass_unigrams:
+#     plot_freq(
+#         word=word,
+#         year_wise_word_count_mappings=year_wise_unigram_mappings,
+#         save_path=os.path.join(UNIGRAM_KEYWORD_PLOT_SAVE_PATH, f"{word}.svg"),
+#         keyword_type=KEYWORD_METHOD,
+#     )
+#     plot_prod(
+#         word=word,
+#         year_wise_prods_mappings=year_wise_word_prod_mappings,
+#         save_path=os.path.join(UNIGRAM_PROD_PLOT_SAVE_PATH, f"{word}.svg"),
+#     )
 
-print(
-    f"Making Frequency Plots for Bigrams and Saving at {BIGRAM_KEYWORD_PLOT_SAVE_PATH}"
-)
-for word in compass_bigrams:
-    plot_freq(
-        word=word,
-        year_wise_word_count_mappings=year_wise_bigram_mappings,
-        save_path=os.path.join(BIGRAM_KEYWORD_PLOT_SAVE_PATH, f"{word}.svg"),
-        keyword_type=KEYWORD_METHOD,
-    )
+# print(
+#     f"Making Frequency Plots for Bigrams and Saving at {BIGRAM_KEYWORD_PLOT_SAVE_PATH}"
+# )
+# for word in compass_bigrams:
+#     plot_freq(
+#         word=word,
+#         year_wise_word_count_mappings=year_wise_bigram_mappings,
+#         save_path=os.path.join(BIGRAM_KEYWORD_PLOT_SAVE_PATH, f"{word}.svg"),
+#         keyword_type=KEYWORD_METHOD,
+#     )
 
-print(
-    f"Making Frequency Plots for Trigrams and Saving at {TRIGRAM_KEYWORD_PLOT_SAVE_PATH}"
-)
-for word in compass_trigrams:
-    plot_freq(
-        word=word,
-        year_wise_word_count_mappings=year_wise_trigram_mappings,
-        save_path=os.path.join(TRIGRAM_KEYWORD_PLOT_SAVE_PATH, f"{word}.svg"),
-        keyword_type=KEYWORD_METHOD,
-    )
-print()
+# print(
+#     f"Making Frequency Plots for Trigrams and Saving at {TRIGRAM_KEYWORD_PLOT_SAVE_PATH}"
+# )
+# for word in compass_trigrams:
+#     plot_freq(
+#         word=word,
+#         year_wise_word_count_mappings=year_wise_trigram_mappings,
+#         save_path=os.path.join(TRIGRAM_KEYWORD_PLOT_SAVE_PATH, f"{word}.svg"),
+#         keyword_type=KEYWORD_METHOD,
+#     )
+# print()
 
 # COMPUTE AND SAVE THE SIMILARITY MATRICES FOR EVERY YEAR
 model_paths = glob.glob(os.path.join(MODEL_FOLDER, "*.model"))
