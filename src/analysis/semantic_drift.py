@@ -2,7 +2,7 @@ import numpy as np
 from gensim.models.word2vec import Word2Vec
 from sklearn.metrics.pairwise import cosine_similarity
 
-from src.utils import intersection
+from ..utils import intersection
 
 
 def find_most_similar_words(

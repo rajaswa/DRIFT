@@ -3,7 +3,7 @@ import operator
 import os
 from itertools import islice
 
-from src.utils import find_freq, find_norm_freq
+from ..utils import find_freq, find_norm_freq
 
 
 def freq_top_k(text, save_load_path=None, top_k=200, n=1, overwrite=False):
