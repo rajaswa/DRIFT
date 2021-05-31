@@ -9,7 +9,7 @@ def find_most_similar_words(
     words,
     year_model_path,
     compass_model_path,
-    top_k=10,
+    top_k_for_sim=10,
 ):
     year_model = Word2Vec.load(year_model_path)
     compass_model = Word2Vec.load(compass_model_path)
