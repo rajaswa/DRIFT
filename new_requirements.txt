@@ -1,0 +1,12 @@
+black==20.8b1
+faiss-cpu==1.7.1 --no-cache
+git+git://github.com/valedica/gensim.git
+isort==5.8.0
+matplotlib==3.3.4
+nltk==3.5
+numpy==1.20.3
+pandas==1.2.3
+python-Levenshtein==0.12.2
+seaborn==0.11.1
+tqdm==4.61.0
+umap-learn==0.3.10
