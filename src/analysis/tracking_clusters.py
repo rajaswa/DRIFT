@@ -1,11 +1,5 @@
-import time
-
 import faiss
-import matplotlib.pyplot as plt
-import nltk
 import numpy as np
-import pandas as pd
-import seaborn as sns
 from gensim.models.word2vec import Word2Vec
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score

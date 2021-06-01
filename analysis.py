@@ -300,13 +300,5 @@ keywords_kmean, X_kmean, label_kmean = kmeans_clustering(
     k_max=10,
 )
 
-# print("MOST DRIFTED WORDS: ")
-# print(
-#     find_most_drifted_words(
-#         list(compass_unigrams.keys()),
-#         ["models/2017.model", "models/2018.model"],
-#         "models/compass.model",
-#         top_k=10,
-#         top_most_drifted_k=5,
-#     )
-# )
+sim_dict = find_most_similar_words(words=list(compass_unigrams.keys()), year_model_path="models/2018.model", compass_model_path="models/compass.model", top_k_for_sim=10)
+print(sim_dict[list(sim_dict.keys())[0]])
