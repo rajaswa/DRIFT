@@ -43,8 +43,8 @@ def compute_acceleration_matrix(sim_matrix_1, sim_matrix_2, top_k_acc=None):
         word_1 = keywords[word_1_index]
         word_2 = keywords[word_2_index]
 
-        word_pairs[word_1 + "_" + word_2] = acceleration_matrix[word_1_index][word_2_index]
+        word_pairs[word_1 + "_" + word_2] = acceleration_matrix[word_1_index][
+            word_2_index
+        ]
 
     return word_pairs
-
-

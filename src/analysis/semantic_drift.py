@@ -84,7 +84,7 @@ def find_most_drifted_words(
     embs_for_plotting = []
     for idx, year_sim_dict in enumerate(sim_dicts):
         for word in sorted_scores:
-            words_for_plotting.append(word + "_" +str(idx))
+            words_for_plotting.append(word + "_" + str(idx))
             embs_for_plotting.append(year_sim_dict[word]["emb"])
 
             for sim_word in year_sim_dict[word]["sim_info"]:
