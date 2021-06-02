@@ -1,5 +1,4 @@
-import json
-import os
+from itertools import islice
 
 import numpy as np
 from nltk import FreqDist, ngrams
@@ -24,18 +23,8 @@ def find_norm_freq(text, n=1, sort=False):
     return gram_count_mapping
 
 
-def find_productivity(words, text, n=2, sort=False, save_load_path=None, overwrite=False):
-    if (
-        save_load_path is not None
-        and os.path.isfile(save_load_path)
-        and not overwrite
-    ):
-        print(f"Loading Productivity Dictionary from {save_load_path}")
-        with open(save_load_path, "r") as prod_f:
-            word_prod_mapping = json.load(prod_f)
-        return word_prod_mapping
-
-    fdist = find_freq(text=text, n=n, sort=sort)
+def find_productivity(words, text, n=2):
+    fdist = find_freq(text=text, n=n, sort=True)
     ngrams_lst = list(fdist.keys())
     prods = {}
     for word in words:
@@ -57,7 +46,18 @@ def find_productivity(words, text, n=2, sort=False, save_load_path=None, overwri
         prod = -np.sum(np.multiply(np.log2(p_m_is), p_m_is))
         prods[word] = prod
 
-    print(f"Saving Productivity Dictionary at {save_load_path}")
-    with open(save_load_path, "w") as prod_f:
-        json.dump(prods, prod_f, indent=4)
     return prods
+
+
+def freq_top_k(text, top_k=200, n=1, normalize=False):
+    if normalize:
+        sorted_gram_count_mapping = find_norm_freq(text, n=n, sort=True)
+    else:
+        sorted_gram_count_mapping = find_freq(text, n=n, sort=True)
+
+    if top_k < len(sorted_gram_count_mapping):
+        sorted_gram_count_mapping = dict(
+            islice(sorted_gram_count_mapping.items(), top_k)
+        )
+
+    return sorted_gram_count_mapping
