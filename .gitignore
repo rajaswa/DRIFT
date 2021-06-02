@@ -127,4 +127,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-*diachronic-env/*
+
+data/*
+diachronic-env*
+model*

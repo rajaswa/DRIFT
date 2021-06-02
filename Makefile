@@ -1,5 +1,5 @@
 
-.PHONY: env style quality final clean max.txt
+.PHONY: env style quality final clean
 
 VENV = diachronic-env
 export VIRTUAL_ENV := $(abspath ${VENV})
@@ -21,12 +21,12 @@ clean:
 	find . -type d -name "__pycache__" -delete
 
 quality:
-	flake8 --extend-ignore E203, W503 --max-line-length 88 src
+	flake8 --extend-ignore E203, W503 --max-line-length 88 src *.py
 
 #Black compatibilty: https://black.readthedocs.io/en/stable/compatible_configs.html
 style:
-	black --line-length 88 --target-version py38 src
-	isort src
+	black --line-length 88 --target-version py38 src *.py
+	isort src *.py
 
 final: style clean| ${VENV}
 	pip freeze>requirements.txt
