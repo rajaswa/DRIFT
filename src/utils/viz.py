@@ -100,7 +100,7 @@ def word_cloud(words, max_words=100, stop_words=None, save_path=None, min_font_s
 def plotly_line_dataframe(df, x_col, y_col, word_col, save_path=None):
 
     fig = px.line(
-        df, x=x_col, y=y_col, color=word_col, color_continuous_scale="Spectral"
+        df, x=x_col, y=y_col, color=word_col
     )
     if save_path:
         fig.write_html(save_path)

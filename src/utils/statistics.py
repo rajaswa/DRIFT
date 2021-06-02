@@ -3,9 +3,15 @@ from itertools import islice
 import numpy as np
 from nltk import FreqDist, ngrams
 
+def find_ngrams_for_sentences(sentences, n=1):
+    sentence_list = sentences.split('\n')
+    ngrams_list = []
+    for sentence in sentence_list:
+        ngrams_list+=list(ngrams(sentence.split(),n))
+    return ngrams_list
 
 def find_freq(text, n=1, sort=False):
-    ngrams_lst = list(ngrams(text.split(), n))
+    ngrams_lst = find_ngrams_for_sentences(text, n)
     gram_count_mapping = dict(FreqDist(ngrams_lst))
     gram_count_mapping = {" ".join(k): v for k, v in gram_count_mapping.items()}
     if sort:
@@ -23,7 +29,7 @@ def find_norm_freq(text, n=1, sort=False):
     return gram_count_mapping
 
 
-def find_productivity(words, text, n=2):
+def find_productivity(words, text, n=1):
     fdist = find_freq(text=text, n=n, sort=True)
     ngrams_lst = list(fdist.keys())
     prods = {}
@@ -49,7 +55,7 @@ def find_productivity(words, text, n=2):
     return prods
 
 
-def freq_top_k(text, top_k=200, n=1, normalize=False):
+def freq_top_k(text, top_k=20, n=1, normalize=False):
     if normalize:
         sorted_gram_count_mapping = find_norm_freq(text, n=n, sort=True)
     else:

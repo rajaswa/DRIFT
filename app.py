@@ -1,12 +1,14 @@
+from nltk.util import choose
+from src.utils.statistics import find_productivity, freq_top_k
 import matplotlib.pyplot as plt
-from nltk import collocations
+import pandas as pd
 import numpy as np
 import plotly.express as px
 import streamlit as st
 import os
 from streamlit import caching
 from nltk.corpus import stopwords
-from src.utils.viz import word_cloud
+from src.utils.viz import plotly_line_dataframe, word_cloud
 import inspect
 
 def get_default_args(func):
@@ -128,7 +130,7 @@ if analysis_type == "WordCloud":
 
     # TO-DO: Check if more stopwords are needed.
 
-    with open(os.path.join(data_path,selected_year+".txt")) as f:
+    with open(os.path.join(data_path,selected_year+".txt"), encoding="utf-8") as f:
         words = f.read()
     col1, col2 = st.beta_columns([8, 2])
     with st.spinner("Plotting"):
@@ -149,17 +151,53 @@ elif analysis_type == "Productivity Plot":
     text_place_holder.write(
         "Term productivity, that is, a measure for the ability of a concept (lexicalised as a singleword term) to produce new, subordinated concepts (lexicalised as multi-word terms)."
     )
-    unigrams = ["this", "is", "a", "dummy", "list"]
-    years = ["1990", "2016", "2017", "2020"]
-    selected_unigram = st.sidebar.selectbox("Unigram", options=unigrams)
+
+    default_values_dict = get_default_args(freq_top_k)
+
+    data_path = st.sidebar.text_input("Data Path",value="./data/", help="Directory path to the folder containing year-wise text files.")
+    years = sorted([fil.split('.')[0] for fil in os.listdir(data_path) if fil!='compass.txt'])
+    stop_words = list(set(stopwords.words("english")))
+
+    with open(os.path.join(data_path, 'compass.txt'), encoding="utf-8") as f:
+        compass_text = f.read()
+
+    n = st.sidebar.number_input("N", value=default_values_dict['n'], min_value=1, format="%d", help="N in N-gram for productivity calculation.")
+    top_k = st.sidebar.number_input("K", value=default_values_dict['top_k'], min_value=1, format="%d", help="Top-K words to be chosen from.")
+
     keyword_method = st.sidebar.radio(
         "Keyword Method", options=["Frequency", "Norm Frequency"]
     )
+    choose_list_freq = freq_top_k(compass_text, top_k=top_k, n=n, normalize=keyword_method=="Norm Frequency")
+    choose_list = list(choose_list_freq.keys())
+    selected_ngrams = st.sidebar.multiselect("Selected N-grams", default=choose_list, options=choose_list)
+
     start_year, end_year = st.sidebar.select_slider(
         "Range in years", options=years, value=(years[0], years[-1])
     )
-    top_k = st.sidebar.number_input("K in Top-K", min_value=1, format="%d")
 
+    yearss = []
+    words = []
+    prodss = []
+
+    start_year_idx = years.index(start_year)
+    end_year_idx = years.index(end_year)
+    for year_idx in range(start_year_idx, end_year_idx+1):
+        year = years[year_idx]
+        with open(os.path.join(data_path, year+".txt"), encoding="utf-8") as f:
+            year_text = f.read()
+            prods = find_productivity(selected_ngrams, year_text, n)
+            for word, productivity in prods.items():
+                yearss.append(year)
+                words.append(word)
+                prodss.append(productivity)
+    productivity_df = pd.DataFrame.from_dict({"Year":yearss,"Word":words, "Productivity":prodss})
+    col1, col2 = st.beta_columns([8, 2])
+    
+    n_gram_freq_df = pd.DataFrame(list(choose_list_freq.items()),columns=["N-gram","Frequency"])
+    with st.spinner("Plotting"):
+        fig = plotly_line_dataframe(productivity_df, x_col="Year",y_col="Productivity", word_col="Word")
+        plot(fig, col1, col2)
+    col1.dataframe(n_gram_freq_df.T)
 elif analysis_type == "Acceleration Plot":
     temp = ["the", "blue", "ball"] * 100
     text_place_holder.write(
