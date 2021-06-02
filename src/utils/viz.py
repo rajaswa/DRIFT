@@ -73,24 +73,28 @@ def plotly_scatter(x, y, color_by_values, text_annot=None, save_path=None):
     return fig
 
 
-def word_cloud(words, max_words=100, stop_words=None, save_path=None):
+def word_cloud(words, max_words=100, stop_words=None, save_path=None, min_font_size=10, max_font_size=25, background_color="#FFFFFF",width=500, height=500, collocations = True):
     """ Returns PIL WordCloud Image """
     if stop_words is None:
         stop_words = set(stopwords.words("english"))
 
-    wordcloud = WordCloud(
-        background_color="black",
+    word_cloud_obj = WordCloud(
+        background_color=background_color,
         stopwords=stop_words,
         max_words=max_words,
-        max_font_size=25,
+        min_font_size=min_font_size,
+        max_font_size=max_font_size,
+        width=width,
+        height=height,
         random_state=42,
-    ).generate(str(words))
+        collocations=collocations
+    ).generate(words)
 
     if save_path:
-        wordcloud_svg = wordcloud.to_svg(embed_font=True)
-        with open(save_path, "w+") as wordcloud_f:
-            wordcloud_f.write(wordcloud_svg)
-    return word_cloud.to_image()
+        word_cloud_svg = word_cloud_obj.to_svg(embed_font=True)
+        with open(save_path, "w+") as word_cloud_f:
+            word_cloud_f.write(word_cloud_svg)
+    return word_cloud_obj.to_image()
 
 
 def plotly_line_dataframe(df, x_col, y_col, word_col, save_path=None):

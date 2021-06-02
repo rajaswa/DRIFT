@@ -1,11 +1,21 @@
 import matplotlib.pyplot as plt
+from nltk import collocations
 import numpy as np
 import plotly.express as px
 import streamlit as st
-import wordcloud
-from wordcloud import WordCloud
-from wordcloud.wordcloud import STOPWORDS
+import os
+from streamlit import caching
+from nltk.corpus import stopwords
+from src.utils.viz import word_cloud
+import inspect
 
+def get_default_args(func):
+    signature = inspect.signature(func)
+    return {
+        k: v.default
+        for k, v in signature.parameters.items()
+        if v.default is not inspect.Parameter.empty
+    }
 
 # Folder selection not directly support in Streamlit as of now
 # https://github.com/streamlit/streamlit/issues/1019
@@ -41,7 +51,8 @@ def plot(obj, col1, col2, typ="plotly"):
     format = col2.selectbox(
         "Format", formats, help="The format to be used to save the file."
     )
-    # # Caveat: This only works on local host. See comment https://github.com/streamlit/streamlit/issues/1019#issuecomment-813001320
+    # Caveat: This only works on local host. See comment https://github.com/streamlit/streamlit/issues/1019#issuecomment-813001320
+    # Caveat 2: The folder selection can only be done once and not repetitively
     # dirname = st.text_input('Selected folder:', filedialog.askdirectory(master=root))
 
     if col2.button("Save"):
@@ -91,25 +102,48 @@ if analysis_type == "WordCloud":
     text_place_holder.write(
         "A tag cloud is a novelty visual representation of text data, typically used to depict keyword metadata on websites, or to visualize free form text. Tags are usually single words, and the importance of each tag is shown with font size or color."
     )
-    years = ["1990", "2016", "2017", "2020"]
-    selected_year = st.sidebar.select_slider("Year", options=years)
+
+    default_values_dict = get_default_args(word_cloud)
+    data_path = st.sidebar.text_input("Data Path",value="./data/", help="Directory path to the folder containing year-wise text files.")
+    years = sorted([fil.split('.')[0] for fil in os.listdir(data_path) if fil!='compass.txt'])
+    selected_year = st.sidebar.select_slider("Year", options=years, help="Year for which world cloud is to be generated.")
     max_words = st.sidebar.number_input(
-        "Max number of words", min_value=10, format="%d"
+        "Max number of words",value=default_values_dict['max_words'], min_value=10, format="%d"
     )
+    min_font_size = st.sidebar.number_input(
+        "Min font size", value=default_values_dict['min_font_size'], min_value = 10, max_value=80, format="%d"
+    )
+    max_font_size = st.sidebar.number_input(
+        "Max font size", value = default_values_dict['max_font_size'], min_value = 25, max_value=100, format="%d"
+    )
+    stop_words = list(set(stopwords.words("english")))
+    background_color = st.sidebar.color_picker("Background Color", value=default_values_dict['background_color'])
+    width = st.sidebar.number_input(
+        "Width", value=default_values_dict['width'], min_value = 100, max_value=10000, format="%d", step=50
+    )
+    height = st.sidebar.number_input(
+        "Height", value=default_values_dict['height'], min_value = 100, max_value=10000, format="%d", step=50
+    )
+    collocations =  st.checkbox("Collocations", value=default_values_dict['collocations'], help="Whether to include collocations (bigrams) of two words.")
+
+    # TO-DO: Check if more stopwords are needed.
+
+    with open(os.path.join(data_path,selected_year+".txt")) as f:
+        words = f.read()
     col1, col2 = st.beta_columns([8, 2])
-    word_cloud = (
-        WordCloud(
-            background_color="white",
-            width=int(selected_year) // 2,
-            height=int(selected_year) // 2,
-            random_state=42,
-        )
-        .generate(
-            "Temporary wordcloud. Just testing this utility by adding random text here."
-        )
-        .to_array()
-    )
-    plot(word_cloud, col1, col2, typ="array")
+    with st.spinner("Plotting"):
+        word_cloud_image= word_cloud(
+                words = words,
+                max_words = max_words,
+                stop_words = stop_words,
+                min_font_size = min_font_size,
+                max_font_size = max_font_size,
+                background_color=background_color,
+                width=width,
+                height=height,
+            )
+
+    plot(word_cloud_image, col1, col2, typ="PIL")
 
 elif analysis_type == "Productivity Plot":
     text_place_holder.write(
