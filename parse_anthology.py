@@ -23,6 +23,7 @@ def innertext(elt):
 
 
 def get_abstract_from_pdf(paper_url):
+    print(f"Getting PDF from URL: {paper_url}")
     _buffer = StringIO()
     data = parser.from_file(paper_url, xmlContent=True)
     xhtml_data = BeautifulSoup(data["content"])
@@ -220,7 +221,7 @@ def main():
                                     author_name += " " + elem.text
                                 paper_dict["authors"].append(author_name)
                             else:
-                                if args.use_pdf:
+                                if not args.use_pdf:
                                     paper_dict[elem.tag] = innertext(elem)
                                     if elem.tag == "abstract":
                                         if (
