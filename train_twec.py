@@ -17,7 +17,7 @@ def train(
 ):
     aligner = TWEC(
         size=embedding_size,
-        sd=int(skipgram),
+        sg=int(skipgram),
         siter=siter,
         diter=diter,
         workers=4,
@@ -37,7 +37,7 @@ def train(
     slices = {}
     for file in sorted(os.listdir(data_dir)):
         start = time.time()
-        slices[file.split(".")[0]] = aligner.train_slice(os.path.join(data_dir, file))
+        slices[file.split(".")[0]] = aligner.train_slice(os.path.join(data_dir, file), save=True)
         end = time.time()
         print("Time Taken for TWEC Fine-tuning:", (end - start), " ms")
 
