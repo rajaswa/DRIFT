@@ -262,7 +262,8 @@ def main():
                                     ] = preprocess_text(paper_dict["abstract"])
 
                     if lang_flag == 1:
-                        all_conf[year].append(paper_dict.update(common_info_dict))
+                        paper_dict.update(common_info_dict)
+                        all_conf[year].append(paper_dict)
 
     with open(json_save_path, "w") as f:
         json.dump(all_conf, f)
