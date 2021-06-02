@@ -130,7 +130,7 @@ def main():
     for path in tqdm(lst_of_xml_files):
         with open(path) as xml_file:
             xml = xml_file.read()
-            if xml.find("<abstract>") == -1:
+            if not args.use_pdf and xml.find("<abstract>") == -1:
                 continue
             tree = ET.fromstring(xml)
 
