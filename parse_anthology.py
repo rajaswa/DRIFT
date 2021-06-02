@@ -123,7 +123,6 @@ def main():
     print("Running " + cmd)
     os.system(cmd)
 
-
     lst_of_xml_files = glob.glob("acl-anthology/data/xml/*.xml")
     lst_of_xml_files.sort()
 
@@ -137,7 +136,6 @@ def main():
             tree = ET.fromstring(xml)
 
             for vol_node in tree.iter("volume"):
-
 
                 year = vol_node.find(".//year")
                 if year is None:

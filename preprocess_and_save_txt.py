@@ -7,6 +7,9 @@ from src.utils.preprocess import preprocess_text
 def preprocess_and_save(
     json_path="../acl_anthology.json", text_key="abstract", save_dir="./data"
 ):
+
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
     with open(json_path) as f:
         data = json.load(f)
     info_dic = {}
