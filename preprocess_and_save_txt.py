@@ -26,7 +26,7 @@ def preprocess_and_save(
                     contents.append(preprocess_text(paper[text_key]))
         if contents != []:
             with open(os.path.join(save_dir, f"{year}.txt"), "w") as f:
-                f.write(" ".join(contents).lower())
+                f.write("\n".join(contents).lower())
         all_contents += contents
         info_dic[int(year)] = len(contents)
     with open(os.path.join(save_dir, "compass.txt"), "w") as f:
