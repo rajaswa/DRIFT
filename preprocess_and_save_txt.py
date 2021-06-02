@@ -27,7 +27,7 @@ def preprocess_and_save(
         all_contents += contents
         info_dic[int(year)] = len(contents)
     with open(os.path.join(save_dir, "compass.txt"), "w") as f:
-        f.write(" ".join(all_contents).lower())
+        f.write("\t".join(all_contents).lower())
 
     return info_dic
 
