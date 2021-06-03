@@ -15,7 +15,9 @@ def get_word_embeddings(model_path, words, all_model_vectors=False):
         words = list(model.wv.vocab.keys())
 
     unk_emb = np.mean([model.wv[word] for word in model.wv.vocab], axis=0)
-    word_embs =  [model.wv[word] if word in model.wv.vocab else unk_emb for word in words]
+    word_embs = [
+        model.wv[word] if word in model.wv.vocab else unk_emb for word in words
+    ]
     return word_embs
 
 

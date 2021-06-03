@@ -37,7 +37,9 @@ def train(
     slices = {}
     for file in sorted(os.listdir(data_dir)):
         start = time.time()
-        slices[file.split(".")[0]] = aligner.train_slice(os.path.join(data_dir, file), save=True)
+        slices[file.split(".")[0]] = aligner.train_slice(
+            os.path.join(data_dir, file), save=True
+        )
         end = time.time()
         print("Time Taken for TWEC Fine-tuning:", (end - start), " ms")
 

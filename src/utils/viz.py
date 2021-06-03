@@ -4,6 +4,8 @@ import numpy as np
 import plotly.express as px
 from nltk.corpus import stopwords
 from wordcloud import WordCloud
+import plotly.graph_objects as go
+
 
 
 nltk.download("stopwords")
@@ -72,8 +74,18 @@ def plotly_scatter(x, y, color_by_values=None, text_annot=None, save_path=None):
         fig.write_html(save_path)
     return fig
 
-
-def word_cloud(words, max_words=100, stop_words=None, save_path=None, min_font_size=10, max_font_size=25, background_color="#FFFFFF",width=500, height=500, collocations = True):
+def word_cloud(
+    words,
+    max_words=100,
+    stop_words=None,
+    save_path=None,
+    min_font_size=10,
+    max_font_size=25,
+    background_color="#FFFFFF",
+    width=500,
+    height=500,
+    collocations=True,
+):
     """ Returns PIL WordCloud Image """
     if stop_words is None:
         stop_words = set(stopwords.words("english"))
@@ -87,7 +99,7 @@ def word_cloud(words, max_words=100, stop_words=None, save_path=None, min_font_s
         width=width,
         height=height,
         random_state=42,
-        collocations=collocations
+        collocations=collocations,
     ).generate(words)
 
     if save_path:
@@ -99,9 +111,7 @@ def word_cloud(words, max_words=100, stop_words=None, save_path=None, min_font_s
 
 def plotly_line_dataframe(df, x_col, y_col, word_col, save_path=None):
 
-    fig = px.line(
-        df, x=x_col, y=y_col, color=word_col
-    )
+    fig = px.line(df, x=x_col, y=y_col, color=word_col)
     if save_path:
         fig.write_html(save_path)
     return fig

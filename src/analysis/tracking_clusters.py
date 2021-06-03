@@ -24,7 +24,7 @@ def kmeans_train(X, n_cluster, method="faiss"):
 
 
 def kmeans_clustering(
-    keywords, model_path, save_path, k_opt=None, k_max=10, method="faiss"
+    keywords, model_path, k_opt=None, k_max=10, method="faiss"
 ):
     assert method in ["faiss", "sklearn"], "method should be one of " + str(
         ["faiss", "sklearn"]
@@ -32,17 +32,17 @@ def kmeans_clustering(
 
     model = Word2Vec.load(model_path)
     keywords = [keyword for keyword in keywords if keyword in model.wv.vocab]
-    X = np.array([model.wv[keyword] for keyword in keywords])
+    embs = np.array([model.wv[keyword] for keyword in keywords])
 
     if k_opt is None:
 
         silhouette_scores = []
         for n_cluster in range(2, k_max + 1):
-            labels = kmeans_train(X, n_cluster, method)
-            silhouette_scores.append(silhouette_score(X, labels, metric="euclidean"))
+            labels = kmeans_train(embs, n_cluster, method)
+            silhouette_scores.append(silhouette_score(embs, labels, metric="euclidean"))
 
         k_opt = 2 + silhouette_scores.index(max(silhouette_scores))
 
-    labels = kmeans_train(X, k_opt, method)
+    labels = kmeans_train(embs, k_opt, method)
 
-    return keywords, X, labels
+    return keywords, embs, labels, k_opt
