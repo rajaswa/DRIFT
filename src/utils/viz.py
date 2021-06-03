@@ -57,7 +57,7 @@ def pyplot_scatter_embeddings(
     return fig
 
 
-def plotly_scatter(x, y, color_by_values, text_annot=None, save_path=None):
+def plotly_scatter(x, y, color_by_values=None, text_annot=None, save_path=None):
 
     fig = px.scatter(
         x=x,

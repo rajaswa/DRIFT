@@ -1,4 +1,6 @@
-from nltk.util import choose
+from src.utils.viz import plotly_scatter
+from src.utils.misc import reduce_dimensions
+from src.analysis.similarity_acc_matrix import compute_acc_between_years
 from src.utils.statistics import find_productivity, freq_top_k
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -8,7 +10,7 @@ import streamlit as st
 import os
 from streamlit import caching
 from nltk.corpus import stopwords
-from src.utils.viz import plotly_line_dataframe, word_cloud
+from src.utils import get_word_embeddings, plotly_line_dataframe, word_cloud
 import inspect
 
 def get_default_args(func):
@@ -126,7 +128,7 @@ if analysis_type == "WordCloud":
     height = st.sidebar.number_input(
         "Height", value=default_values_dict['height'], min_value = 100, max_value=10000, format="%d", step=50
     )
-    collocations =  st.checkbox("Collocations", value=default_values_dict['collocations'], help="Whether to include collocations (bigrams) of two words.")
+    collocations =  st.sidebar.checkbox("Collocations", value=default_values_dict['collocations'], help="Whether to include collocations (bigrams) of two words.")
 
     # TO-DO: Check if more stopwords are needed.
 
@@ -198,22 +200,76 @@ elif analysis_type == "Productivity Plot":
         fig = plotly_line_dataframe(productivity_df, x_col="Year",y_col="Productivity", word_col="Word")
         plot(fig, col1, col2)
     col1.dataframe(n_gram_freq_df.T)
+
 elif analysis_type == "Acceleration Plot":
-    temp = ["the", "blue", "ball"] * 100
+
+    st.info("Note that all words may not be present in all years. In that case mean of all word vectors is taken.")
+    acc_default_values_dict = get_default_args(compute_acc_between_years)
+    freq_default_values_dict = get_default_args(freq_top_k)
+
     text_place_holder.write(
         "Identification of fast converging keywords over X Number of years."
     )
-    years = ["1990", "2016", "2017", "2020"]
-    start_year, end_year = st.sidebar.select_slider(
-        "Range in years", options=years, value=(years[0], years[-1])
+    data_path = st.sidebar.text_input("Data Path",value="./data/", help="Directory path to the folder containing year-wise text files.")
+    model_path = st.sidebar.text_input("Model Path",value="./model/", help="Directory path to the folder containing year-wise model files.")
+    
+    years = sorted([fil.split('.')[0] for fil in os.listdir(data_path) if fil!='compass.txt'])
+
+
+    with open(os.path.join(data_path, 'compass.txt'), encoding="utf-8") as f:
+            compass_text = f.read()
+    p2f = st.sidebar.checkbox("""Past→Future""", value=True)
+    year1, year2 = st.sidebar.select_slider(
+        "Range in years", options=years if p2f else years[::-1], value=(years[0], years[-1]) if p2f else (years[-1], years[0])
     )
     keyword_method = st.sidebar.radio(
         "Keyword Method", options=["Frequency", "Norm Frequency"]
     )  # Needs format_func
-    top_k = st.sidebar.number_input("K in Top-K", min_value=1, format="%d")
+    top_k = st.sidebar.number_input("K", value=acc_default_values_dict['top_k_acc'], min_value=1, format="%d")
 
-    list_of_words = temp[:top_k]
-    selected_values = st.selectbox(label="Top-K words", options=list_of_words)
+    top_k_keywords = st.sidebar.number_input("K (for keywords selection)",value=freq_default_values_dict['top_k'], min_value = 1, format="%d")
+    # n = st.sidebar.number_input("N", value=freq_default_values_dict['n'], min_value=1, format="%d", help="N in N-gram for productivity calculation.")
+
+
+    choose_list_freq = freq_top_k(compass_text, top_k=top_k_keywords, n=1, normalize=keyword_method=="Norm Frequency")
+    keywords_list = list(choose_list_freq.keys()) 
+
+    selected_ngrams = st.sidebar.multiselect("Selected N-grams", default=keywords_list, options=keywords_list)
+
+    model_path1 = os.path.join(model_path, year1+'.model')
+    model_path2 = os.path.join(model_path, year2+'.model')
+    
+    word_pairs, em1, em2 = compute_acc_between_years(selected_ngrams, model_path1, model_path2, all_model_vectors=acc_default_values_dict['all_model_vectors'], top_k_acc=top_k, skip_same_word_pairs=False, skip_duplicates=False)
+    word_pair_sim_df = pd.DataFrame(list(word_pairs.items()), columns=["Word Pair","Acceleration"])
+    word_pair_sim_df = word_pair_sim_df.sort_values(by="Acceleration", ascending=False)
+    st.dataframe(word_pair_sim_df.T)
+
+    plot_year = st.select_slider("Year", options=years, value=years[-1], help="Year for which plot is to be made.")
+    plot_words_string = st.text_area(label="Words to be plotted", value=",".join(selected_ngrams))
+    plot_words = plot_words_string.split(',')
+
+    year_model_path = os.path.join(model_path, plot_year+'.model')
+
+    word_embeddings = get_word_embeddings(year_model_path, plot_words)
+
+    
+    compass_embeddings = None
+    if st.checkbox("Fit on Compass"):
+        compass_embeddings = None
+        compass_words = compass_text.replace("\n"," ").split() # TO-DO: CHECK THIS APPROACH
+        compass_model_path = os.path.join(model_path, "compass.model")
+        compass_embeddings = get_word_embeddings(compass_model_path, compass_words)
+    
+    typ = st.selectbox("Dimensionality Reduction Method",options=["tsne","pca","umap"])
+    two_dim_embs = reduce_dimensions(word_embeddings, compass_embeddings, typ=typ, fit_on_compass=compass_embeddings is not None)
+
+    print(two_dim_embs.shape)
+    fig = plotly_scatter(two_dim_embs[:,0], two_dim_embs[:,1], text_annot=plot_words)
+
+    col1, col2 = st.beta_columns([8, 2])
+    plot(fig, col1, col2)
+
+
 
 elif analysis_type == "Semantic Drift":
     text_place_holder.write(
