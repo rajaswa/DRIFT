@@ -20,26 +20,23 @@ def compute_acceleration_matrix(keywords, sim_matrix_1, sim_matrix_2, top_k_acc=
 
     word_pairs = {}
     top_k_count = 0
+    idx = 0
 
-    for sorted_idx in sorted_indices:
-        while top_k_count<top_k_acc:
-            word_1_index, word_2_index = sorted_idx
+    while top_k_count<top_k_acc and idx<len(sorted_indices):
+        word_1_index, word_2_index = sorted_indices[idx]
+        idx+=1
 
-            word_1 = keywords[word_1_index]
-            word_2 = keywords[word_2_index]
-            if skip_same_word_pairs and word_1==word_2:
-                print('d')
-                continue
-            if skip_duplicates and (word_2, word_1) in word_pairs:
-                print('t')
-                continue
+        word_1 = keywords[word_1_index]
+        word_2 = keywords[word_2_index]
+        if skip_same_word_pairs and word_1==word_2:
+            continue
+        if skip_duplicates and (word_2, word_1) in word_pairs:
+            continue
 
-            word_pairs[(word_1,word_2)] = acceleration_matrix[word_1_index][
-                word_2_index
-            ]
-            top_k_count+=1
-        else:
-            break
+        word_pairs[(word_1,word_2)] = acceleration_matrix[word_1_index][
+            word_2_index
+        ]
+        top_k_count+=1
 
     return word_pairs
 

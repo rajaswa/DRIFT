@@ -239,13 +239,20 @@ elif analysis_type == "Acceleration Plot":
     model_path1 = os.path.join(model_path, year1+'.model')
     model_path2 = os.path.join(model_path, year2+'.model')
     
-    word_pairs, em1, em2 = compute_acc_between_years(selected_ngrams, model_path1, model_path2, all_model_vectors=acc_default_values_dict['all_model_vectors'], top_k_acc=top_k, skip_same_word_pairs=False, skip_duplicates=False)
+    word_pairs, em1, em2 = compute_acc_between_years(selected_ngrams, model_path1, model_path2, all_model_vectors=acc_default_values_dict['all_model_vectors'], top_k_acc=top_k, skip_same_word_pairs=True, skip_duplicates=True)
     word_pair_sim_df = pd.DataFrame(list(word_pairs.items()), columns=["Word Pair","Acceleration"])
     word_pair_sim_df = word_pair_sim_df.sort_values(by="Acceleration", ascending=False)
     st.dataframe(word_pair_sim_df.T)
 
     plot_year = st.select_slider("Year", options=years, value=years[-1], help="Year for which plot is to be made.")
-    plot_words_string = st.text_area(label="Words to be plotted", value=",".join(selected_ngrams))
+    word_pair_sim_df_words = []
+    for word1, word2 in word_pair_sim_df["Word Pair"].values:
+        if word1 not in word_pair_sim_df_words:
+            word_pair_sim_df_words.append(word1)
+        if word2 not in word_pair_sim_df_words:
+            word_pair_sim_df_words.append(word2)
+        
+    plot_words_string = st.text_area(label="Words to be plotted", value=",".join(word_pair_sim_df_words))
     plot_words = plot_words_string.split(',')
 
     year_model_path = os.path.join(model_path, plot_year+'.model')
@@ -263,7 +270,6 @@ elif analysis_type == "Acceleration Plot":
     typ = st.selectbox("Dimensionality Reduction Method",options=["tsne","pca","umap"])
     two_dim_embs = reduce_dimensions(word_embeddings, compass_embeddings, typ=typ, fit_on_compass=compass_embeddings is not None)
 
-    print(two_dim_embs.shape)
     fig = plotly_scatter(two_dim_embs[:,0], two_dim_embs[:,1], text_annot=plot_words)
 
     col1, col2 = st.beta_columns([8, 2])
@@ -275,6 +281,18 @@ elif analysis_type == "Semantic Drift":
     text_place_holder.write(
         "We find the top k words which have drifted the most WRT some fixed words."
     )
+
+    acc_default_values_dict = get_default_args(compute_acc_between_years)
+    freq_default_values_dict = get_default_args(freq_top_k)
+
+    data_path = st.sidebar.text_input("Data Path",value="./data/", help="Directory path to the folder containing year-wise text files.")
+    model_path = st.sidebar.text_input("Model Path",value="./model/", help="Directory path to the folder containing year-wise model files.")
+    
+    years = sorted([fil.split('.')[0] for fil in os.listdir(data_path) if fil!='compass.txt'])
+
+
+    with open(os.path.join(data_path, 'compass.txt'), encoding="utf-8") as f:
+            compass_text = f.read()
     years = ["1990", "2016", "2017", "2020"]
     start_year, end_year = st.sidebar.select_slider(
         "Range in years", options=years, value=(years[0], years[-1])
