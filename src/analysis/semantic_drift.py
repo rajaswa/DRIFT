@@ -1,11 +1,12 @@
 import numpy as np
+import streamlit as st
 from gensim.models.word2vec import Word2Vec
 from sklearn.metrics.pairwise import cosine_similarity
 
 from src.utils.words import get_word_embeddings
 
 from ..utils import intersection
-import streamlit as st
+
 
 def find_most_similar_words(
     words,
@@ -52,7 +53,10 @@ def find_most_similar_words(
         sim_dict[word]["sim_scores"] = most_sim_scores[idx]
     return sim_dict
 
+
 st.cache(persist=True)
+
+
 def find_most_drifted_words(
     words, year_model_paths, compass_model_path, top_k_for_sim=10, top_most_drifted_k=5
 ):

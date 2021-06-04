@@ -1,8 +1,9 @@
 from itertools import islice
 
 import numpy as np
-from nltk import FreqDist, ngrams
 import streamlit as st
+from nltk import FreqDist, ngrams
+
 
 def find_ngrams_for_sentences(sentences, n=1):
     sentence_list = sentences.split("\n")
@@ -55,6 +56,7 @@ def find_productivity(words, text, n=1):
         prods[word] = prod
 
     return prods
+
 
 @st.cache(persist=True)
 def freq_top_k(text, top_k=20, n=1, normalize=False):

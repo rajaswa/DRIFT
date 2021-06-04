@@ -2,10 +2,9 @@ import matplotlib.pyplot as plt
 import nltk
 import numpy as np
 import plotly.express as px
+import plotly.graph_objects as go
 from nltk.corpus import stopwords
 from wordcloud import WordCloud
-import plotly.graph_objects as go
-
 
 
 nltk.download("stopwords")
@@ -73,6 +72,7 @@ def plotly_scatter(x, y, color_by_values=None, text_annot=None, save_path=None):
     if save_path:
         fig.write_html(save_path)
     return fig
+
 
 def word_cloud(
     words,

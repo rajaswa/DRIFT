@@ -23,9 +23,7 @@ def kmeans_train(X, n_cluster, method="faiss"):
     return labels
 
 
-def kmeans_clustering(
-    keywords, model_path, k_opt=None, k_max=10, method="faiss"
-):
+def kmeans_clustering(keywords, model_path, k_opt=None, k_max=10, method="faiss"):
     assert method in ["faiss", "sklearn"], "method should be one of " + str(
         ["faiss", "sklearn"]
     )
