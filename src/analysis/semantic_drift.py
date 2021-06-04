@@ -62,9 +62,7 @@ def find_most_drifted_words(
 ):
 
     sim_dicts = [
-        find_most_similar_words(
-            words, year_model_path, compass_model_path, top_k_sim
-        )
+        find_most_similar_words(words, year_model_path, compass_model_path, top_k_sim)
         for year_model_path in year_model_paths
     ]
     scores = {}

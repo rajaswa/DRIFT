@@ -58,7 +58,9 @@ def pyplot_scatter_embeddings(
     return fig
 
 
-def plotly_scatter(x, y, color_by_values=None, text_annot=None, save_path=None):
+def plotly_scatter(
+    x, y, color_by_values=None, text_annot=None, title=None, save_path=None
+):
 
     fig = px.scatter(
         x=x,
@@ -66,6 +68,7 @@ def plotly_scatter(x, y, color_by_values=None, text_annot=None, save_path=None):
         color=color_by_values,
         text=text_annot,
         color_continuous_scale="Spectral",
+        title=title,
     )
 
     fig.update_traces(textposition="top center")
@@ -109,9 +112,9 @@ def word_cloud(
     return word_cloud_obj.to_image()
 
 
-def plotly_line_dataframe(df, x_col, y_col, word_col, save_path=None):
+def plotly_line_dataframe(df, x_col, y_col, word_col, title=None, save_path=None):
 
-    fig = px.line(df, x=x_col, y=y_col, color=word_col)
+    fig = px.line(df, x=x_col, y=y_col, color=word_col, title=title)
     if save_path:
         fig.write_html(save_path)
     return fig

@@ -1,6 +1,7 @@
-from .similarity_acc_matrix import compute_similarity_matrix_keywords
 import numpy as np
 import tqdm
+
+from .similarity_acc_matrix import compute_similarity_matrix_keywords
 
 
 def predict_trends(keywords, year_model_paths, delta=20):

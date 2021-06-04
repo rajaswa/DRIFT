@@ -89,10 +89,9 @@ def plot(obj, col1, col2, typ="plotly"):
             elif typ == "PIL":
                 obj.save(save_name)
 
+
 def generate_components_from_dict(analysis_type, variable_params):
-    sidebar_summary_text.write(
-        ANALYSIS_METHODS[analysis_type]["SUMMARY"]
-    )
+    sidebar_summary_text.write(ANALYSIS_METHODS[analysis_type]["SUMMARY"])
     figure1_title.header(analysis_type)
 
     vars = {}
@@ -114,24 +113,23 @@ def generate_components_from_dict(analysis_type, variable_params):
 
     return vars
 
+
 def get_years_from_data_path(data_path):
     years = sorted(
-        [
-            fil.split(".")[0]
-            for fil in os.listdir(data_path)
-            if fil != "compass.txt"
-        ]
+        [fil.split(".")[0] for fil in os.listdir(data_path) if fil != "compass.txt"]
     )
     return years
 
+
 def read_text_file(data_path, name):
-    with open(
-        os.path.join(data_path, name + ".txt"), encoding="utf-8"
-    ) as f:
+    with open(os.path.join(data_path, name + ".txt"), encoding="utf-8") as f:
         words = f.read()
     return words
 
-def get_productivity_for_range(start_year, end_year,selected_ngrams, years, data_path, n):
+
+def get_productivity_for_range(
+    start_year, end_year, selected_ngrams, years, data_path, n
+):
     yearss = []
     words = []
     prodss = []
@@ -150,7 +148,10 @@ def get_productivity_for_range(start_year, end_year,selected_ngrams, years, data
     )
     return productivity_df
 
-def get_word_pair_sim_bw_models(year1, year2, model_path, selected_ngrams, all_model_vectors,top_k_acc):
+
+def get_word_pair_sim_bw_models(
+    year1, year2, model_path, selected_ngrams, all_model_vectors, top_k_acc
+):
     model_path1 = os.path.join(model_path, year1 + ".model")
     model_path2 = os.path.join(model_path, year2 + ".model")
 
@@ -167,7 +168,7 @@ def get_word_pair_sim_bw_models(year1, year2, model_path, selected_ngrams, all_m
         list(word_pairs.items()), columns=["Word Pair", "Acceleration"]
     )
     word_pair_sim_df = word_pair_sim_df.sort_values(by="Acceleration", ascending=False)
-    
+
     word_pair_sim_df_words = []
     for word1, word2 in word_pair_sim_df["Word Pair"].values:
         if word1 not in word_pair_sim_df_words:
@@ -175,6 +176,7 @@ def get_word_pair_sim_bw_models(year1, year2, model_path, selected_ngrams, all_m
         if word2 not in word_pair_sim_df_words:
             word_pair_sim_df_words.append(word2)
     return word_pair_sim_df, word_pair_sim_df_words
+
 
 st.set_page_config(
     page_title="Diachronic Analysis",
@@ -214,7 +216,10 @@ sidebar_parameters = sidebar.beta_container()
 # COMMON RESOURCES
 
 COMMON = dict(
-    TITLE="Diachronic", SIDEBAR_TITLE="Settings", SIDEBAR_SUMMARY_HEADER="Summary", STOPWORDS=list(set(stopwords.words("english")))
+    TITLE="Diachronic",
+    SIDEBAR_TITLE="Settings",
+    SIDEBAR_SUMMARY_HEADER="Summary",
+    STOPWORDS=list(set(stopwords.words("english"))),
 )
 
 ANALYSIS_METHODS = {
@@ -353,7 +358,7 @@ ANALYSIS_METHODS = {
                 variable_params={},
                 params=dict(
                     body="Note that all words may not be present in all years. In that case mean of all word vectors is taken."
-                )
+                ),
             ),
             data_path=dict(
                 component_var=sidebar_parameters,
@@ -406,17 +411,17 @@ ANALYSIS_METHODS = {
                     help="Top-K words for accuracy.",
                 ),
             ),
-            p2f = dict(
+            p2f=dict(
                 component_var=sidebar_parameters,
                 typ="checkbox",
                 variable_params={},
                 params=dict(
                     label="Past→Future",
                     value=True,
-                    help="Whether to calculate past to future acceleration"
-                )
-            )
-        )
+                    help="Whether to calculate past to future acceleration",
+                ),
+            ),
+        ),
     ),
     "Semantic Drift": dict(
         ABOUT="",
@@ -475,7 +480,7 @@ ANALYSIS_METHODS = {
                     help="Top-K words for drift.",
                 ),
             ),
-        )
+        ),
     ),
     "Tracking Clusters": dict(
         ABOUT="",
@@ -512,8 +517,7 @@ ANALYSIS_METHODS = {
                     help="Top-K words to be chosen from.",
                 ),
             ),
-
-            n_clusters = dict(
+            n_clusters=dict(
                 component_var=sidebar_parameters,
                 typ="number_input",
                 variable_params={},
@@ -525,10 +529,10 @@ ANALYSIS_METHODS = {
                     help="Number of clusters. If set to 0, optimal number of clusters are found using the silhouette score.",
                 ),
             ),
-            max_clusters = dict(
+            max_clusters=dict(
                 component_var=sidebar_parameters,
                 typ="number_input",
-                variable_params={"value":"k_max"},
+                variable_params={"value": "k_max"},
                 params=dict(
                     label="Max number of clusters",
                     min_value=1,
@@ -536,7 +540,6 @@ ANALYSIS_METHODS = {
                     format="%d",
                     help="Maximum number of clusters. Used when number of clusters is 0.",
                 ),
-
             ),
             method=dict(
                 component_var=sidebar_parameters,
@@ -545,11 +548,11 @@ ANALYSIS_METHODS = {
                 params=dict(
                     label="Method",
                     options=["faiss", "sklearn"],
-                    help="Method to use for K-means. `faiss` is recommended when calculating optimal number of clusters."
-                )
-            )
-        )
-    )
+                    help="Method to use for K-means. `faiss` is recommended when calculating optimal number of clusters.",
+                ),
+            ),
+        ),
+    ),
 }
 # SIDEBAR COMMON SETUP
 title.title(COMMON["TITLE"])
@@ -576,7 +579,7 @@ if analysis_type == "WordCloud":
             label="Year",
             options=years,
             help="Year for which world cloud is to be generated",
-        )    
+        )
 
     words = read_text_file(vars["data_path"], selected_year)
 
@@ -600,13 +603,10 @@ elif analysis_type == "Productivity Plot":
     vars = generate_components_from_dict(analysis_type, variable_params)
 
     years = get_years_from_data_path(vars["data_path"])
-    compass_text = read_text_file(vars["data_path"],"compass")
+    compass_text = read_text_file(vars["data_path"], "compass")
 
     choose_list_freq = freq_top_k(
-        compass_text,
-        top_k=vars["top_k"],
-        n=vars["n"],
-        normalize=vars["normalize"]
+        compass_text, top_k=vars["top_k"], n=vars["n"], normalize=vars["normalize"]
     )
     choose_list = list(choose_list_freq.keys())
 
@@ -618,37 +618,47 @@ elif analysis_type == "Productivity Plot":
         start_year, end_year = st.select_slider(
             "Range in years", options=years, value=(years[0], years[-1])
         )
+        plot_title = st.text_input(
+            label="Plot Title",
+            value=f"{analysis_type} for range {start_year}-{end_year}",
+        )
 
-    productivity_df = get_productivity_for_range(start_year, end_year, selected_ngrams, years, vars["data_path"], vars["n"])   
+    productivity_df = get_productivity_for_range(
+        start_year, end_year, selected_ngrams, years, vars["data_path"], vars["n"]
+    )
     n_gram_freq_df = pd.DataFrame(
         list(choose_list_freq.items()), columns=["N-gram", "Frequency"]
     )
-    
+
     # plot
     col1, col2 = figure1_block.beta_columns([8, 2])
     with st.spinner("Plotting"):
         fig = plotly_line_dataframe(
-            productivity_df, x_col="Year", y_col="Productivity", word_col="Word"
+            productivity_df,
+            x_col="Year",
+            y_col="Productivity",
+            word_col="Word",
+            title=plot_title,
         )
         plot(fig, col1, col2)
     col1.dataframe(n_gram_freq_df.T)
 
 elif analysis_type == "Acceleration Plot":
     variable_params = get_default_args(compute_acc_between_years)
-    variable_params.update(get_default_args(freq_top_k)) 
+    variable_params.update(get_default_args(freq_top_k))
     vars = generate_components_from_dict(analysis_type, variable_params)
     years = get_years_from_data_path(vars["data_path"])
-    compass_text = read_text_file(vars["data_path"],"compass")
+    compass_text = read_text_file(vars["data_path"], "compass")
 
     figure1_params_expander = figure1_params.beta_expander("Plot Parameters")
-    
+
     with figure1_params_expander:
         year1, year2 = st.select_slider(
             "Range in years",
             options=years if vars["p2f"] else years[::-1],
             value=(years[0], years[-1]) if vars["p2f"] else (years[-1], years[0]),
         )
-        
+
     # TO-DO: Check if n is needed here
     # n = st.sidebar.number_input("N", value=freq_default_values_dict['n'], min_value=1, format="%d", help="N in N-gram for productivity calculation.")
 
@@ -665,8 +675,15 @@ elif analysis_type == "Acceleration Plot":
             "Selected N-grams", default=choose_list, options=choose_list
         )
 
-    word_pair_sim_df, word_pair_sim_df_words = get_word_pair_sim_bw_models(year1, year2, vars["model_path"], selected_ngrams, vars["all_model_vectors"], vars["top_k_acc"])
-    
+    word_pair_sim_df, word_pair_sim_df_words = get_word_pair_sim_bw_models(
+        year1,
+        year2,
+        vars["model_path"],
+        selected_ngrams,
+        vars["all_model_vectors"],
+        vars["top_k_acc"],
+    )
+
     with figure1_params_expander:
         st.dataframe(word_pair_sim_df.T)
         plot_year = st.select_slider(
@@ -683,6 +700,10 @@ elif analysis_type == "Acceleration Plot":
         typ = st.selectbox(
             "Dimensionality Reduction Method", options=["tsne", "pca", "umap"]
         )
+        plot_title = st.text_input(
+            label="Plot Title",
+            value=f"{analysis_type} for range {plot_year} given acc range {year1}-{year2}",
+        )
     plot_words = plot_words_string.split(",")
 
     year_model_path = os.path.join(vars["model_path"], plot_year + ".model")
@@ -693,7 +714,12 @@ elif analysis_type == "Acceleration Plot":
 
     col1, col2 = figure1_block.beta_columns([8, 2])
     with st.spinner("Plotting"):
-        fig = plotly_scatter(two_dim_embs[:, 0], two_dim_embs[:, 1], text_annot=plot_words)
+        fig = plotly_scatter(
+            two_dim_embs[:, 0],
+            two_dim_embs[:, 1],
+            text_annot=plot_words,
+            title=plot_title,
+        )
         plot(fig, col1, col2)
 
 
@@ -702,15 +728,12 @@ elif analysis_type == "Semantic Drift":
     variable_params.update(get_default_args(freq_top_k))
     vars = generate_components_from_dict(analysis_type, variable_params)
     years = get_years_from_data_path(vars["data_path"])
-    compass_text = read_text_file(vars["data_path"],"compass")
+    compass_text = read_text_file(vars["data_path"], "compass")
 
     # n = st.sidebar.number_input("N", value=freq_default_values_dict['n'], min_value=1, format="%d", help="N in N-gram for productivity calculation.")
 
     choose_list_freq = freq_top_k(
-        compass_text,
-        top_k=vars["top_k"],
-        n=1,
-        normalize=True
+        compass_text, top_k=vars["top_k"], n=1, normalize=True
     )
     keywords_list = list(choose_list_freq.keys())
 
@@ -728,6 +751,9 @@ elif analysis_type == "Semantic Drift":
         typ = st.selectbox(
             "Dimensionality Reduction Method", options=["tsne", "pca", "umap"]
         )
+        plot_title = st.text_input(
+            label="Plot Title", value=f"{analysis_type} for range {year1}-{year2}"
+        )
 
     model_path_1 = os.path.join(vars["model_path"], year1 + ".model")
     model_path_2 = os.path.join(vars["model_path"], year2 + ".model")
@@ -740,7 +766,7 @@ elif analysis_type == "Semantic Drift":
         top_k_for_sim=vars["top_k_sim"],
         top_most_drifted_k=vars["top_k_drift"],
     )
-        
+
     two_dim_embs = reduce_dimensions(embs, typ=typ, fit_on_compass=False)
     plot_words = [word.split("_")[0] for word in words]
     plot_years = [word.split("_")[1] for word in words]
@@ -752,6 +778,7 @@ elif analysis_type == "Semantic Drift":
             y=two_dim_embs[:, 1],
             color_by_values=plot_years,
             text_annot=plot_words,
+            title=plot_title,
         )
         plot(fig, col1, col2)
 
@@ -761,7 +788,7 @@ elif analysis_type == "Tracking Clusters":
     variable_params.update(get_default_args(freq_top_k))
     vars = generate_components_from_dict(analysis_type, variable_params)
     years = get_years_from_data_path(vars["data_path"])
-    compass_text = read_text_file(vars["data_path"],"compass")
+    compass_text = read_text_file(vars["data_path"], "compass")
 
     figure1_params_expander = figure1_params.beta_expander("Plot Parameters")
     with figure1_params_expander:
@@ -780,6 +807,9 @@ elif analysis_type == "Tracking Clusters":
         typ = st.selectbox(
             "Dimensionality Reduction Method", options=["tsne", "pca", "umap"]
         )
+        plot_title = st.text_input(
+            label="Plot Title", value=f"{analysis_type} for range {selected_year}"
+        )
 
     year_model_path = os.path.join(vars["model_path"], selected_year + ".model")
 
@@ -792,7 +822,7 @@ elif analysis_type == "Tracking Clusters":
     )
 
     figure1_block.write(f"Optimal Number of Clusters: {k_opt}")
-    
+
     two_dim_embs = reduce_dimensions(embs, typ=typ, fit_on_compass=False)
 
     col1, col2 = figure1_block.beta_columns([8, 2])
@@ -802,5 +832,6 @@ elif analysis_type == "Tracking Clusters":
             y=two_dim_embs[:, 1],
             color_by_values=labels,
             text_annot=keywords,
+            title=title,
         )
         plot(fig, col1, col2)
