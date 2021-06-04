@@ -3,9 +3,7 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
-from numpy.core.fromnumeric import var
 import pandas as pd
-import plotly.express as px
 import streamlit as st
 from nltk.corpus import stopwords
 from streamlit import caching
@@ -91,6 +89,92 @@ def plot(obj, col1, col2, typ="plotly"):
             elif typ == "PIL":
                 obj.save(save_name)
 
+def generate_components_from_dict(analysis_type, variable_params):
+    sidebar_summary_text.write(
+        ANALYSIS_METHODS[analysis_type]["SUMMARY"]
+    )
+    figure1_title.header(analysis_type)
+
+    vars = {}
+
+    for component_key, component_dict in ANALYSIS_METHODS[analysis_type][
+        "COMPONENTS"
+    ].items():
+        component_var = component_dict["component_var"]
+        typ = component_dict["typ"]
+        params = component_dict["params"]
+        component_variable_params = component_dict["variable_params"]
+        params.update(
+            {
+                key: variable_params[value]
+                for key, value in component_variable_params.items()
+            }
+        )
+        vars[component_key] = get_component(component_var, typ, params)
+
+    return vars
+
+def get_years_from_data_path(data_path):
+    years = sorted(
+        [
+            fil.split(".")[0]
+            for fil in os.listdir(data_path)
+            if fil != "compass.txt"
+        ]
+    )
+    return years
+
+def read_text_file(data_path, name):
+    with open(
+        os.path.join(data_path, name + ".txt"), encoding="utf-8"
+    ) as f:
+        words = f.read()
+    return words
+
+def get_productivity_for_range(start_year, end_year,selected_ngrams, years, data_path, n):
+    yearss = []
+    words = []
+    prodss = []
+    start_year_idx = years.index(start_year)
+    end_year_idx = years.index(end_year)
+    for year_idx in range(start_year_idx, end_year_idx + 1):
+        year = years[year_idx]
+        year_text = read_text_file(data_path, year)
+        prods = find_productivity(selected_ngrams, year_text, n)
+        for word, productivity in prods.items():
+            yearss.append(year)
+            words.append(word)
+            prodss.append(productivity)
+    productivity_df = pd.DataFrame.from_dict(
+        {"Year": yearss, "Word": words, "Productivity": prodss}
+    )
+    return productivity_df
+
+def get_word_pair_sim_bw_models(year1, year2, model_path, selected_ngrams, all_model_vectors,top_k_acc):
+    model_path1 = os.path.join(model_path, year1 + ".model")
+    model_path2 = os.path.join(model_path, year2 + ".model")
+
+    word_pairs, em1, em2 = compute_acc_between_years(
+        selected_ngrams,
+        model_path1,
+        model_path2,
+        all_model_vectors=all_model_vectors,
+        top_k_acc=top_k_acc,
+        skip_same_word_pairs=True,
+        skip_duplicates=True,
+    )
+    word_pair_sim_df = pd.DataFrame(
+        list(word_pairs.items()), columns=["Word Pair", "Acceleration"]
+    )
+    word_pair_sim_df = word_pair_sim_df.sort_values(by="Acceleration", ascending=False)
+    
+    word_pair_sim_df_words = []
+    for word1, word2 in word_pair_sim_df["Word Pair"].values:
+        if word1 not in word_pair_sim_df_words:
+            word_pair_sim_df_words.append(word1)
+        if word2 not in word_pair_sim_df_words:
+            word_pair_sim_df_words.append(word2)
+    return word_pair_sim_df, word_pair_sim_df_words
 
 st.set_page_config(
     page_title="Diachronic Analysis",
@@ -123,14 +207,14 @@ sidebar_summary_header = sidebar.empty()
 sidebar_summary_text = sidebar.empty()
 sidebar_mode = sidebar.empty()
 sidebar_analysis_type = sidebar.empty()
-sidebar_parameters = sidebar.beta_container()  # this will be a beta container
-
+sidebar_parameters = sidebar.beta_container()
 
 
 # Analysis Methods Resource Bundle
 # COMMON RESOURCES
+
 COMMON = dict(
-    TITLE="Diachronic", SIDEBAR_TITLE="Settings", SIDEBAR_SUMMARY_HEADER="Summary"
+    TITLE="Diachronic", SIDEBAR_TITLE="Settings", SIDEBAR_SUMMARY_HEADER="Summary", STOPWORDS=list(set(stopwords.words("english")))
 )
 
 ANALYSIS_METHODS = {
@@ -248,7 +332,7 @@ ANALYSIS_METHODS = {
                     help="Top-K words to be chosen from.",
                 ),
             ),
-            keyword_method=dict(
+            normalize=dict(
                 component_var=sidebar_parameters,
                 typ="checkbox",
                 variable_params={"value": "normalize"},
@@ -262,43 +346,210 @@ ANALYSIS_METHODS = {
     "Acceleration Plot": dict(
         ABOUT="",
         SUMMARY="A tag cloud is a novelty visual representation of text data, typically used to depict keyword metadata on websites, or to visualize free form text. Tags are usually single words, and the importance of each tag is shown with font size or color.",
-        COMPONENTS=
-
-
-
-            data_path = st.sidebar.text_input(
-                "Data Dir",
-                value="./data/",
-                help="Directory path to the folder containing year-wise text files.",
+        COMPONENTS=dict(
+            note=dict(
+                component_var=figure1_block,
+                typ="info",
+                variable_params={},
+                params=dict(
+                    body="Note that all words may not be present in all years. In that case mean of all word vectors is taken."
+                )
+            ),
+            data_path=dict(
+                component_var=sidebar_parameters,
+                typ="text_input",
+                variable_params={},
+                params=dict(
+                    label="Data Path",
+                    value="./data/",
+                    help="Directory path to the folder containing year-wise text files.",
+                ),
+            ),
+            model_path=dict(
+                component_var=sidebar_parameters,
+                typ="text_input",
+                variable_params={},
+                params=dict(
+                    label="Model Dir",
+                    value="./model/",
+                    help="Directory path to the folder containing year-wise model files.",
+                ),
+            ),
+            normalize=dict(
+                component_var=sidebar_parameters,
+                typ="checkbox",
+                variable_params={"value": "normalize"},
+                params=dict(
+                    label="Normalize",
+                    help="Whether to use normalize frequency.",
+                ),
+            ),
+            top_k=dict(
+                component_var=sidebar_parameters,
+                typ="number_input",
+                variable_params={"value": "top_k"},
+                params=dict(
+                    label="K",
+                    min_value=1,
+                    format="%d",
+                    help="Top-K words to be chosen from.",
+                ),
+            ),
+            top_k_acc=dict(
+                component_var=sidebar_parameters,
+                typ="number_input",
+                variable_params={"value": "top_k_acc"},
+                params=dict(
+                    label="K (acc.)",
+                    min_value=1,
+                    format="%d",
+                    help="Top-K words for accuracy.",
+                ),
+            ),
+            p2f = dict(
+                component_var=sidebar_parameters,
+                typ="checkbox",
+                variable_params={},
+                params=dict(
+                    label="Past→Future",
+                    value=True,
+                    help="Whether to calculate past to future acceleration"
+                )
             )
-            model_path = st.sidebar.text_input(
-                "Model Dir",
-                value="./model/",
-                help="Directory path to the folder containing year-wise model files.",
-            )
-
-            keyword_method = st.sidebar.radio(
-                "Keyword Method", options=["Frequency", "Norm Frequency"]
-            )  # Needs format_func
-            top_k = st.sidebar.number_input(
-                "K", value=variable_params["top_k_acc"], min_value=1, format="%d"
-            )
-
-            top_k_keywords = st.sidebar.number_input(
-                "K (for keywords selection)",
-                value=variable_params["top_k"],
-                min_value=1,
-                format="%d",
-            )
+        )
     ),
     "Semantic Drift": dict(
         ABOUT="",
         SUMMARY="A tag cloud is a novelty visual representation of text data, typically used to depict keyword metadata on websites, or to visualize free form text. Tags are usually single words, and the importance of each tag is shown with font size or color.",
+        COMPONENTS=dict(
+            data_path=dict(
+                component_var=sidebar_parameters,
+                typ="text_input",
+                variable_params={},
+                params=dict(
+                    label="Data Path",
+                    value="./data/",
+                    help="Directory path to the folder containing year-wise text files.",
+                ),
+            ),
+            model_path=dict(
+                component_var=sidebar_parameters,
+                typ="text_input",
+                variable_params={},
+                params=dict(
+                    label="Model Dir",
+                    value="./model/",
+                    help="Directory path to the folder containing year-wise model files.",
+                ),
+            ),
+            top_k=dict(
+                component_var=sidebar_parameters,
+                typ="number_input",
+                variable_params={"value": "top_k"},
+                params=dict(
+                    label="K",
+                    min_value=1,
+                    format="%d",
+                    help="Top-K words to be chosen from.",
+                ),
+            ),
+            top_k_sim=dict(
+                component_var=sidebar_parameters,
+                typ="number_input",
+                variable_params={"value": "top_k_sim"},
+                params=dict(
+                    label="K (sim.)",
+                    min_value=1,
+                    format="%d",
+                    help="Top-K words for similarity.",
+                ),
+            ),
+            top_k_drift=dict(
+                component_var=sidebar_parameters,
+                typ="number_input",
+                variable_params={"value": "top_k_drift"},
+                params=dict(
+                    label="K (drift.)",
+                    min_value=1,
+                    format="%d",
+                    help="Top-K words for drift.",
+                ),
+            ),
+        )
     ),
     "Tracking Clusters": dict(
         ABOUT="",
         SUMMARY="A tag cloud is a novelty visual representation of text data, typically used to depict keyword metadata on websites, or to visualize free form text. Tags are usually single words, and the importance of each tag is shown with font size or color.",
-    ),
+        COMPONENTS=dict(
+            data_path=dict(
+                component_var=sidebar_parameters,
+                typ="text_input",
+                variable_params={},
+                params=dict(
+                    label="Data Path",
+                    value="./data/",
+                    help="Directory path to the folder containing year-wise text files.",
+                ),
+            ),
+            model_path=dict(
+                component_var=sidebar_parameters,
+                typ="text_input",
+                variable_params={},
+                params=dict(
+                    label="Model Dir",
+                    value="./model/",
+                    help="Directory path to the folder containing year-wise model files.",
+                ),
+            ),
+            top_k=dict(
+                component_var=sidebar_parameters,
+                typ="number_input",
+                variable_params={"value": "top_k"},
+                params=dict(
+                    label="K",
+                    min_value=1,
+                    format="%d",
+                    help="Top-K words to be chosen from.",
+                ),
+            ),
+
+            n_clusters = dict(
+                component_var=sidebar_parameters,
+                typ="number_input",
+                variable_params={},
+                params=dict(
+                    label="Number of clusters",
+                    min_value=0,
+                    value=0,
+                    format="%d",
+                    help="Number of clusters. If set to 0, optimal number of clusters are found using the silhouette score.",
+                ),
+            ),
+            max_clusters = dict(
+                component_var=sidebar_parameters,
+                typ="number_input",
+                variable_params={"value":"k_max"},
+                params=dict(
+                    label="Max number of clusters",
+                    min_value=1,
+                    value=0,
+                    format="%d",
+                    help="Maximum number of clusters. Used when number of clusters is 0.",
+                ),
+
+            ),
+            method=dict(
+                component_var=sidebar_parameters,
+                typ="selectbox",
+                variable_params={},
+                params=dict(
+                    label="Method",
+                    options=["faiss", "sklearn"],
+                    help="Method to use for K-means. `faiss` is recommended when calculating optimal number of clusters."
+                )
+            )
+        )
+    )
 }
 # SIDEBAR COMMON SETUP
 title.title(COMMON["TITLE"])
@@ -314,51 +565,27 @@ sidebar_summary_header.header(COMMON["SIDEBAR_SUMMARY_HEADER"])
 
 
 if analysis_type == "WordCloud":
+    # setup
     variable_params = get_default_args(word_cloud)
-    sidebar_summary_text.write(ANALYSIS_METHODS[analysis_type]["SUMMARY"])
-    figure1_title.header(analysis_type)
-    vars = {}
+    vars = generate_components_from_dict(analysis_type, variable_params)
 
-    for component_key, component_dict in ANALYSIS_METHODS[analysis_type][
-        "COMPONENTS"
-    ].items():
-        component_var = component_dict["component_var"]
-        typ = component_dict["typ"]
-        params = component_dict["params"]
-        component_variable_params = component_dict["variable_params"]
-        params.update(
-            {
-                key: variable_params[value]
-                for key, value in component_variable_params.items()
-            }
-        )
-        vars[component_key] = get_component(component_var, typ, params)
-
-    years = sorted(
-        [
-            fil.split(".")[0]
-            for fil in os.listdir(vars["data_path"])
-            if fil != "compass.txt"
-        ]
-    )
+    # get words
+    years = get_years_from_data_path(vars["data_path"])
     with figure1_params.beta_expander("Plot Parameters"):
         selected_year = st.select_slider(
             label="Year",
             options=years,
             help="Year for which world cloud is to be generated",
-        )
-    # TO-DO: Check if more stopwords are needed.
-    stop_words = list(set(stopwords.words("english")))
+        )    
 
-    with open(
-        os.path.join(vars["data_path"], selected_year + ".txt"), encoding="utf-8"
-    ) as f:
-        words = f.read()
+    words = read_text_file(vars["data_path"], selected_year)
+
+    # plot
     col1, col2 = figure1_plot.beta_columns([8, 2])
     with st.spinner("Plotting"):
         word_cloud_image = word_cloud(
             words=words,
-            stop_words=stop_words,
+            stop_words=COMMON["STOPWORDS"],
             max_words=vars["max_words"],
             min_font_size=vars["min_font_size"],
             max_font_size=vars["max_font_size"],
@@ -366,46 +593,20 @@ if analysis_type == "WordCloud":
             width=vars["width"],
             height=vars["height"],
         )
-
         plot(word_cloud_image, col1, col2, typ="PIL")
 
 elif analysis_type == "Productivity Plot":
     variable_params = get_default_args(freq_top_k)
-    sidebar_summary_text.write(ANALYSIS_METHODS[analysis_type]["SUMMARY"])
-    vars = {}
+    vars = generate_components_from_dict(analysis_type, variable_params)
 
-    for component_key, component_dict in ANALYSIS_METHODS[analysis_type][
-        "COMPONENTS"
-    ].items():
-        component_var = component_dict["component_var"]
-        typ = component_dict["typ"]
-        params = component_dict["params"]
-        component_variable_params = component_dict["variable_params"]
-        params.update(
-            {
-                key: variable_params[value]
-                for key, value in component_variable_params.items()
-            }
-        )
-        vars[component_key] = get_component(component_var, typ, params)
-
-    years = sorted(
-        [
-            fil.split(".")[0]
-            for fil in os.listdir(vars["data_path"])
-            if fil != "compass.txt"
-        ]
-    )
-    stop_words = list(set(stopwords.words("english")))
-
-    with open(os.path.join(vars["data_path"], "compass.txt"), encoding="utf-8") as f:
-        compass_text = f.read()
+    years = get_years_from_data_path(vars["data_path"])
+    compass_text = read_text_file(vars["data_path"],"compass")
 
     choose_list_freq = freq_top_k(
         compass_text,
         top_k=vars["top_k"],
         n=vars["n"],
-        normalize=vars["keyword_method"]
+        normalize=vars["normalize"]
     )
     choose_list = list(choose_list_freq.keys())
 
@@ -418,31 +619,13 @@ elif analysis_type == "Productivity Plot":
             "Range in years", options=years, value=(years[0], years[-1])
         )
 
-    yearss = []
-    words = []
-    prodss = []
-
-    start_year_idx = years.index(start_year)
-    end_year_idx = years.index(end_year)
-    for year_idx in range(start_year_idx, end_year_idx + 1):
-        year = years[year_idx]
-        with open(
-            os.path.join(vars["data_path"], year + ".txt"), encoding="utf-8"
-        ) as f:
-            year_text = f.read()
-            prods = find_productivity(selected_ngrams, year_text, vars["n"])
-            for word, productivity in prods.items():
-                yearss.append(year)
-                words.append(word)
-                prodss.append(productivity)
-    productivity_df = pd.DataFrame.from_dict(
-        {"Year": yearss, "Word": words, "Productivity": prodss}
-    )
+    productivity_df = get_productivity_for_range(start_year, end_year, selected_ngrams, years, vars["data_path"], vars["n"])   
     n_gram_freq_df = pd.DataFrame(
         list(choose_list_freq.items()), columns=["N-gram", "Frequency"]
     )
+    
+    # plot
     col1, col2 = figure1_block.beta_columns([8, 2])
-
     with st.spinner("Plotting"):
         fig = plotly_line_dataframe(
             productivity_df, x_col="Year", y_col="Productivity", word_col="Word"
@@ -452,315 +635,172 @@ elif analysis_type == "Productivity Plot":
 
 elif analysis_type == "Acceleration Plot":
     variable_params = get_default_args(compute_acc_between_years)
-    variable_params.update(get_default_args(freq_top_k))
-    sidebar_summary_text.write(
-        ANALYSIS_METHODS[analysis_type]["SUMMARY"]
-    )
+    variable_params.update(get_default_args(freq_top_k)) 
+    vars = generate_components_from_dict(analysis_type, variable_params)
+    years = get_years_from_data_path(vars["data_path"])
+    compass_text = read_text_file(vars["data_path"],"compass")
 
-    st.info(
-        "Note that all words may not be present in all years. In that case mean of all word vectors is taken."
-    )
-
-    vars = {}
-
-    for component_key, component_dict in ANALYSIS_METHODS[analysis_type][
-        "COMPONENTS"
-    ].items():
-        component_var = component_dict["component_var"]
-        typ = component_dict["typ"]
-        params = component_dict["params"]
-        component_variable_params = component_dict["variable_params"]
-        params.update(
-            {
-                key: variable_params[value]
-                for key, value in component_variable_params.items()
-            }
-        )
-        vars[component_key] = get_component(component_var, typ, params)
-
-    years = sorted(
-        [fil.split(".")[0] for fil in os.listdir(data_path) if fil != "compass.txt"]
-    )
-
-    with open(os.path.join(data_path, "compass.txt"), encoding="utf-8") as f:
-        compass_text = f.read()
-    p2f = st.sidebar.checkbox("""Past→Future""", value=True)
-    year1, year2 = st.sidebar.select_slider(
-        "Range in years",
-        options=years if p2f else years[::-1],
-        value=(years[0], years[-1]) if p2f else (years[-1], years[0]),
-    )
+    figure1_params_expander = figure1_params.beta_expander("Plot Parameters")
     
+    with figure1_params_expander:
+        year1, year2 = st.select_slider(
+            "Range in years",
+            options=years if vars["p2f"] else years[::-1],
+            value=(years[0], years[-1]) if vars["p2f"] else (years[-1], years[0]),
+        )
+        
+    # TO-DO: Check if n is needed here
     # n = st.sidebar.number_input("N", value=freq_default_values_dict['n'], min_value=1, format="%d", help="N in N-gram for productivity calculation.")
 
     choose_list_freq = freq_top_k(
         compass_text,
-        top_k=top_k_keywords,
+        top_k=vars["top_k"],
         n=1,
-        normalize=keyword_method == "Norm Frequency",
+        normalize=vars["normalize"],
     )
-    keywords_list = list(choose_list_freq.keys())
+    choose_list = list(choose_list_freq.keys())
 
-    compass_words = compass_text.replace("\n", " ").split()
+    with figure1_params_expander:
+        selected_ngrams = st.multiselect(
+            "Selected N-grams", default=choose_list, options=choose_list
+        )
 
-    selected_ngrams = st.sidebar.multiselect(
-        "Selected N-grams", default=keywords_list, options=compass_words
-    )
+    word_pair_sim_df, word_pair_sim_df_words = get_word_pair_sim_bw_models(year1, year2, vars["model_path"], selected_ngrams, vars["all_model_vectors"], vars["top_k_acc"])
+    
+    with figure1_params_expander:
+        st.dataframe(word_pair_sim_df.T)
+        plot_year = st.select_slider(
+            "Year",
+            options=years,
+            value=years[-1],
+            help="Year for which plot is to be made.",
+        )
 
-    model_path1 = os.path.join(model_path, year1 + ".model")
-    model_path2 = os.path.join(model_path, year2 + ".model")
+        plot_words_string = st.text_area(
+            label="Words to be plotted", value=",".join(word_pair_sim_df_words)
+        )
 
-    word_pairs, em1, em2 = compute_acc_between_years(
-        selected_ngrams,
-        model_path1,
-        model_path2,
-        all_model_vectors=acc_default_values_dict["all_model_vectors"],
-        top_k_acc=top_k,
-        skip_same_word_pairs=True,
-        skip_duplicates=True,
-    )
-    word_pair_sim_df = pd.DataFrame(
-        list(word_pairs.items()), columns=["Word Pair", "Acceleration"]
-    )
-    word_pair_sim_df = word_pair_sim_df.sort_values(by="Acceleration", ascending=False)
-    st.dataframe(word_pair_sim_df.T)
-
-    plot_year = st.select_slider(
-        "Year",
-        options=years,
-        value=years[-1],
-        help="Year for which plot is to be made.",
-    )
-    word_pair_sim_df_words = []
-    for word1, word2 in word_pair_sim_df["Word Pair"].values:
-        if word1 not in word_pair_sim_df_words:
-            word_pair_sim_df_words.append(word1)
-        if word2 not in word_pair_sim_df_words:
-            word_pair_sim_df_words.append(word2)
-
-    plot_words_string = st.text_area(
-        label="Words to be plotted", value=",".join(word_pair_sim_df_words)
-    )
+        typ = st.selectbox(
+            "Dimensionality Reduction Method", options=["tsne", "pca", "umap"]
+        )
     plot_words = plot_words_string.split(",")
 
-    year_model_path = os.path.join(model_path, plot_year + ".model")
+    year_model_path = os.path.join(vars["model_path"], plot_year + ".model")
 
     word_embeddings = get_word_embeddings(year_model_path, plot_words)
 
-    # compass_embeddings = None
-    # if st.checkbox("Fit on Compass"):
-    #     compass_embeddings = None
-    #     compass_words = compass_text.replace("\n"," ").split() # TO-DO: CHECK THIS APPROACH
-    #     compass_model_path = os.path.join(model_path, "compass.model")
-    #     compass_embeddings = get_word_embeddings(compass_model_path, compass_words)
-
-    typ = st.selectbox(
-        "Dimensionality Reduction Method", options=["tsne", "pca", "umap"]
-    )
     two_dim_embs = reduce_dimensions(word_embeddings, typ=typ, fit_on_compass=False)
 
-    fig = plotly_scatter(two_dim_embs[:, 0], two_dim_embs[:, 1], text_annot=plot_words)
-
-    col1, col2 = st.beta_columns([8, 2])
-    plot(fig, col1, col2)
+    col1, col2 = figure1_block.beta_columns([8, 2])
+    with st.spinner("Plotting"):
+        fig = plotly_scatter(two_dim_embs[:, 0], two_dim_embs[:, 1], text_annot=plot_words)
+        plot(fig, col1, col2)
 
 
 elif analysis_type == "Semantic Drift":
-    text_place_holder.write(
-        "We find the top k words which have drifted the most WRT some fixed words."
-    )
+    variable_params = get_default_args(find_most_drifted_words)
+    variable_params.update(get_default_args(freq_top_k))
+    vars = generate_components_from_dict(analysis_type, variable_params)
+    years = get_years_from_data_path(vars["data_path"])
+    compass_text = read_text_file(vars["data_path"],"compass")
 
-    drif_default_values_dict = get_default_args(find_most_drifted_words)
-    freq_default_values_dict = get_default_args(freq_top_k)
-
-    data_path = st.sidebar.text_input(
-        "Data Dir",
-        value="./data/",
-        help="Directory path to the folder containing year-wise text files.",
-    )
-    model_path = st.sidebar.text_input(
-        "Model Dir",
-        value="./model/",
-        help="Directory path to the folder containing year-wise model files.",
-    )
-
-    years = sorted(
-        [fil.split(".")[0] for fil in os.listdir(data_path) if fil != "compass.txt"]
-    )
-
-    with open(os.path.join(data_path, "compass.txt"), encoding="utf-8") as f:
-        compass_text = f.read()
-    p2f = st.sidebar.checkbox("""Past→Future""", value=True)
-    year1, year2 = st.sidebar.select_slider(
-        "Range in years",
-        options=years if p2f else years[::-1],
-        value=(years[0], years[-1]) if p2f else (years[-1], years[0]),
-    )
-    keyword_method = st.sidebar.radio(
-        "Keyword Method", options=["Frequency", "Norm Frequency"]
-    )  # Needs format_func
-    top_k_for_sim = st.sidebar.number_input(
-        "K for sim",
-        value=drif_default_values_dict["top_k_for_sim"],
-        min_value=1,
-        format="%d",
-    )
-    top_k_for_drift = st.sidebar.number_input(
-        "K for drift",
-        value=drif_default_values_dict["top_most_drifted_k"],
-        min_value=1,
-        format="%d",
-    )
-    top_k_keywords = st.sidebar.number_input(
-        "K (for keywords selection)",
-        value=freq_default_values_dict["top_k"],
-        min_value=1,
-        format="%d",
-    )
     # n = st.sidebar.number_input("N", value=freq_default_values_dict['n'], min_value=1, format="%d", help="N in N-gram for productivity calculation.")
 
     choose_list_freq = freq_top_k(
         compass_text,
-        top_k=top_k_keywords,
+        top_k=vars["top_k"],
         n=1,
-        normalize=keyword_method == "Norm Frequency",
+        normalize=True
     )
     keywords_list = list(choose_list_freq.keys())
 
-    compass_words = compass_text.replace("\n", " ").split()
-    selected_ngrams = st.sidebar.multiselect(
-        "Selected N-grams", default=keywords_list, options=compass_words
-    )
+    figure1_params_expander = figure1_params.beta_expander("Plot Parameters")
+    with figure1_params_expander:
+        year1, year2 = st.select_slider(
+            "Range in years",
+            options=years,
+            value=(years[0], years[-1]),
+        )
 
-    model_path_1 = os.path.join(model_path, year1 + ".model")
-    model_path_2 = os.path.join(model_path, year2 + ".model")
-    compass_model_path = os.path.join(model_path, "compass.model")
+        selected_ngrams = st.multiselect(
+            "Selected N-grams", default=keywords_list, options=keywords_list
+        )
+        typ = st.selectbox(
+            "Dimensionality Reduction Method", options=["tsne", "pca", "umap"]
+        )
+
+    model_path_1 = os.path.join(vars["model_path"], year1 + ".model")
+    model_path_2 = os.path.join(vars["model_path"], year2 + ".model")
+    compass_model_path = os.path.join(vars["model_path"], "compass.model")
 
     words, embs = find_most_drifted_words(
         selected_ngrams,
         [model_path_1, model_path_2],
         compass_model_path,
-        top_k_for_sim=top_k_for_sim,
-        top_most_drifted_k=top_k_for_drift,
+        top_k_for_sim=vars["top_k_sim"],
+        top_most_drifted_k=vars["top_k_drift"],
     )
-    typ = st.selectbox(
-        "Dimensionality Reduction Method", options=["tsne", "pca", "umap"]
-    )
+        
     two_dim_embs = reduce_dimensions(embs, typ=typ, fit_on_compass=False)
     plot_words = [word.split("_")[0] for word in words]
     plot_years = [word.split("_")[1] for word in words]
 
-    # plot_unique_words,plot_word_counts = np.unique(plot_words, return_counts=True)
-    # same_words = []
-    # for idx, plot_word_count in enumerate(plot_word_counts):
-    #     if plot_word_count>1:
-    #         same_words.append(plot_unique_words[idx])
-
-    # plot_same_words_indices = [idx for idx,word in enumerate(plot_words) if word in same_words]
-    # plot_dstnct_words_indices = [idx for idx,word in enumerate(plot_words) if word not in same_words]
-
-    # plot_same_words = get_values_from_indices(plot_words,  plot_same_words_indices)
-    # plot_dstnct_words = get_values_from_indices(plot_words,  plot_dstnct_words_indices)
-    # plot_same_years = get_values_from_indices(plot_years,  plot_same_words_indices)
-    # plot_dstnct_years = get_values_from_indices(plot_years,  plot_dstnct_words_indices)
-    # plot_same_embs = np.array(get_values_from_indices(two_dim_embs,  plot_same_words_indices))
-    # plot_dstnct_embs = np.array(get_values_from_indices(two_dim_embs,  plot_dstnct_words_indices))
-
-    # print(plot_dstnct_words)
-    # fig = px.line(x = plot_same_embs[:,0], y = plot_same_embs[:,1], color = plot_same_years,text=plot_same_words)
-    fig = plotly_scatter(
-        x=two_dim_embs[:, 0],
-        y=two_dim_embs[:, 1],
-        color_by_values=plot_years,
-        text_annot=plot_words,
-    )
-    # fig = plotly_add_lines_to_scatter(fig, plot_same_embs[:,0], plot_same_embs[:,1], color_by_values=plot_same_years, text_annot=plot_same_words)
-    col1, col2 = st.beta_columns([8, 2])
-    plot(fig, col1, col2)
+    col1, col2 = figure1_block.beta_columns([8, 2])
+    with st.spinner("Plotting"):
+        fig = plotly_scatter(
+            x=two_dim_embs[:, 0],
+            y=two_dim_embs[:, 1],
+            color_by_values=plot_years,
+            text_annot=plot_words,
+        )
+        plot(fig, col1, col2)
 
 
 elif analysis_type == "Tracking Clusters":
-    text_place_holder.write(
-        "We find the top k words which have drifted the most WRT some fixed words."
-    )
+    variable_params = get_default_args(kmeans_clustering)
+    variable_params.update(get_default_args(freq_top_k))
+    vars = generate_components_from_dict(analysis_type, variable_params)
+    years = get_years_from_data_path(vars["data_path"])
+    compass_text = read_text_file(vars["data_path"],"compass")
 
-    kmeans_default_values_dict = get_default_args(kmeans_clustering)
-    freq_default_values_dict = get_default_args(freq_top_k)
+    figure1_params_expander = figure1_params.beta_expander("Plot Parameters")
+    with figure1_params_expander:
+        selected_year = st.select_slider(
+            "Range in years", options=years, value=years[0]
+        )
 
-    data_path = st.sidebar.text_input(
-        "Data Dir",
-        value="./data/",
-        help="Directory path to the folder containing year-wise text files.",
-    )
-    model_path = st.sidebar.text_input(
-        "Model Dir",
-        value="./model/",
-        help="Directory path to the folder containing year-wise model files.",
-    )
-
-    years = sorted(
-        [fil.split(".")[0] for fil in os.listdir(data_path) if fil != "compass.txt"]
-    )
-
-    selected_year = st.sidebar.select_slider(
-        "Range in years", options=years, value=years[0]
-    )
-
-    with open(os.path.join(data_path, "compass.txt"), encoding="utf-8") as f:
-        compass_text = f.read()
-
-    top_k_keywords = st.sidebar.number_input(
-        "K (for keywords selection)",
-        value=freq_default_values_dict["top_k"],
-        min_value=1,
-        format="%d",
-    )
-    # n = st.sidebar.number_input("N", value=freq_default_values_dict['n'], min_value=1, format="%d", help="N in N-gram for productivity calculation.")
-
-    choose_list_freq = freq_top_k(compass_text, top_k=top_k_keywords, n=1)
+    choose_list_freq = freq_top_k(compass_text, top_k=vars["top_k"], n=1)
 
     keywords_list = list(choose_list_freq.keys())
 
-    compass_words = compass_text.replace("\n", " ").split()
-    selected_ngrams = st.sidebar.multiselect(
-        "Selected N-grams", default=keywords_list, options=compass_words
-    )
+    with figure1_params_expander:
+        selected_ngrams = st.multiselect(
+            "Selected N-grams", default=keywords_list, options=keywords_list
+        )
+        typ = st.selectbox(
+            "Dimensionality Reduction Method", options=["tsne", "pca", "umap"]
+        )
 
-    n_clusters = st.sidebar.number_input(
-        "Number of clusters",
-        value=0,
-        min_value=0,
-        format="%d",
-    )
-    max_clusters = st.sidebar.number_input(
-        "Max number of clusters",
-        value=kmeans_default_values_dict["k_max"],
-        min_value=1,
-        format="%d",
-    )
-
-    method = st.sidebar.selectbox("Method", options=["faiss", "sklearn"])
-    year_model_path = os.path.join(model_path, selected_year + ".model")
+    year_model_path = os.path.join(vars["model_path"], selected_year + ".model")
 
     keywords, embs, labels, k_opt = kmeans_clustering(
         selected_ngrams,
         year_model_path,
-        k_opt=None if n_clusters == 0 else n_clusters,
-        k_max=max_clusters,
-        method=method,
+        k_opt=None if vars["n_clusters"] == 0 else vars["n_clusters"],
+        k_max=vars["max_clusters"],
+        method=vars["method"],
     )
 
-    st.write(f"Optimal Number of Clusters: {k_opt}")
-    typ = st.selectbox(
-        "Dimensionality Reduction Method", options=["tsne", "pca", "umap"]
-    )
+    figure1_block.write(f"Optimal Number of Clusters: {k_opt}")
+    
     two_dim_embs = reduce_dimensions(embs, typ=typ, fit_on_compass=False)
 
-    fig = plotly_scatter(
-        x=two_dim_embs[:, 0],
-        y=two_dim_embs[:, 1],
-        color_by_values=labels,
-        text_annot=keywords,
-    )
-    col1, col2 = st.beta_columns([8, 2])
-    plot(fig, col1, col2)
+    col1, col2 = figure1_block.beta_columns([8, 2])
+    with st.spinner("Plotting"):
+        fig = plotly_scatter(
+            x=two_dim_embs[:, 0],
+            y=two_dim_embs[:, 1],
+            color_by_values=labels,
+            text_annot=keywords,
+        )
+        plot(fig, col1, col2)

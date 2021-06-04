@@ -12,7 +12,7 @@ def find_most_similar_words(
     words,
     year_model_path,
     compass_model_path,
-    top_k_for_sim=10,
+    top_k_sim=10,
 ):
     compass_model = Word2Vec.load(compass_model_path)
     compass_words = list(compass_model.wv.vocab.keys())
@@ -23,7 +23,7 @@ def find_most_similar_words(
 
     sim_matrix = cosine_similarity(word_vectors, compass_vectors)
     top_sims = np.argsort(sim_matrix, axis=1)
-    top_sims = top_sims[:, -top_k_for_sim:]
+    top_sims = top_sims[:, -top_k_sim:]
 
     # Find most similar compass words to each of these words
     most_sim_words = [
@@ -58,12 +58,12 @@ st.cache(persist=True)
 
 
 def find_most_drifted_words(
-    words, year_model_paths, compass_model_path, top_k_for_sim=10, top_most_drifted_k=5
+    words, year_model_paths, compass_model_path, top_k_sim=10, top_k_drift=5
 ):
 
     sim_dicts = [
         find_most_similar_words(
-            words, year_model_path, compass_model_path, top_k_for_sim
+            words, year_model_path, compass_model_path, top_k_sim
         )
         for year_model_path in year_model_paths
     ]
@@ -89,7 +89,7 @@ def find_most_drifted_words(
         )
 
     sorted_scores = sorted(scores.items(), key=lambda x: x[1], reverse=True)[
-        :top_most_drifted_k
+        :top_k_drift
     ]
 
     words_for_plotting = []
