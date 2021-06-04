@@ -680,7 +680,7 @@ elif analysis_type == "Acceleration Plot":
         year2,
         vars["model_path"],
         selected_ngrams,
-        vars["all_model_vectors"],
+        False,
         vars["top_k_acc"],
     )
 
@@ -702,7 +702,7 @@ elif analysis_type == "Acceleration Plot":
         )
         plot_title = st.text_input(
             label="Plot Title",
-            value=f"{analysis_type} for range {plot_year} given acc range {year1}-{year2}",
+            value=f"{analysis_type} for year {plot_year} given acc range {year1}-{year2}",
         )
     plot_words = plot_words_string.split(",")
 
@@ -763,8 +763,8 @@ elif analysis_type == "Semantic Drift":
         selected_ngrams,
         [model_path_1, model_path_2],
         compass_model_path,
-        top_k_for_sim=vars["top_k_sim"],
-        top_most_drifted_k=vars["top_k_drift"],
+        top_k_sim=vars["top_k_sim"],
+        top_k_drift=vars["top_k_drift"],
     )
 
     two_dim_embs = reduce_dimensions(embs, typ=typ, fit_on_compass=False)
@@ -808,7 +808,7 @@ elif analysis_type == "Tracking Clusters":
             "Dimensionality Reduction Method", options=["tsne", "pca", "umap"]
         )
         plot_title = st.text_input(
-            label="Plot Title", value=f"{analysis_type} for range {selected_year}"
+            label="Plot Title", value=f"{analysis_type} for year {selected_year}"
         )
 
     year_model_path = os.path.join(vars["model_path"], selected_year + ".model")
@@ -832,6 +832,6 @@ elif analysis_type == "Tracking Clusters":
             y=two_dim_embs[:, 1],
             color_by_values=labels,
             text_annot=keywords,
-            title=title,
+            title=plot_title,
         )
         plot(fig, col1, col2)
