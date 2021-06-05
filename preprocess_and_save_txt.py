@@ -1,20 +1,36 @@
 import json
 import os
 
+from tqdm.auto import tqdm
 from src.utils.preprocess import preprocess_text
 
 
 def preprocess_and_save(
-    json_path="../acl_anthology_xml.json", text_key="abstract", save_dir="./data"
+    json_path="../acl_anthology_xml.json",
+    text_key="abstract",
+    save_dir="./data",
+    streamlit=False,
+    component=None,
 ):
+    if not json_path.endswith(".json"):
+        raise ValueError("Selected `json_path` should end with `.json`.")
+    if streamlit and component is None:
+        raise ValueError("`component` cannot be `None` when `streamlit` is `True`.")
 
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
+
     with open(json_path) as f:
         data = json.load(f)
     info_dic = {}
     all_contents = []
-    for year in data:
+    if streamlit:
+        component.write("Preprocessing")
+        progress_bar = component.progress(0.0)
+        text_output = component.empty()
+    for idx, year in enumerate(tqdm(data)):
+        if streamlit:
+            text_output.info(f"Preprocessing Year {year}")
         contents = []
         for paper in data[year]:
             if "language" in paper and paper["language"] != "eng":
@@ -29,7 +45,12 @@ def preprocess_and_save(
                 f.write("\n".join(contents).lower())
         all_contents += contents
         info_dic[int(year)] = len(contents)
+        if streamlit:
+            progress = (idx + 1)/ len(data)
+            progress_bar.progress(progress-1e-10)
     with open(os.path.join(save_dir, "compass.txt"), "w") as f:
+        if streamlit:
+            text_output.info(f"Saving Compass")
         f.write("\n".join(all_contents).lower())
 
     return info_dic

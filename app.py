@@ -1,5 +1,6 @@
 import inspect
 import os
+from warnings import simplefilter
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -8,6 +9,7 @@ import streamlit as st
 from nltk.corpus import stopwords
 from streamlit import caching
 
+from preprocess_and_save_txt import preprocess_and_save
 from src.analysis.semantic_drift import find_most_drifted_words
 from src.analysis.similarity_acc_matrix import compute_acc_between_years
 from src.analysis.tracking_clusters import kmeans_clustering
@@ -15,6 +17,7 @@ from src.utils import get_word_embeddings, plotly_line_dataframe, word_cloud
 from src.utils.misc import reduce_dimensions
 from src.utils.statistics import find_productivity, freq_top_k
 from src.utils.viz import plotly_scatter
+from train_twec import train
 
 
 # Folder selection not directly support in Streamlit as of now
@@ -90,15 +93,10 @@ def plot(obj, col1, col2, typ="plotly"):
                 obj.save(save_name)
 
 
-def generate_components_from_dict(analysis_type, variable_params):
-    sidebar_summary_text.write(ANALYSIS_METHODS[analysis_type]["SUMMARY"])
-    figure1_title.header(analysis_type)
-
+def generate_components_from_dict(comp_dict, variable_params):
     vars = {}
 
-    for component_key, component_dict in ANALYSIS_METHODS[analysis_type][
-        "COMPONENTS"
-    ].items():
+    for component_key, component_dict in comp_dict.items():
         component_var = component_dict["component_var"]
         typ = component_dict["typ"]
         params = component_dict["params"]
@@ -111,6 +109,16 @@ def generate_components_from_dict(analysis_type, variable_params):
         )
         vars[component_key] = get_component(component_var, typ, params)
 
+    return vars
+
+
+def generate_analysis_components(analysis_type, variable_params):
+    sidebar_summary_text.write(ANALYSIS_METHODS[analysis_type]["SUMMARY"])
+    figure1_title.header(analysis_type)
+
+    vars = generate_components_from_dict(
+        ANALYSIS_METHODS[analysis_type]["COMPONENTS"], variable_params
+    )
     return vars
 
 
@@ -205,10 +213,10 @@ figure2_plot = figure2_block.beta_container()
 
 sidebar = st.sidebar.beta_container()
 sidebar_title = sidebar.empty()
-sidebar_summary_header = sidebar.empty()
-sidebar_summary_text = sidebar.empty()
 sidebar_mode = sidebar.empty()
 sidebar_analysis_type = sidebar.empty()
+sidebar_summary_header = sidebar.empty()
+sidebar_summary_text = sidebar.empty()
 sidebar_parameters = sidebar.beta_container()
 
 
@@ -554,6 +562,119 @@ ANALYSIS_METHODS = {
         ),
     ),
 }
+
+PREPROCESS = dict(
+    ABOUT="",
+    SUMMARY="",
+    COMPONENTS=dict(
+        json_path=dict(
+            component_var=st,
+            typ="text_input",
+            variable_params={"value": "json_path"},
+            params=dict(
+                label="JSON Path", help="Path to the JSON file containing raw data"
+            ),
+        ),
+        text_key=dict(
+            component_var=st,
+            typ="text_input",
+            variable_params={"value": "text_key"},
+            params=dict(label="Text Key", help="Key in JSON containing the text"),
+        ),
+        save_dir=dict(
+            component_var=st,
+            typ="text_input",
+            variable_params={"value": "save_dir"},
+            params=dict(
+                label="Data Path",
+                help="Directory path to the folder where you want to store year-wise processed text files.",
+            ),
+        ),
+    ),
+)
+
+TRAIN = dict(
+    ABOUT="",
+    SUMMARY="",
+    COMPONENTS=dict(
+        data_dir=dict(
+            component_var=st,
+            typ="text_input",
+            variable_params={"value": "data_dir"},
+            params=dict(
+                label="Data Path",
+                help="Directory path to the folder where year-wise processed text files are stored.",
+            ),
+        ),
+        embedding_size=dict(
+            component_var=st,
+            typ="number_input",
+            variable_params={"value": "embedding_size"},
+            params=dict(label="Embedding Size", help="Embedding size to be used"),
+        ),
+        skipgram=dict(
+            component_var=st,
+            typ="checkbox",
+            variable_params={"value": "skipgram"},
+            params=dict(label="Skipgram", help="Whether to use skipgram or CBOW"),
+        ),
+        siter=dict(
+            component_var=st,
+            typ="number_input",
+            variable_params={"value": "siter"},
+            params=dict(
+                label="Static Iterations",
+                help="Iterations when training the compass",  # TO-DO: VERIFY
+            ),
+        ),
+        diter=dict(
+            component_var=st,
+            typ="number_input",
+            variable_params={"value": "diter"},
+            params=dict(
+                label="Dynamic Iterations",
+                help="Iterations when training the slices",  # TO-DO: VERIFY
+            ),
+        ),
+        negative_samples=dict(
+            component_var=st,
+            typ="number_input",
+            variable_params={"value": "negative_samples"},
+            params=dict(
+                label="Negative Samples",
+                help="Number of negative samples to use during training",  # TO-DO: VERIFY
+            ),
+        ),
+        window_size=dict(
+            component_var=st,
+            typ="number_input",
+            variable_params={"value": "window_size"},
+            params=dict(
+                label="Window Size",
+                help="Window size used to create input-output pairs",  # TO-DO: VERIFY
+            ),
+        ),
+        output_path=dict(
+            component_var=st,
+            typ="text_input",
+            variable_params={"value": "output_path"},
+            params=dict(
+                label="Model Path",
+                help="Directory path to the folder where you want to store year-wise model files.",
+            ),
+        ),
+        overwrite_compass=dict(
+            component_var=st,
+            typ="checkbox",
+            variable_params={"value": "overwrite_compass"},
+            params=dict(
+                label="Overwrite Compass",
+                help="Whether to overwrite the compass if it already exists",  # TO-DO: VERIFY
+            ),
+        ),
+    ),
+)
+
 # SIDEBAR COMMON SETUP
 title.title(COMMON["TITLE"])
 sidebar_title.title(COMMON["SIDEBAR_TITLE"])
@@ -564,274 +685,288 @@ analysis_type = sidebar_analysis_type.selectbox(
     help="The type of analysis you want to perform.",
 )
 
-sidebar_summary_header.header(COMMON["SIDEBAR_SUMMARY_HEADER"])
+mode = sidebar_mode.radio(label="Mode", options=["Train", "Analysis"])
 
+if mode == "Train":
+    variable_params = get_default_args(train)
+    variable_params.update(get_default_args(preprocess_and_save))
+    with sidebar.beta_expander("Preprocessing"):
+        preprocess_vars = generate_components_from_dict(
+            PREPROCESS["COMPONENTS"], variable_params
+        )
+        if st.button("Preprocess"):
+            preprocess_and_save(**preprocess_vars, streamlit=True, component=main)
 
-if analysis_type == "WordCloud":
-    # setup
-    variable_params = get_default_args(word_cloud)
-    vars = generate_components_from_dict(analysis_type, variable_params)
+    with sidebar.beta_expander("Training"):
+        train_vars = generate_components_from_dict(TRAIN["COMPONENTS"], variable_params)
+        if st.button("Train"):
+            train(**train_vars, streamlit=True, component=main)
 
-    # get words
-    years = get_years_from_data_path(vars["data_path"])
-    with figure1_params.beta_expander("Plot Parameters"):
-        selected_year = st.select_slider(
-            label="Year",
-            options=years,
-            help="Year for which world cloud is to be generated",
+elif mode == "Analysis":
+    sidebar_summary_header.header(COMMON["SIDEBAR_SUMMARY_HEADER"])
+    if analysis_type == "WordCloud":
+        # setup
+        variable_params = get_default_args(word_cloud)
+        vars = generate_analysis_components(analysis_type, variable_params)
+
+        # get words
+        years = get_years_from_data_path(vars["data_path"])
+        with figure1_params.beta_expander("Plot Parameters"):
+            selected_year = st.select_slider(
+                label="Year",
+                options=years,
+                help="Year for which world cloud is to be generated",
+            )
+
+        words = read_text_file(vars["data_path"], selected_year)
+
+        # plot
+        col1, col2 = figure1_plot.beta_columns([8, 2])
+        with st.spinner("Plotting"):
+            word_cloud_image = word_cloud(
+                words=words,
+                stop_words=COMMON["STOPWORDS"],
+                max_words=vars["max_words"],
+                min_font_size=vars["min_font_size"],
+                max_font_size=vars["max_font_size"],
+                background_color=vars["background_color"],
+                width=vars["width"],
+                height=vars["height"],
+            )
+            plot(word_cloud_image, col1, col2, typ="PIL")
+
+    elif analysis_type == "Productivity Plot":
+        variable_params = get_default_args(freq_top_k)
+        vars = generate_analysis_components(analysis_type, variable_params)
+
+        years = get_years_from_data_path(vars["data_path"])
+        compass_text = read_text_file(vars["data_path"], "compass")
+
+        choose_list_freq = freq_top_k(
+            compass_text, top_k=vars["top_k"], n=vars["n"], normalize=vars["normalize"]
+        )
+        choose_list = list(choose_list_freq.keys())
+
+        with figure1_params.beta_expander("Plot Parameters"):
+            selected_ngrams = st.multiselect(
+                "Selected N-grams", default=choose_list, options=choose_list
+            )
+
+            start_year, end_year = st.select_slider(
+                "Range in years", options=years, value=(years[0], years[-1])
+            )
+            plot_title = st.text_input(
+                label="Plot Title",
+                value=f"{analysis_type} for range {start_year}-{end_year}",
+            )
+
+        productivity_df = get_productivity_for_range(
+            start_year, end_year, selected_ngrams, years, vars["data_path"], vars["n"]
+        )
+        n_gram_freq_df = pd.DataFrame(
+            list(choose_list_freq.items()), columns=["N-gram", "Frequency"]
         )
 
-    words = read_text_file(vars["data_path"], selected_year)
+        # plot
+        col1, col2 = figure1_block.beta_columns([8, 2])
+        with st.spinner("Plotting"):
+            fig = plotly_line_dataframe(
+                productivity_df,
+                x_col="Year",
+                y_col="Productivity",
+                word_col="Word",
+                title=plot_title,
+            )
+            plot(fig, col1, col2)
+        col1.dataframe(n_gram_freq_df.T)
 
-    # plot
-    col1, col2 = figure1_plot.beta_columns([8, 2])
-    with st.spinner("Plotting"):
-        word_cloud_image = word_cloud(
-            words=words,
-            stop_words=COMMON["STOPWORDS"],
-            max_words=vars["max_words"],
-            min_font_size=vars["min_font_size"],
-            max_font_size=vars["max_font_size"],
-            background_color=vars["background_color"],
-            width=vars["width"],
-            height=vars["height"],
+    elif analysis_type == "Acceleration Plot":
+        variable_params = get_default_args(compute_acc_between_years)
+        variable_params.update(get_default_args(freq_top_k))
+        vars = generate_analysis_components(analysis_type, variable_params)
+        years = get_years_from_data_path(vars["data_path"])
+        compass_text = read_text_file(vars["data_path"], "compass")
+
+        figure1_params_expander = figure1_params.beta_expander("Plot Parameters")
+
+        with figure1_params_expander:
+            year1, year2 = st.select_slider(
+                "Range in years",
+                options=years if vars["p2f"] else years[::-1],
+                value=(years[0], years[-1]) if vars["p2f"] else (years[-1], years[0]),
+            )
+
+        # TO-DO: Check if n is needed here
+        # n = st.sidebar.number_input("N", value=freq_default_values_dict['n'], min_value=1, format="%d", help="N in N-gram for productivity calculation.")
+
+        choose_list_freq = freq_top_k(
+            compass_text,
+            top_k=vars["top_k"],
+            n=1,
+            normalize=vars["normalize"],
         )
-        plot(word_cloud_image, col1, col2, typ="PIL")
+        choose_list = list(choose_list_freq.keys())
 
-elif analysis_type == "Productivity Plot":
-    variable_params = get_default_args(freq_top_k)
-    vars = generate_components_from_dict(analysis_type, variable_params)
+        with figure1_params_expander:
+            selected_ngrams = st.multiselect(
+                "Selected N-grams", default=choose_list, options=choose_list
+            )
 
-    years = get_years_from_data_path(vars["data_path"])
-    compass_text = read_text_file(vars["data_path"], "compass")
-
-    choose_list_freq = freq_top_k(
-        compass_text, top_k=vars["top_k"], n=vars["n"], normalize=vars["normalize"]
-    )
-    choose_list = list(choose_list_freq.keys())
-
-    with figure1_params.beta_expander("Plot Parameters"):
-        selected_ngrams = st.multiselect(
-            "Selected N-grams", default=choose_list, options=choose_list
-        )
-
-        start_year, end_year = st.select_slider(
-            "Range in years", options=years, value=(years[0], years[-1])
-        )
-        plot_title = st.text_input(
-            label="Plot Title",
-            value=f"{analysis_type} for range {start_year}-{end_year}",
-        )
-
-    productivity_df = get_productivity_for_range(
-        start_year, end_year, selected_ngrams, years, vars["data_path"], vars["n"]
-    )
-    n_gram_freq_df = pd.DataFrame(
-        list(choose_list_freq.items()), columns=["N-gram", "Frequency"]
-    )
-
-    # plot
-    col1, col2 = figure1_block.beta_columns([8, 2])
-    with st.spinner("Plotting"):
-        fig = plotly_line_dataframe(
-            productivity_df,
-            x_col="Year",
-            y_col="Productivity",
-            word_col="Word",
-            title=plot_title,
-        )
-        plot(fig, col1, col2)
-    col1.dataframe(n_gram_freq_df.T)
-
-elif analysis_type == "Acceleration Plot":
-    variable_params = get_default_args(compute_acc_between_years)
-    variable_params.update(get_default_args(freq_top_k))
-    vars = generate_components_from_dict(analysis_type, variable_params)
-    years = get_years_from_data_path(vars["data_path"])
-    compass_text = read_text_file(vars["data_path"], "compass")
-
-    figure1_params_expander = figure1_params.beta_expander("Plot Parameters")
-
-    with figure1_params_expander:
-        year1, year2 = st.select_slider(
-            "Range in years",
-            options=years if vars["p2f"] else years[::-1],
-            value=(years[0], years[-1]) if vars["p2f"] else (years[-1], years[0]),
+        word_pair_sim_df, word_pair_sim_df_words = get_word_pair_sim_bw_models(
+            year1,
+            year2,
+            vars["model_path"],
+            selected_ngrams,
+            False,
+            vars["top_k_acc"],
         )
 
-    # TO-DO: Check if n is needed here
-    # n = st.sidebar.number_input("N", value=freq_default_values_dict['n'], min_value=1, format="%d", help="N in N-gram for productivity calculation.")
+        with figure1_params_expander:
+            st.dataframe(word_pair_sim_df.T)
+            plot_year = st.select_slider(
+                "Year",
+                options=years,
+                value=years[-1],
+                help="Year for which plot is to be made.",
+            )
 
-    choose_list_freq = freq_top_k(
-        compass_text,
-        top_k=vars["top_k"],
-        n=1,
-        normalize=vars["normalize"],
-    )
-    choose_list = list(choose_list_freq.keys())
+            plot_words_string = st.text_area(
+                label="Words to be plotted", value=",".join(word_pair_sim_df_words)
+            )
 
-    with figure1_params_expander:
-        selected_ngrams = st.multiselect(
-            "Selected N-grams", default=choose_list, options=choose_list
+            typ = st.selectbox(
+                "Dimensionality Reduction Method", options=["tsne", "pca", "umap"]
+            )
+            plot_title = st.text_input(
+                label="Plot Title",
+                value=f"{analysis_type} for year {plot_year} given acc range {year1}-{year2}",
+            )
+        plot_words = plot_words_string.split(",")
+
+        year_model_path = os.path.join(vars["model_path"], plot_year + ".model")
+
+        word_embeddings = get_word_embeddings(year_model_path, plot_words)
+
+        two_dim_embs = reduce_dimensions(word_embeddings, typ=typ, fit_on_compass=False)
+
+        col1, col2 = figure1_block.beta_columns([8, 2])
+        with st.spinner("Plotting"):
+            fig = plotly_scatter(
+                two_dim_embs[:, 0],
+                two_dim_embs[:, 1],
+                text_annot=plot_words,
+                title=plot_title,
+            )
+            plot(fig, col1, col2)
+
+    elif analysis_type == "Semantic Drift":
+        variable_params = get_default_args(find_most_drifted_words)
+        variable_params.update(get_default_args(freq_top_k))
+        vars = generate_analysis_components(analysis_type, variable_params)
+        years = get_years_from_data_path(vars["data_path"])
+        compass_text = read_text_file(vars["data_path"], "compass")
+
+        # n = st.sidebar.number_input("N", value=freq_default_values_dict['n'], min_value=1, format="%d", help="N in N-gram for productivity calculation.")
+
+        choose_list_freq = freq_top_k(
+            compass_text, top_k=vars["top_k"], n=1, normalize=True
+        )
+        keywords_list = list(choose_list_freq.keys())
+
+        figure1_params_expander = figure1_params.beta_expander("Plot Parameters")
+        with figure1_params_expander:
+            year1, year2 = st.select_slider(
+                "Range in years",
+                options=years,
+                value=(years[0], years[-1]),
+            )
+
+            selected_ngrams = st.multiselect(
+                "Selected N-grams", default=keywords_list, options=keywords_list
+            )
+            typ = st.selectbox(
+                "Dimensionality Reduction Method", options=["tsne", "pca", "umap"]
+            )
+            plot_title = st.text_input(
+                label="Plot Title", value=f"{analysis_type} for range {year1}-{year2}"
+            )
+
+        model_path_1 = os.path.join(vars["model_path"], year1 + ".model")
+        model_path_2 = os.path.join(vars["model_path"], year2 + ".model")
+        compass_model_path = os.path.join(vars["model_path"], "compass.model")
+
+        words, embs = find_most_drifted_words(
+            selected_ngrams,
+            [model_path_1, model_path_2],
+            compass_model_path,
+            top_k_sim=vars["top_k_sim"],
+            top_k_drift=vars["top_k_drift"],
         )
 
-    word_pair_sim_df, word_pair_sim_df_words = get_word_pair_sim_bw_models(
-        year1,
-        year2,
-        vars["model_path"],
-        selected_ngrams,
-        False,
-        vars["top_k_acc"],
-    )
+        two_dim_embs = reduce_dimensions(embs, typ=typ, fit_on_compass=False)
+        plot_words = [word.split("_")[0] for word in words]
+        plot_years = [word.split("_")[1] for word in words]
 
-    with figure1_params_expander:
-        st.dataframe(word_pair_sim_df.T)
-        plot_year = st.select_slider(
-            "Year",
-            options=years,
-            value=years[-1],
-            help="Year for which plot is to be made.",
+        col1, col2 = figure1_block.beta_columns([8, 2])
+        with st.spinner("Plotting"):
+            fig = plotly_scatter(
+                x=two_dim_embs[:, 0],
+                y=two_dim_embs[:, 1],
+                color_by_values=plot_years,
+                text_annot=plot_words,
+                title=plot_title,
+            )
+            plot(fig, col1, col2)
+
+    elif analysis_type == "Tracking Clusters":
+        variable_params = get_default_args(kmeans_clustering)
+        variable_params.update(get_default_args(freq_top_k))
+        vars = generate_analysis_components(analysis_type, variable_params)
+        years = get_years_from_data_path(vars["data_path"])
+        compass_text = read_text_file(vars["data_path"], "compass")
+
+        figure1_params_expander = figure1_params.beta_expander("Plot Parameters")
+        with figure1_params_expander:
+            selected_year = st.select_slider(
+                "Range in years", options=years, value=years[0]
+            )
+
+        choose_list_freq = freq_top_k(compass_text, top_k=vars["top_k"], n=1)
+
+        keywords_list = list(choose_list_freq.keys())
+
+        with figure1_params_expander:
+            selected_ngrams = st.multiselect(
+                "Selected N-grams", default=keywords_list, options=keywords_list
+            )
+            typ = st.selectbox(
+                "Dimensionality Reduction Method", options=["tsne", "pca", "umap"]
+            )
+            plot_title = st.text_input(
+                label="Plot Title", value=f"{analysis_type} for year {selected_year}"
+            )
+
+        year_model_path = os.path.join(vars["model_path"], selected_year + ".model")
+
+        keywords, embs, labels, k_opt = kmeans_clustering(
+            selected_ngrams,
+            year_model_path,
+            k_opt=None if vars["n_clusters"] == 0 else vars["n_clusters"],
+            k_max=vars["max_clusters"],
+            method=vars["method"],
         )
 
-        plot_words_string = st.text_area(
-            label="Words to be plotted", value=",".join(word_pair_sim_df_words)
-        )
+        figure1_block.write(f"Optimal Number of Clusters: {k_opt}")
 
-        typ = st.selectbox(
-            "Dimensionality Reduction Method", options=["tsne", "pca", "umap"]
-        )
-        plot_title = st.text_input(
-            label="Plot Title",
-            value=f"{analysis_type} for year {plot_year} given acc range {year1}-{year2}",
-        )
-    plot_words = plot_words_string.split(",")
+        two_dim_embs = reduce_dimensions(embs, typ=typ, fit_on_compass=False)
 
-    year_model_path = os.path.join(vars["model_path"], plot_year + ".model")
-
-    word_embeddings = get_word_embeddings(year_model_path, plot_words)
-
-    two_dim_embs = reduce_dimensions(word_embeddings, typ=typ, fit_on_compass=False)
-
-    col1, col2 = figure1_block.beta_columns([8, 2])
-    with st.spinner("Plotting"):
-        fig = plotly_scatter(
-            two_dim_embs[:, 0],
-            two_dim_embs[:, 1],
-            text_annot=plot_words,
-            title=plot_title,
-        )
-        plot(fig, col1, col2)
-
-
-elif analysis_type == "Semantic Drift":
-    variable_params = get_default_args(find_most_drifted_words)
-    variable_params.update(get_default_args(freq_top_k))
-    vars = generate_components_from_dict(analysis_type, variable_params)
-    years = get_years_from_data_path(vars["data_path"])
-    compass_text = read_text_file(vars["data_path"], "compass")
-
-    # n = st.sidebar.number_input("N", value=freq_default_values_dict['n'], min_value=1, format="%d", help="N in N-gram for productivity calculation.")
-
-    choose_list_freq = freq_top_k(
-        compass_text, top_k=vars["top_k"], n=1, normalize=True
-    )
-    keywords_list = list(choose_list_freq.keys())
-
-    figure1_params_expander = figure1_params.beta_expander("Plot Parameters")
-    with figure1_params_expander:
-        year1, year2 = st.select_slider(
-            "Range in years",
-            options=years,
-            value=(years[0], years[-1]),
-        )
-
-        selected_ngrams = st.multiselect(
-            "Selected N-grams", default=keywords_list, options=keywords_list
-        )
-        typ = st.selectbox(
-            "Dimensionality Reduction Method", options=["tsne", "pca", "umap"]
-        )
-        plot_title = st.text_input(
-            label="Plot Title", value=f"{analysis_type} for range {year1}-{year2}"
-        )
-
-    model_path_1 = os.path.join(vars["model_path"], year1 + ".model")
-    model_path_2 = os.path.join(vars["model_path"], year2 + ".model")
-    compass_model_path = os.path.join(vars["model_path"], "compass.model")
-
-    words, embs = find_most_drifted_words(
-        selected_ngrams,
-        [model_path_1, model_path_2],
-        compass_model_path,
-        top_k_sim=vars["top_k_sim"],
-        top_k_drift=vars["top_k_drift"],
-    )
-
-    two_dim_embs = reduce_dimensions(embs, typ=typ, fit_on_compass=False)
-    plot_words = [word.split("_")[0] for word in words]
-    plot_years = [word.split("_")[1] for word in words]
-
-    col1, col2 = figure1_block.beta_columns([8, 2])
-    with st.spinner("Plotting"):
-        fig = plotly_scatter(
-            x=two_dim_embs[:, 0],
-            y=two_dim_embs[:, 1],
-            color_by_values=plot_years,
-            text_annot=plot_words,
-            title=plot_title,
-        )
-        plot(fig, col1, col2)
-
-
-elif analysis_type == "Tracking Clusters":
-    variable_params = get_default_args(kmeans_clustering)
-    variable_params.update(get_default_args(freq_top_k))
-    vars = generate_components_from_dict(analysis_type, variable_params)
-    years = get_years_from_data_path(vars["data_path"])
-    compass_text = read_text_file(vars["data_path"], "compass")
-
-    figure1_params_expander = figure1_params.beta_expander("Plot Parameters")
-    with figure1_params_expander:
-        selected_year = st.select_slider(
-            "Range in years", options=years, value=years[0]
-        )
-
-    choose_list_freq = freq_top_k(compass_text, top_k=vars["top_k"], n=1)
-
-    keywords_list = list(choose_list_freq.keys())
-
-    with figure1_params_expander:
-        selected_ngrams = st.multiselect(
-            "Selected N-grams", default=keywords_list, options=keywords_list
-        )
-        typ = st.selectbox(
-            "Dimensionality Reduction Method", options=["tsne", "pca", "umap"]
-        )
-        plot_title = st.text_input(
-            label="Plot Title", value=f"{analysis_type} for year {selected_year}"
-        )
-
-    year_model_path = os.path.join(vars["model_path"], selected_year + ".model")
-
-    keywords, embs, labels, k_opt = kmeans_clustering(
-        selected_ngrams,
-        year_model_path,
-        k_opt=None if vars["n_clusters"] == 0 else vars["n_clusters"],
-        k_max=vars["max_clusters"],
-        method=vars["method"],
-    )
-
-    figure1_block.write(f"Optimal Number of Clusters: {k_opt}")
-
-    two_dim_embs = reduce_dimensions(embs, typ=typ, fit_on_compass=False)
-
-    col1, col2 = figure1_block.beta_columns([8, 2])
-    with st.spinner("Plotting"):
-        fig = plotly_scatter(
-            x=two_dim_embs[:, 0],
-            y=two_dim_embs[:, 1],
-            color_by_values=labels,
-            text_annot=keywords,
-            title=plot_title,
-        )
-        plot(fig, col1, col2)
+        col1, col2 = figure1_block.beta_columns([8, 2])
+        with st.spinner("Plotting"):
+            fig = plotly_scatter(
+                x=two_dim_embs[:, 0],
+                y=two_dim_embs[:, 1],
+                color_by_values=labels,
+                text_annot=keywords,
+                title=plot_title,
+            )
+            plot(fig, col1, col2)
