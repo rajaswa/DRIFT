@@ -2,8 +2,10 @@ import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 
 from ..utils import get_word_embeddings
+import os
+import streamlit as st
 
-
+@st.cache(persist=eval(os.getenv('PERSISTENT')))
 def compute_similarity_matrix_keywords(
     model_path, keywords=[], all_model_vectors=False
 ):
@@ -14,7 +16,7 @@ def compute_similarity_matrix_keywords(
 
     return keywords, word_embs, sim_matrix
 
-
+@st.cache(persist=eval(os.getenv('PERSISTENT')))
 def compute_acceleration_matrix(
     keywords,
     sim_matrix_1,
@@ -49,7 +51,7 @@ def compute_acceleration_matrix(
 
     return word_pairs
 
-
+@st.cache(persist=eval(os.getenv('PERSISTENT')))
 def compute_acc_between_years(
     keywords,
     model_path_1,

@@ -1,7 +1,8 @@
 import inspect
 import os
-from warnings import simplefilter
 
+# Need this here to prevent errors
+os.environ['PERSISTENT'] = 'True'
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -92,6 +93,17 @@ def plot(obj, col1, col2, typ="plotly"):
             elif typ == "PIL":
                 obj.save(save_name)
 
+def display_caching_option():
+    col1, col2 = st.beta_columns(2)
+    if col1.checkbox("Persistent Caching", value=False):
+        caching._clear_mem_cache()
+        os.environ['PERSISTENT'] = 'True'
+    else:
+        caching._clear_disk_cache()
+        os.environ['PERSISTENT'] = 'False'
+
+    if col2.button("Clear All Cache"):
+	    caching.clear_cache()
 
 def generate_components_from_dict(comp_dict, variable_params):
     vars = {}
@@ -679,11 +691,8 @@ TRAIN = dict(
 title.title(COMMON["TITLE"])
 sidebar_title.title(COMMON["SIDEBAR_TITLE"])
 
-analysis_type = sidebar_analysis_type.selectbox(
-    label="Analysis Type",
-    options=list(ANALYSIS_METHODS.keys()),
-    help="The type of analysis you want to perform.",
-)
+with settings.beta_expander("App Settings"):
+    display_caching_option()
 
 mode = sidebar_mode.radio(label="Mode", options=["Train", "Analysis"])
 
@@ -703,6 +712,12 @@ if mode == "Train":
             train(**train_vars, streamlit=True, component=main)
 
 elif mode == "Analysis":
+    analysis_type = sidebar_analysis_type.selectbox(
+        label="Analysis Type",
+        options=list(ANALYSIS_METHODS.keys()),
+        help="The type of analysis you want to perform.",
+    )
+
     sidebar_summary_header.header(COMMON["SIDEBAR_SUMMARY_HEADER"])
     if analysis_type == "WordCloud":
         # setup

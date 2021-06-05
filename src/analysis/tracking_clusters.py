@@ -3,9 +3,10 @@ import numpy as np
 from gensim.models.word2vec import Word2Vec
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
-from tqdm.auto import tqdm
+import streamlit as st
+import os
 
-
+@st.cache(persist=eval(os.getenv('PERSISTENT')))
 def kmeans_train(X, n_cluster, method="faiss"):
     if method == "faiss":
         kmeans = faiss.Kmeans(
@@ -22,7 +23,7 @@ def kmeans_train(X, n_cluster, method="faiss"):
 
     return labels
 
-
+@st.cache(persist=eval(os.getenv('PERSISTENT')))
 def kmeans_clustering(keywords, model_path, k_opt=None, k_max=10, method="faiss"):
     assert method in ["faiss", "sklearn"], "method should be one of " + str(
         ["faiss", "sklearn"]

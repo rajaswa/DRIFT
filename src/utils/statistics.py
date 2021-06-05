@@ -4,6 +4,7 @@ import numpy as np
 import streamlit as st
 from nltk import FreqDist, ngrams
 
+import os
 
 def find_ngrams_for_sentences(sentences, n=1):
     sentence_list = sentences.split("\n")
@@ -24,14 +25,13 @@ def find_freq(text, n=1, sort=False):
         gram_count_mapping = {k: v for k, v in sorted_gram_count_tuple}
     return gram_count_mapping
 
-
 def find_norm_freq(text, n=1, sort=False):
     gram_count_mapping = find_freq(text=text, n=n, sort=sort)
     norm_factor = sum(list(gram_count_mapping.values()))
     gram_count_mapping = {k: v / norm_factor for k, v in gram_count_mapping.items()}
     return gram_count_mapping
 
-
+@st.cache(persist=eval(os.getenv('PERSISTENT')))
 def find_productivity(words, text, n=1):
     fdist = find_freq(text=text, n=n, sort=True)
     ngrams_lst = list(fdist.keys())
@@ -58,7 +58,7 @@ def find_productivity(words, text, n=1):
     return prods
 
 
-@st.cache(persist=True)
+@st.cache(persist=eval(os.getenv('PERSISTENT')))
 def freq_top_k(text, top_k=20, n=1, normalize=False):
     if normalize:
         sorted_gram_count_mapping = find_norm_freq(text, n=n, sort=True)
