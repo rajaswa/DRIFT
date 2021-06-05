@@ -47,7 +47,7 @@ def preprocess_and_save(
         info_dic[int(year)] = len(contents)
         if streamlit:
             progress = (idx + 1)/ len(data)
-            progress_bar.progress(progress-1e-10)
+            progress_bar.progress(progress)
     with open(os.path.join(save_dir, "compass.txt"), "w") as f:
         if streamlit:
             text_output.info(f"Saving Compass")

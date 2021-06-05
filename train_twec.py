@@ -68,7 +68,7 @@ def train(
                 print(year_out)
             else:
                 progress += 1 / num_files
-                progress_bar.progress(progress-1e-10)
+                progress_bar.progress(progress)
                 with output:
                     st.write(year_out)
 
