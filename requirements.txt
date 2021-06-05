@@ -1,3 +1,4 @@
+arxiv==1.2.0
 beautifulsoup4==4.9.3
 black==20.8b1
 contractions==0.0.49
