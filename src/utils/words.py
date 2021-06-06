@@ -7,7 +7,7 @@ from nltk.corpus import stopwords
 from tqdm.auto import tqdm
 
 
-def get_word_embeddings(model_path, words, all_model_vectors=False):
+def get_word_embeddings(model_path, words, all_model_vectors=False, return_words=False):
     model = Word2Vec.load(model_path)
 
     if all_model_vectors:
@@ -18,7 +18,10 @@ def get_word_embeddings(model_path, words, all_model_vectors=False):
     word_embs = [
         model.wv[word] if word in model.wv.vocab else unk_emb for word in words
     ]
-    return word_embs
+    if return_words:
+        return words, word_embs
+    else:
+        return word_embs
 
 
 def get_all_word_counts(file_path="./data/compass", sort=True, remove_stopwords=True):
