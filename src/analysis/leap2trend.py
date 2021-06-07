@@ -1,11 +1,13 @@
-import numpy as np
-import tqdm
-import streamlit as st
 import os
+
+import numpy as np
+import streamlit as st
+import tqdm
 
 from .similarity_acc_matrix import compute_similarity_matrix_keywords
 
-@st.cache(persist=eval(os.getenv('PERSISTENT')))
+
+@st.cache(persist=eval(os.getenv("PERSISTENT")))
 def predict_trends(keywords, year_model_paths, delta=20):
     ranked_matrices = []
     keywords = list(keywords.keys())
@@ -20,7 +22,8 @@ def predict_trends(keywords, year_model_paths, delta=20):
     ]
     return word_pairs
 
-@st.cache(persist=eval(os.getenv('PERSISTENT')))
+
+@st.cache(persist=eval(os.getenv("PERSISTENT")))
 def rank_ascent_identification(ranked_matrices, delta=20):
     rank_identification_matrix = np.zeros(ranked_matrices[0].shape)
     for matrix_t, matrix_t_1 in zip(ranked_matrices[:-1], ranked_matrices[1:]):
@@ -28,7 +31,8 @@ def rank_ascent_identification(ranked_matrices, delta=20):
         leap_indices = np.where(rank_diff_matrix >= delta)
     return leap_indices
 
-@st.cache(persist=eval(os.getenv('PERSISTENT')))
+
+@st.cache(persist=eval(os.getenv("PERSISTENT")))
 def rank_matrices(matrix):
     sorted_matrix = np.sort(matrix.flatten())[::-1].reshape(matrix.shape)
     rank = 1

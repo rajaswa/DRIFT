@@ -77,6 +77,33 @@ def plotly_scatter(
     return fig
 
 
+def plotly_heatmap(
+    arr,
+    x=None,
+    y=None,
+    x_label=None,
+    y_label=None,
+    color_label=None,
+    title=None,
+    save_path=None,
+):
+
+    fig = px.imshow(
+        arr,
+        labels=dict(x=x_label, y=y_label, color=color_label),
+        x=x,
+        y=y,
+        color_continuous_scale="Spectral",
+        title=title,
+    )
+
+    fig.update_xaxes(side="top")
+
+    if save_path:
+        fig.write_html(save_path)
+    return fig
+
+
 def word_cloud(
     words,
     max_words=100,

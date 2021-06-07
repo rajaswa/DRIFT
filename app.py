@@ -1,8 +1,9 @@
 import inspect
 import os
 
+
 # Need this here to prevent errors
-os.environ['PERSISTENT'] = 'True'
+os.environ["PERSISTENT"] = "True"
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -12,12 +13,16 @@ from streamlit import caching
 
 from preprocess_and_save_txt import preprocess_and_save
 from src.analysis.semantic_drift import find_most_drifted_words
-from src.analysis.similarity_acc_matrix import compute_acc_between_years
+from src.analysis.similarity_acc_matrix import (
+    compute_acc_between_years,
+    compute_acc_heatmap_between_years,
+    compute_acceleration_matrix,
+)
 from src.analysis.tracking_clusters import kmeans_clustering
 from src.utils import get_word_embeddings, plotly_line_dataframe, word_cloud
 from src.utils.misc import reduce_dimensions
 from src.utils.statistics import find_productivity, freq_top_k
-from src.utils.viz import plotly_scatter
+from src.utils.viz import plotly_heatmap, plotly_scatter
 from train_twec import train
 
 
@@ -93,17 +98,19 @@ def plot(obj, col1, col2, typ="plotly"):
             elif typ == "PIL":
                 obj.save(save_name)
 
+
 def display_caching_option():
     col1, col2 = st.beta_columns(2)
     if col1.checkbox("Persistent Caching", value=False):
         caching._clear_mem_cache()
-        os.environ['PERSISTENT'] = 'True'
+        os.environ["PERSISTENT"] = "True"
     else:
         caching._clear_disk_cache()
-        os.environ['PERSISTENT'] = 'False'
+        os.environ["PERSISTENT"] = "False"
 
     if col2.button("Clear All Cache"):
-	    caching.clear_cache()
+        caching.clear_cache()
+
 
 def generate_components_from_dict(comp_dict, variable_params):
     vars = {}
@@ -169,7 +176,7 @@ def get_productivity_for_range(
     return productivity_df
 
 
-def get_word_pair_sim_bw_models(
+def get_acceleration_bw_models(
     year1, year2, model_path, selected_ngrams, all_model_vectors, top_k_acc
 ):
     model_path1 = os.path.join(model_path, year1 + ".model")
@@ -183,6 +190,15 @@ def get_word_pair_sim_bw_models(
         top_k_acc=top_k_acc,
         skip_same_word_pairs=True,
         skip_duplicates=True,
+    )
+    return word_pairs, em1, em2
+
+
+def get_word_pair_sim_bw_models(
+    year1, year2, model_path, selected_ngrams, all_model_vectors, top_k_acc
+):
+    word_pairs, em1, em2 = get_acceleration_bw_models(
+        year1, year2, model_path, selected_ngrams, all_model_vectors, top_k_acc
     )
     word_pair_sim_df = pd.DataFrame(
         list(word_pairs.items()), columns=["Word Pair", "Acceleration"]
@@ -400,15 +416,6 @@ ANALYSIS_METHODS = {
                     help="Directory path to the folder containing year-wise model files.",
                 ),
             ),
-            normalize=dict(
-                component_var=sidebar_parameters,
-                typ="checkbox",
-                variable_params={"value": "normalize"},
-                params=dict(
-                    label="Normalize",
-                    help="Whether to use normalize frequency.",
-                ),
-            ),
             top_k=dict(
                 component_var=sidebar_parameters,
                 typ="number_input",
@@ -569,6 +576,61 @@ ANALYSIS_METHODS = {
                     label="Method",
                     options=["faiss", "sklearn"],
                     help="Method to use for K-means. `faiss` is recommended when calculating optimal number of clusters.",
+                ),
+            ),
+        ),
+    ),
+    "Acceleration Heatmap": dict(
+        ABOUT="",
+        SUMMARY="A tag cloud is a novelty visual representation of text data, typically used to depict keyword metadata on websites, or to visualize free form text. Tags are usually single words, and the importance of each tag is shown with font size or color.",
+        COMPONENTS=dict(
+            note=dict(
+                component_var=figure1_params,
+                typ="info",
+                variable_params={},
+                params=dict(
+                    body="Note that all words may not be present in all years. In that case mean of all word vectors is taken."
+                ),
+            ),
+            data_path=dict(
+                component_var=sidebar_parameters,
+                typ="text_input",
+                variable_params={},
+                params=dict(
+                    label="Data Path",
+                    value="./data/",
+                    help="Directory path to the folder containing year-wise text files.",
+                ),
+            ),
+            model_path=dict(
+                component_var=sidebar_parameters,
+                typ="text_input",
+                variable_params={},
+                params=dict(
+                    label="Model Dir",
+                    value="./model/",
+                    help="Directory path to the folder containing year-wise model files.",
+                ),
+            ),
+            top_k=dict(
+                component_var=sidebar_parameters,
+                typ="number_input",
+                variable_params={"value": "top_k"},
+                params=dict(
+                    label="K",
+                    min_value=1,
+                    format="%d",
+                    help="Top-K words to be chosen from.",
+                ),
+            ),
+            p2f=dict(
+                component_var=sidebar_parameters,
+                typ="checkbox",
+                variable_params={},
+                params=dict(
+                    label="Year 1 → Year 2",
+                    value=True,
+                    help="Whether to calculate Year 1 to Year 2 acceleration",
                 ),
             ),
         ),
@@ -818,7 +880,7 @@ elif mode == "Analysis":
             compass_text,
             top_k=vars["top_k"],
             n=1,
-            normalize=vars["normalize"],
+            normalize=False,
         )
         choose_list = list(choose_list_freq.keys())
 
@@ -982,6 +1044,63 @@ elif mode == "Analysis":
                 y=two_dim_embs[:, 1],
                 color_by_values=labels,
                 text_annot=keywords,
+                title=plot_title,
+            )
+            plot(fig, col1, col2)
+
+    elif analysis_type == "Acceleration Heatmap":
+        variable_params = get_default_args(compute_acc_heatmap_between_years)
+        variable_params.update(get_default_args(freq_top_k))
+        vars = generate_analysis_components(analysis_type, variable_params)
+        years = get_years_from_data_path(vars["data_path"])
+        compass_text = read_text_file(vars["data_path"], "compass")
+
+        # TO-DO: Check if n is needed here
+        # n = st.sidebar.number_input("N", value=freq_default_values_dict['n'], min_value=1, format="%d", help="N in N-gram for productivity calculation.")
+
+        choose_list_freq = freq_top_k(
+            compass_text,
+            top_k=vars["top_k"],
+            n=1,
+            normalize=False,
+        )
+        choose_list = list(choose_list_freq.keys())
+        figure1_params_expander = figure1_params.beta_expander("Plot Parameters")
+        with figure1_params_expander:
+            selected_ngrams = st.multiselect(
+                "Selected N-grams", default=choose_list, options=choose_list
+            )
+
+        col_1_1, col_1_2 = figure1_params.beta_columns([5, 5])
+        year_1 = col_1_1.selectbox("Year 1", options=years, index=0)
+
+        year_2 = col_1_2.selectbox("Year 2", options=years, index=len(years) - 1)
+
+        if not vars["p2f"]:
+            year_2, year_1 = year_1, year_2
+
+        with figure1_params_expander:
+            plot_title = st.text_input(
+                label="Plot Title", value=f"{analysis_type} for range {year_1}-{year_2}"
+            )
+
+        model_path_1 = os.path.join(vars["model_path"], year_1 + ".model")
+        model_path_2 = os.path.join(vars["model_path"], year_2 + ".model")
+
+        print(len(selected_ngrams))
+        acc_matrix = compute_acc_heatmap_between_years(
+            selected_ngrams,
+            model_path_1,
+            model_path_2,
+            False,
+        )
+
+        col1, col2 = figure1_plot.beta_columns([9, 1])
+        with st.spinner("Plotting"):
+            fig = plotly_heatmap(
+                acc_matrix,
+                x=selected_ngrams,
+                y=selected_ngrams,
                 title=plot_title,
             )
             plot(fig, col1, col2)

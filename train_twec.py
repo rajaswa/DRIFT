@@ -1,9 +1,11 @@
 import os
 import time
 
-from twec.twec import TWEC
-import streamlit as st
 import numpy as np
+import streamlit as st
+
+from twec.twec import TWEC
+
 
 def train(
     data_dir="./data/",
@@ -69,8 +71,8 @@ def train(
                 print(year_out)
             else:
                 progress += 1 / num_files
-                if progress>1.0:
-                    progress=1.0
+                if progress > 1.0:
+                    progress = 1.0
                 progress_bar.progress(progress)
                 with output:
                     st.write(year_out)

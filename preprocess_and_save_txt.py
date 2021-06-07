@@ -2,6 +2,7 @@ import json
 import os
 
 from tqdm.auto import tqdm
+
 from src.utils.preprocess import preprocess_text
 
 
@@ -46,9 +47,9 @@ def preprocess_and_save(
         all_contents += contents
         info_dic[int(year)] = len(contents)
         if streamlit:
-            progress = (idx + 1)/ len(data)
-            if progress>1.0:
-                progress=1.0
+            progress = (idx + 1) / len(data)
+            if progress > 1.0:
+                progress = 1.0
             progress_bar.progress(progress)
     with open(os.path.join(save_dir, "compass.txt"), "w") as f:
         if streamlit:

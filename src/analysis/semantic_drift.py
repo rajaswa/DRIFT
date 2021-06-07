@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 import streamlit as st
 from gensim.models.word2vec import Word2Vec
@@ -6,9 +8,9 @@ from sklearn.metrics.pairwise import cosine_similarity
 from src.utils.words import get_word_embeddings
 
 from ..utils import intersection
-import os
 
-@st.cache(persist=eval(os.getenv('PERSISTENT')))
+
+@st.cache(persist=eval(os.getenv("PERSISTENT")))
 def find_most_similar_words(
     words,
     year_model_path,
@@ -55,7 +57,7 @@ def find_most_similar_words(
     return sim_dict
 
 
-@st.cache(persist=eval(os.getenv('PERSISTENT')))
+@st.cache(persist=eval(os.getenv("PERSISTENT")))
 def find_most_drifted_words(
     words, year_model_paths, compass_model_path, top_k_sim=10, top_k_drift=5
 ):
