@@ -3,7 +3,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 from ..utils import get_word_embeddings
 
-def compute_similarity_matrix_years(model_paths, keyword, top_k=5):
+def compute_similarity_matrix_years(model_paths, keyword, top_k_sim=5):
     first_year_embs = get_word_embeddings(model_paths[0], [keyword], return_words=False)
     sim_dict = {}
     for model_path in model_paths[1:]:
@@ -31,6 +31,6 @@ def compute_similarity_matrix_years(model_paths, keyword, top_k=5):
             sim_dict_wo_dup[key] = sim_dict[key]
             sim_dups.append(word)
             ctr += 1
-            if ctr == top_k:
+            if ctr == top_k_sim:
                 break
     return sim_dict_wo_dup

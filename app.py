@@ -4,15 +4,18 @@ import os
 
 # Need this here to prevent errors
 os.environ["PERSISTENT"] = "True"
+import math
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import streamlit as st
 from nltk.corpus import stopwords
 from streamlit import caching
+from st_aggrid import GridOptionsBuilder, AgGrid, GridUpdateMode, DataReturnMode, JsCode
 
 from preprocess_and_save_txt import preprocess_and_save
 from src.analysis.semantic_drift import find_most_drifted_words
+from src.analysis.track_trends_sim import compute_similarity_matrix_years
 from src.analysis.similarity_acc_matrix import (
     compute_acc_between_years,
     compute_acc_heatmap_between_years,
@@ -20,7 +23,7 @@ from src.analysis.similarity_acc_matrix import (
 )
 from src.analysis.tracking_clusters import kmeans_clustering
 from src.utils import get_word_embeddings, plotly_line_dataframe, word_cloud
-from src.utils.misc import reduce_dimensions
+from src.utils.misc import get_sub, get_super, reduce_dimensions
 from src.utils.statistics import find_productivity, freq_top_k
 from src.utils.viz import plotly_heatmap, plotly_scatter
 from train_twec import train
@@ -37,6 +40,11 @@ from train_twec import train
 # root.wm_attributes('-topmost', 1)
 
 np.random.seed(42)
+
+
+@st.cache(allow_output_mutation=True)
+def get_df():
+    return {}
 
 
 def get_default_args(func):
@@ -132,6 +140,8 @@ def generate_components_from_dict(comp_dict, variable_params):
 
 
 def generate_analysis_components(analysis_type, variable_params):
+    # print(ANALYSIS_METHODS[analysis_type])
+    # print(variable_params)
     sidebar_summary_text.write(ANALYSIS_METHODS[analysis_type]["SUMMARY"])
     figure1_title.header(analysis_type)
 
@@ -140,6 +150,8 @@ def generate_analysis_components(analysis_type, variable_params):
     )
     return vars
 
+def get_tail_from_data_path(data_path):
+    return os.path.split(data_path)[-1].split(".")[0]
 
 def get_years_from_data_path(data_path):
     years = sorted(
@@ -635,6 +647,66 @@ ANALYSIS_METHODS = {
             ),
         ),
     ),
+
+    "Track Trends with Similarity": dict(
+        ABOUT="",
+        SUMMARY="A tag cloud is a novelty visual representation of text data, typically used to depict keyword metadata on websites, or to visualize free form text. Tags are usually single words, and the importance of each tag is shown with font size or color.",
+        COMPONENTS=dict(
+            data_path=dict(
+                component_var=sidebar_parameters,
+                typ="text_input",
+                variable_params={},
+                params=dict(
+                    label="Data Path",
+                    value="./data/",
+                    help="Directory path to the folder containing year-wise text files.",
+                ),
+            ),
+            model_path=dict(
+                component_var=sidebar_parameters,
+                typ="text_input",
+                variable_params={},
+                params=dict(
+                    label="Model Dir",
+                    value="./model/",
+                    help="Directory path to the folder containing year-wise model files.",
+                ),
+            ),
+            top_k=dict(
+                component_var=sidebar_parameters,
+                typ="number_input",
+                variable_params={"value": "top_k"},
+                params=dict(
+                    label="K",
+                    min_value=1,
+                    format="%d",
+                    help="Top-K words to be chosen from.",
+                ),
+            ),
+            top_k_sim=dict(
+                component_var=sidebar_parameters,
+                typ="number_input",
+                variable_params={"value": "top_k_sim"},
+                params=dict(
+                    label="K (sim.)",
+                    min_value=1,
+                    format="%d",
+                    help="Top-K words for similarity.",
+                ),
+            ),
+            stride=dict(
+                component_var=sidebar_parameters,
+                typ="number_input",
+                variable_params={"value": "stride"},
+                params=dict(
+                    label="Stride",
+                    min_value=1,
+                    format="%d",
+                    help="Stride",
+                ),
+            ),
+        ),
+    ),
 }
 
 PREPROCESS = dict(
@@ -756,7 +828,7 @@ sidebar_title.title(COMMON["SIDEBAR_TITLE"])
 with settings.beta_expander("App Settings"):
     display_caching_option()
 
-mode = sidebar_mode.radio(label="Mode", options=["Train", "Analysis"])
+mode = sidebar_mode.radio(label="Mode", options=["Train", "Analysis"], index=1)
 
 if mode == "Train":
     variable_params = get_default_args(train)
@@ -1087,7 +1159,7 @@ elif mode == "Analysis":
         model_path_1 = os.path.join(vars["model_path"], year_1 + ".model")
         model_path_2 = os.path.join(vars["model_path"], year_2 + ".model")
 
-        print(len(selected_ngrams))
+        # print(len(selected_ngrams))
         acc_matrix = compute_acc_heatmap_between_years(
             selected_ngrams,
             model_path_1,
@@ -1104,3 +1176,41 @@ elif mode == "Analysis":
                 title=plot_title,
             )
             plot(fig, col1, col2)
+    elif analysis_type == "Track Trends with Similarity":
+
+        variable_params = get_default_args(compute_similarity_matrix_years)
+        variable_params["stride"] = 3
+        variable_params.update(get_default_args(freq_top_k))
+        vars = generate_analysis_components(analysis_type, variable_params)
+        years = get_years_from_data_path(vars["data_path"])
+        compass_text = read_text_file(vars["data_path"], "compass")
+
+        # n = st.sidebar.number_input("N", value=freq_default_values_dict['n'], min_value=1, format="%d", help="N in N-gram for productivity calculation.")
+
+        choose_list_freq = freq_top_k(
+            compass_text, top_k=vars["top_k"], n=1, normalize=True
+        )
+        keywords_list = list(choose_list_freq.keys())
+        figure1_params_expander = figure1_params.beta_expander("Plot Parameters")
+        with figure1_params_expander:
+            year1, year2 = st.select_slider(
+                "Range in years",
+                options=years,
+                value=(years[0], years[-1]),
+            )
+            st.text(body=", ".join(keywords_list))
+            selected_ngram = st.text_input(label='Type a Word', value="language")
+
+            # selected_ngram = st.selectbox(label="Choose a Word", freq)
+            # selected_ngram = st.text_input("Type Word")
+
+        model_paths = [os.path.join(vars["model_path"], str(year) + ".model") for year in range(int(year1), int(year2)+1)]
+        compass_model_path = os.path.join(vars["model_path"], "compass.model")
+
+        if st.button("Add row"):
+            get_df()["add"] = ["fpfe", "onfpo;wnf"] 
+
+        if st.button("ADD2"):
+            get_df()["add2"] = ["fpfe", "onfpo;wnf"] 
+
+        st.write(pd.DataFrame.from_dict(get_df()))
