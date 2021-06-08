@@ -1200,17 +1200,58 @@ elif mode == "Analysis":
             )
             st.text(body=", ".join(keywords_list))
             selected_ngram = st.text_input(label='Type a Word', value="language")
+            model_paths = [os.path.join(vars["model_path"], str(year) + ".model") for year in range(int(year1), int(year2)+1)]
+            compass_model_path = os.path.join(vars["model_path"], "compass.model")
+            if st.button("Generate Dataframe"):
+               
+                sim_dict = compute_similarity_matrix_years(model_paths, selected_ngram, top_k_sim=vars["top_k_sim"])
+
+                get_df()[
+                    "{}{}".format(
+                        selected_ngram, get_sub(get_tail_from_data_path(model_paths[0]))
+                    )
+                ] = [
+                    "{}{} ({})".format(
+                        k.split("_")[0],
+                        get_sub(get_tail_from_data_path(k.split("_")[1])),
+                        round(float(sim_dict[k]), 2),
+                    )
+                    for k in sim_dict
+                ]
+                # get_df()["add"] = ["fpfe", "onfpo;wnf"] 
 
             # selected_ngram = st.selectbox(label="Choose a Word", freq)
             # selected_ngram = st.text_input("Type Word")
 
-        model_paths = [os.path.join(vars["model_path"], str(year) + ".model") for year in range(int(year1), int(year2)+1)]
-        compass_model_path = os.path.join(vars["model_path"], "compass.model")
+   
 
-        if st.button("Add row"):
-            get_df()["add"] = ["fpfe", "onfpo;wnf"] 
 
-        if st.button("ADD2"):
-            get_df()["add2"] = ["fpfe", "onfpo;wnf"] 
+        if get_df() != {}:
 
-        st.write(pd.DataFrame.from_dict(get_df()))
+            next_word_form = st.form(key='next_word_form')
+            next_word = next_word_form.selectbox("Select a Word", [ele.split("(")[0] for ele in list(pd.DataFrame.from_dict(get_df()).iloc[:, -1])])
+            gen_next_word_button = next_word_form.form_submit_button(label='Generate Next Word')
+            if gen_next_word_button:
+                next_word_pure = "".join([i for i in next_word if not i.isdigit()]).strip()
+                sim_dict = compute_similarity_matrix_years(model_paths, next_word_pure, top_k_sim=vars["top_k_sim"])
+
+                get_df()[
+                    "{}{}".format(
+                        next_word_pure, get_sub(get_tail_from_data_path(model_paths[0]))
+                    )
+                ] = [
+                    "{}{} ({})".format(
+                        k.split("_")[0],
+                        get_sub(get_tail_from_data_path(k.split("_")[1])),
+                        round(float(sim_dict[k]), 2),
+                    )
+                    for k in sim_dict
+                ]
+
+            # if st.button("ADD2"):
+            #     get_df()["add2"] = ["fpfe", "onfpo;wnf"] 
+
+            st.write(pd.DataFrame.from_dict(get_df()))
+        clear_data = st.button(label="Clear Data")
+        if clear_data:
+            get_df().clear()
