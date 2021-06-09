@@ -5,17 +5,21 @@ import umap.umap_ as umap
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 
-def get_sub(x):
+
+def get_sub(x, rev=False):
     normal = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-=()"
     sub_s = "ₐ₈CDₑբGₕᵢⱼₖₗₘₙₒₚQᵣₛₜᵤᵥwₓᵧZₐ♭꜀ᑯₑբ₉ₕᵢⱼₖₗₘₙₒₚ૧ᵣₛₜᵤᵥwₓᵧ₂₀₁₂₃₄₅₆₇₈₉₊₋₌₍₎"
-    res = x.maketrans(''.join(normal), ''.join(sub_s))
+    if rev:
+        res = x.maketrans("".join(sub_s), "".join(normal))
+    else:
+        res = x.maketrans("".join(normal), "".join(sub_s))
     return x.translate(res)
 
 
 def get_super(x):
     normal = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-=()"
     super_s = "ᴬᴮᶜᴰᴱᶠᴳᴴᴵᴶᴷᴸᴹᴺᴼᴾQᴿˢᵀᵁⱽᵂˣʸᶻᵃᵇᶜᵈᵉᶠᵍʰᶦʲᵏˡᵐⁿᵒᵖ۹ʳˢᵗᵘᵛʷˣʸᶻ⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾"
-    res = x.maketrans(''.join(normal), ''.join(super_s))
+    res = x.maketrans("".join(normal), "".join(super_s))
     return x.translate(res)
 
 

@@ -3,6 +3,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 from ..utils import get_word_embeddings
 
+
 def compute_similarity_matrix_years(model_paths, keyword, top_k_sim=5):
     first_year_embs = get_word_embeddings(model_paths[0], [keyword], return_words=False)
     sim_dict = {}
@@ -10,9 +11,10 @@ def compute_similarity_matrix_years(model_paths, keyword, top_k_sim=5):
         second_year_vocab, second_year_embs = get_word_embeddings(
             model_path, [], all_model_vectors=True, return_words=True
         )
-        word_remove_idx = second_year_vocab.index(keyword)
-        del second_year_vocab[word_remove_idx]
-        second_year_embs = np.delete(second_year_embs, word_remove_idx, axis=0)
+        if keyword in second_year_vocab:
+            word_remove_idx = second_year_vocab.index(keyword)
+            del second_year_vocab[word_remove_idx]
+            second_year_embs = np.delete(second_year_embs, word_remove_idx, axis=0)
         sim_vec = cosine_similarity(first_year_embs, second_year_embs)[0]
         sim_dict = {
             **sim_dict,

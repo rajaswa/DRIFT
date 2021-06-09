@@ -5,22 +5,23 @@ import os
 # Need this here to prevent errors
 os.environ["PERSISTENT"] = "True"
 import math
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import streamlit as st
 from nltk.corpus import stopwords
+from st_aggrid import AgGrid, DataReturnMode, GridOptionsBuilder, GridUpdateMode, JsCode
 from streamlit import caching
-from st_aggrid import GridOptionsBuilder, AgGrid, GridUpdateMode, DataReturnMode, JsCode
 
 from preprocess_and_save_txt import preprocess_and_save
 from src.analysis.semantic_drift import find_most_drifted_words
-from src.analysis.track_trends_sim import compute_similarity_matrix_years
 from src.analysis.similarity_acc_matrix import (
     compute_acc_between_years,
     compute_acc_heatmap_between_years,
     compute_acceleration_matrix,
 )
+from src.analysis.track_trends_sim import compute_similarity_matrix_years
 from src.analysis.tracking_clusters import kmeans_clustering
 from src.utils import get_word_embeddings, plotly_line_dataframe, word_cloud
 from src.utils.misc import get_sub, get_super, reduce_dimensions
@@ -150,8 +151,10 @@ def generate_analysis_components(analysis_type, variable_params):
     )
     return vars
 
+
 def get_tail_from_data_path(data_path):
     return os.path.split(data_path)[-1].split(".")[0]
+
 
 def get_years_from_data_path(data_path):
     years = sorted(
@@ -647,7 +650,6 @@ ANALYSIS_METHODS = {
             ),
         ),
     ),
-
     "Track Trends with Similarity": dict(
         ABOUT="",
         SUMMARY="A tag cloud is a novelty visual representation of text data, typically used to depict keyword metadata on websites, or to visualize free form text. Tags are usually single words, and the importance of each tag is shown with font size or color.",
@@ -1184,7 +1186,7 @@ elif mode == "Analysis":
         vars = generate_analysis_components(analysis_type, variable_params)
         years = get_years_from_data_path(vars["data_path"])
         compass_text = read_text_file(vars["data_path"], "compass")
-
+        stride = vars["stride"]
         # n = st.sidebar.number_input("N", value=freq_default_values_dict['n'], min_value=1, format="%d", help="N in N-gram for productivity calculation.")
 
         choose_list_freq = freq_top_k(
@@ -1199,12 +1201,18 @@ elif mode == "Analysis":
                 value=(years[0], years[-1]),
             )
             st.text(body=", ".join(keywords_list))
-            selected_ngram = st.text_input(label='Type a Word', value="language")
-            model_paths = [os.path.join(vars["model_path"], str(year) + ".model") for year in range(int(year1), int(year2)+1)]
+            selected_ngram = st.text_input(label="Type a Word", value="language")
+            years = years[years.index(year1) : years.index(year2) + 1]
+            model_paths = [
+                os.path.join(vars["model_path"], str(year) + ".model")
+                for year in years[: min(stride + 1, len(years))]
+            ]
             compass_model_path = os.path.join(vars["model_path"], "compass.model")
             if st.button("Generate Dataframe"):
-               
-                sim_dict = compute_similarity_matrix_years(model_paths, selected_ngram, top_k_sim=vars["top_k_sim"])
+                get_df().clear()
+                sim_dict = compute_similarity_matrix_years(
+                    model_paths, selected_ngram, top_k_sim=vars["top_k_sim"]
+                )
 
                 get_df()[
                     "{}{}".format(
@@ -1218,40 +1226,64 @@ elif mode == "Analysis":
                     )
                     for k in sim_dict
                 ]
-                # get_df()["add"] = ["fpfe", "onfpo;wnf"] 
+                # get_df()["add"] = ["fpfe", "onfpo;wnf"]
 
             # selected_ngram = st.selectbox(label="Choose a Word", freq)
             # selected_ngram = st.text_input("Type Word")
 
-   
-
-
         if get_df() != {}:
+            next_word_module = st.empty()
+            next_word_form = next_word_module.form(key="next_word_form")
+            next_word = next_word_form.selectbox(
+                "Select a Word",
+                [
+                    ele.split("(")[0]
+                    for ele in list(pd.DataFrame.from_dict(get_df()).iloc[:, -1])
+                ],
+                key="bruh",
+            )
+            gen_next_word_button = next_word_form.form_submit_button(
+                label="Generate Next Word"
+            )
+            # gen_next_word_button = next_word_form.button(label='Generate Next Word')
 
-            next_word_form = st.form(key='next_word_form')
-            next_word = next_word_form.selectbox("Select a Word", [ele.split("(")[0] for ele in list(pd.DataFrame.from_dict(get_df()).iloc[:, -1])])
-            gen_next_word_button = next_word_form.form_submit_button(label='Generate Next Word')
             if gen_next_word_button:
-                next_word_pure = "".join([i for i in next_word if not i.isdigit()]).strip()
-                sim_dict = compute_similarity_matrix_years(model_paths, next_word_pure, top_k_sim=vars["top_k_sim"])
-
-                get_df()[
-                    "{}{}".format(
-                        next_word_pure, get_sub(get_tail_from_data_path(model_paths[0]))
+                next_word_pure = "".join([i for i in next_word if i.isalpha()]).strip()
+                next_year = int(
+                    get_sub(
+                        "".join([i for i in next_word if i.isdigit()]).strip(), rev=True
                     )
-                ] = [
-                    "{}{} ({})".format(
-                        k.split("_")[0],
-                        get_sub(get_tail_from_data_path(k.split("_")[1])),
-                        round(float(sim_dict[k]), 2),
+                ) - int(year1)
+                if str(next_year + int(year1)) == year2:
+                    st.success("Analysis complete!")
+                else:
+                    model_paths = [
+                        os.path.join(vars["model_path"], str(year) + ".model")
+                        for year in years[
+                            next_year : min(stride + next_year + 1, len(years))
+                        ]
+                    ]
+                    sim_dict = compute_similarity_matrix_years(
+                        model_paths, next_word_pure, top_k_sim=vars["top_k_sim"]
                     )
-                    for k in sim_dict
-                ]
 
-            # if st.button("ADD2"):
-            #     get_df()["add2"] = ["fpfe", "onfpo;wnf"] 
+                    get_df()[
+                        "{}{}".format(
+                            next_word_pure,
+                            get_sub(get_tail_from_data_path(model_paths[0])),
+                        )
+                    ] = [
+                        "{}{} ({})".format(
+                            k.split("_")[0],
+                            get_sub(get_tail_from_data_path(k.split("_")[1])),
+                            round(float(sim_dict[k]), 2),
+                        )
+                        for k in sim_dict
+                    ]
 
-            st.write(pd.DataFrame.from_dict(get_df()))
-        clear_data = st.button(label="Clear Data")
-        if clear_data:
-            get_df().clear()
+            clear_data = st.button(label="Clear Data")
+            if clear_data:
+                get_df().clear()
+
+            if get_df() != {}:
+                st.write(pd.DataFrame.from_dict(get_df()))
