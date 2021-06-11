@@ -5,7 +5,8 @@ import plotly.express as px
 import plotly.graph_objects as go
 from nltk.corpus import stopwords
 from wordcloud import WordCloud
-
+from src.utils.misc import get_tail_from_data_path
+from ..analysis import similarity_acc_matrix
 
 nltk.download("stopwords")
 nltk.download("wordnet")
@@ -147,3 +148,23 @@ def plotly_line_dataframe(df, x_col, y_col, word_col, title=None, save_path=None
     if save_path:
         fig.write_html(save_path)
     return fig
+
+def embs_for_plotting(word, year_path, top_k_sim=10):
+    year = get_tail_from_data_path(year_path)
+    keywords, embs, sim_matrix = similarity_acc_matrix.compute_similarity_matrix_keywords(model_path=year_path, keywords=[], all_model_vectors=True)
+    print(keywords)
+    word_idx = keywords.index(word)
+
+    sim_vector = sim_matrix[word_idx]
+    top_sims = np.argsort(sim_vector)
+    top_sims = top_sims[-top_k_sim:]
+
+    words = []
+    word_embs = []
+    words.append(word + "_" + year)
+    word_embs.append(embs[word_idx])
+    for top_sim in top_sims:
+        words.append(keywords[top_sim] + "_" + year)
+        word_embs.append(embs[top_sim])    
+
+    return words, word_embs

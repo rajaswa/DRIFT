@@ -28,9 +28,9 @@ from src.analysis.topic_extraction_lda import extract_topics_lda
 from src.analysis.track_trends_sim import compute_similarity_matrix_years
 from src.analysis.tracking_clusters import kmeans_clustering
 from src.utils import get_word_embeddings, plotly_line_dataframe, word_cloud
-from src.utils.misc import get_sub, get_super, reduce_dimensions
+from src.utils.misc import get_sub, get_super, reduce_dimensions, get_tail_from_data_path
 from src.utils.statistics import find_productivity, freq_top_k, yake_keyword_extraction
-from src.utils.viz import plotly_heatmap, plotly_scatter
+from src.utils.viz import plotly_heatmap, plotly_scatter, embs_for_plotting
 from train_twec import train
 
 
@@ -154,10 +154,6 @@ def generate_analysis_components(analysis_type, variable_params):
         ANALYSIS_METHODS[analysis_type]["COMPONENTS"], variable_params
     )
     return vars
-
-
-def get_tail_from_data_path(data_path):
-    return os.path.split(data_path)[-1].split(".")[0]
 
 
 def get_years_from_data_path(data_path):
@@ -493,17 +489,6 @@ ANALYSIS_METHODS = {
                     help="Directory path to the folder containing year-wise model files.",
                 ),
             ),
-            top_k=dict(
-                component_var=sidebar_parameters,
-                typ="number_input",
-                variable_params={"value": "top_k"},
-                params=dict(
-                    label="K",
-                    min_value=1,
-                    format="%d",
-                    help="Top-K words to be chosen from.",
-                ),
-            ),
             top_k_sim=dict(
                 component_var=sidebar_parameters,
                 typ="number_input",
@@ -524,6 +509,16 @@ ANALYSIS_METHODS = {
                     min_value=1,
                     format="%d",
                     help="Top-K words for drift.",
+                ),
+            ),
+            distance_measure=dict(
+                component_var=sidebar_parameters,
+                typ="selectbox",
+                variable_params={},
+                params=dict(
+                    label="Distance Method",
+                    options=["euclidean", "cosine"],
+                    help="Distance Method to compute the drift.",
                 ),
             ),
         ),
@@ -1095,17 +1090,14 @@ elif mode == "Analysis":
 
     elif analysis_type == "Semantic Drift":
         variable_params = get_default_args(find_most_drifted_words)
-        variable_params.update(get_default_args(freq_top_k))
+        del variable_params["words"]
+        variable_params["top_k_sim"] = 10
+        # print(variable_params)
+        
         vars = generate_analysis_components(analysis_type, variable_params)
         years = get_years_from_data_path(vars["data_path"])
         compass_text = read_text_file(vars["data_path"], "compass")
 
-        # n = st.sidebar.number_input("N", value=freq_default_values_dict['n'], min_value=1, format="%d", help="N in N-gram for productivity calculation.")
-
-        choose_list_freq = freq_top_k(
-            compass_text, top_k=vars["top_k"], n=1, normalize=True
-        )
-        keywords_list = list(choose_list_freq.keys())
 
         figure1_params_expander = figure1_params.beta_expander("Plot Parameters")
         with figure1_params_expander:
@@ -1115,12 +1107,6 @@ elif mode == "Analysis":
                 value=(years[0], years[-1]),
             )
 
-            selected_ngrams = st.selectbox(
-                "Select N-grams from list", index=0, options=keywords_list
-            )
-            selected_ngrams_text = st.text_input(
-                "Write your own N-gram to analyze", value=""
-            )
             typ = st.selectbox(
                 "Dimensionality Reduction Method", options=["tsne", "pca", "umap"]
             )
@@ -1130,16 +1116,20 @@ elif mode == "Analysis":
 
         model_path_1 = os.path.join(vars["model_path"], year1 + ".model")
         model_path_2 = os.path.join(vars["model_path"], year2 + ".model")
-        compass_model_path = os.path.join(vars["model_path"], "compass.model")
+        distance_dict = find_most_drifted_words(year_1_path=model_path_1, year_2_path=model_path_2, words=[], top_k_drift=vars["top_k_drift"], distance_measure=vars["distance_measure"])
+        selected_ngrams = st.selectbox(
+            "Select N-grams from list", index=0, options=list(distance_dict.keys())
+        )
+        selected_ngrams_text = st.text_input(
+            "Write your own N-gram to analyze", value=""
+        )
         if selected_ngrams_text != "":
             selected_ngrams = selected_ngrams_text
-        words, embs = find_most_drifted_words(
-            [selected_ngrams],
-            [model_path_1, model_path_2],
-            compass_model_path,
-            top_k_sim=vars["top_k_sim"],
-            top_k_drift=vars["top_k_drift"],
-        )
+        
+        words1, embs1 = embs_for_plotting(selected_ngrams, model_path_1, top_k_sim=vars["top_k_sim"])
+        words2, embs2 = embs_for_plotting(selected_ngrams, model_path_2, top_k_sim=vars["top_k_sim"])
+        words = words1 + words2
+        embs = embs1 + embs2
 
         two_dim_embs = reduce_dimensions(embs, typ=typ, fit_on_compass=False)
 

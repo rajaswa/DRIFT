@@ -1,3 +1,4 @@
+import os
 import json
 
 import numpy as np
@@ -27,6 +28,9 @@ def get_super(x):
     super_s = "ᴬᴮᶜᴰᴱᶠᴳᴴᴵᴶᴷᴸᴹᴺᴼᴾQᴿˢᵀᵁⱽᵂˣʸᶻᵃᵇᶜᵈᵉᶠᵍʰᶦʲᵏˡᵐⁿᵒᵖ۹ʳˢᵗᵘᵛʷˣʸᶻ⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾"
     res = x.maketrans("".join(normal), "".join(super_s))
     return x.translate(res)
+
+def get_tail_from_data_path(data_path):
+    return os.path.split(data_path)[-1].split(".")[0]
 
 
 def intersection(lst1, lst2):
