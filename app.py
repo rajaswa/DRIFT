@@ -1,6 +1,6 @@
 import inspect
 import os
-
+import glob
 
 # Need this here to prevent errors
 os.environ["PERSISTENT"] = "True"
@@ -23,6 +23,7 @@ from src.analysis.similarity_acc_matrix import (
 )
 from src.analysis.track_trends_sim import compute_similarity_matrix_years
 from src.analysis.tracking_clusters import kmeans_clustering
+from src.analysis.topic_extraction_lda import extract_topics_lda
 from src.utils import get_word_embeddings, plotly_line_dataframe, word_cloud
 from src.utils.misc import get_sub, get_super, reduce_dimensions
 from src.utils.statistics import find_productivity, freq_top_k, yake_keyword_extraction
@@ -750,6 +751,46 @@ ANALYSIS_METHODS = {
             ),
         ),
     ),
+    "LDA Topic Modelling": dict(
+        ABOUT="",
+        SUMMARY="A tag cloud is a novelty visual representation of text data, typically used to depict keyword metadata on websites, or to visualize free form text. Tags are usually single words, and the importance of each tag is shown with font size or color.",
+        COMPONENTS=dict(
+            data_path=dict(
+                component_var=sidebar_parameters,
+                typ="text_input",
+                variable_params={},
+                params=dict(
+                    label="Data Path",
+                    value="./data/",
+                    help="Directory path to the folder containing year-wise text files.",
+                ),
+            ),
+            num_topics=dict(
+                component_var=sidebar_parameters,
+                typ="number_input",
+                variable_params={"value": "num_topics"},
+                params=dict(
+                    label="Number of Topics",
+                    min_value=0,
+                    value=0,
+                    format="%d",
+                    help="Number of LDA Topics",
+                ),
+            ),
+            num_words=dict(
+                component_var=sidebar_parameters,
+                typ="number_input",
+                variable_params={"value": "num_words"},
+                params=dict(
+                    label="Number of Words",
+                    min_value=10,
+                    value=10,
+                    format="%d",
+                    help="Number of Words Per Topic.",
+                ),
+            ),
+        ),
+    ),
 }
 
 PREPROCESS = dict(
@@ -1361,4 +1402,62 @@ elif mode == "Analysis":
             fig = px.bar(keywords_df, y="ngram", x="score", orientation="h")
             plot(fig, col1, col2)
 
-        col1.dataframe(keywords_df)
+        keywords_df = keywords_df.round(2)
+        col1.dataframe(keywords_df.T)
+   
+    elif analysis_type == "LDA Topic Modelling":
+        variable_params = get_default_args(extract_topics_lda)
+        vars = generate_analysis_components(analysis_type, variable_params)
+        years = get_years_from_data_path(vars["data_path"])
+
+        with figure1_params.beta_expander("Plot Parameters"):
+            selected_year = st.select_slider(
+                label="Year",
+                options=years,
+                help="Year for which the topical analysis is to be shown.",
+            )
+        year_paths = glob.glob(os.path.join(vars["data_path"], "*.txt"))
+        year_paths.remove(os.path.join(vars["data_path"], "compass.txt"))
+        year_wise_topics, topic_wise_info = extract_topics_lda(year_paths, num_topics=vars["num_topics"], num_words=vars["num_words"])
+        vars["num_topics"] = len(topic_wise_info)
+        topic_wise_info_for_graph = []
+        for topic_info in topic_wise_info:
+            topic_info_for_graph_wt = []
+            topic_info_for_graph_word = []
+            info_str = topic_info[1]
+            weight_ngram_pairs = info_str.split("+")
+            weight_ngram_pairs = [(weight_ngram_pair.strip().split("*")[0], weight_ngram_pair.strip().split("*")[1].replace("\"","")) for weight_ngram_pair in weight_ngram_pairs]
+            for ele in weight_ngram_pairs:
+                topic_info_for_graph_wt.append(ele[0])
+                topic_info_for_graph_word.append(ele[1])
+            df_topic_info = pd.DataFrame()
+            df_topic_info["word"] = topic_info_for_graph_word
+            df_topic_info["wt"] = topic_info_for_graph_wt
+            topic_wise_info_for_graph.append(df_topic_info)
+
+        selected_year_idx = year_paths.index(os.path.join(vars["data_path"], f"{selected_year}.txt"))
+        selected_year_topics = year_wise_topics[selected_year_idx]
+
+        dict_for_graph = {}
+        for selected_year_topic in selected_year_topics:
+            dict_for_graph[int(selected_year_topic[0])] = selected_year_topic[1]
+
+        st.write("Number of Topics: ", vars["num_topics"])
+        
+        topics_not_present = list(set([i for i in range(vars["num_topics"])]) - set(list(dict_for_graph.keys())))
+        for topic_not_present in topics_not_present:
+            dict_for_graph[topic_not_present] = np.array(0.0).astype(np.float32)
+        st.write(dict_for_graph)
+        df_for_graph = pd.DataFrame.from_dict({"topic":list(dict_for_graph.keys()), "probability":list(dict_for_graph.values())})
+        
+        col1, col2 = figure1_block.beta_columns([8, 2])
+
+        with st.spinner("Plotting"):
+            # fig = go.Figure(data=[go.Histogram(x=x,y=y)])
+            fig = px.bar(df_for_graph, y="topic", x="probability", orientation="h")
+            plot(fig, col1, col2)
+
+
+
+        # keywords_df = keywords_df.round(2)
+        # col1.dataframe(keywords_df.T)
