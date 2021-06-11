@@ -4,6 +4,7 @@ from itertools import islice
 import numpy as np
 import streamlit as st
 from nltk import FreqDist, ngrams
+import yake
 
 
 def find_ngrams_for_sentences(sentences, n=1):
@@ -73,3 +74,27 @@ def freq_top_k(text, top_k=20, n=1, normalize=False):
         )
 
     return sorted_gram_count_mapping
+
+
+def yake_keyword_extraction(
+    text_file,
+    top_k=20,
+    language="en",
+    max_ngram_size=3,
+    window_size=2,
+    deduplication_threshold=0.9,
+    deduplication_algo="seqm",
+):
+    with open(text_file, "r") as f:
+        text = f.read()
+    custom_kw_extractor = yake.KeywordExtractor(
+        lan=language,
+        n=max_ngram_size,
+        dedupLim=deduplication_threshold,
+        dedupFunc=deduplication_algo,
+        windowsSize=window_size,
+        top=top_k,
+        features=None,
+    )
+    keywords = custom_kw_extractor.extract_keywords(text)
+    return keywords
