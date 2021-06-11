@@ -4,8 +4,8 @@ from itertools import islice
 import numpy as np
 import pandas as pd
 import streamlit as st
-from nltk import FreqDist, ngrams
 import yake
+from nltk import FreqDist, ngrams
 
 
 def find_ngrams_for_sentences(sentences, n=1):

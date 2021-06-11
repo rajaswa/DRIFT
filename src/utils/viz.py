@@ -72,6 +72,8 @@ def plotly_scatter(
     )
 
     fig.update_traces(textposition="top center")
+    fig.update_xaxes(showgrid=False, zeroline=False)
+    fig.update_yaxes(showgrid=False, zeroline=False)
     if save_path:
         fig.write_html(save_path)
     return fig

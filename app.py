@@ -9,6 +9,8 @@ import math
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
 import streamlit as st
 from nltk.corpus import stopwords
 from st_aggrid import AgGrid, DataReturnMode, GridOptionsBuilder, GridUpdateMode, JsCode
@@ -28,8 +30,6 @@ from src.utils.misc import get_sub, get_super, reduce_dimensions
 from src.utils.statistics import find_productivity, freq_top_k, yake_keyword_extraction
 from src.utils.viz import plotly_heatmap, plotly_scatter
 from train_twec import train
-import plotly.graph_objects as go
-import plotly.express as px
 
 
 # Folder selection not directly support in Streamlit as of now
@@ -1073,8 +1073,11 @@ elif mode == "Analysis":
                 value=(years[0], years[-1]),
             )
 
-            selected_ngrams = st.multiselect(
-                "Selected N-grams", default=keywords_list, options=keywords_list
+            selected_ngrams = st.selectbox(
+                "Select N-grams from list", index=0, options=keywords_list
+            )
+            selected_ngrams_text = st.text_input(
+                "Write your own N-gram to analyze", value=""
             )
             typ = st.selectbox(
                 "Dimensionality Reduction Method", options=["tsne", "pca", "umap"]
@@ -1086,9 +1089,10 @@ elif mode == "Analysis":
         model_path_1 = os.path.join(vars["model_path"], year1 + ".model")
         model_path_2 = os.path.join(vars["model_path"], year2 + ".model")
         compass_model_path = os.path.join(vars["model_path"], "compass.model")
-
+        if selected_ngrams_text != "":
+            selected_ngrams = selected_ngrams_text
         words, embs = find_most_drifted_words(
-            selected_ngrams,
+            [selected_ngrams],
             [model_path_1, model_path_2],
             compass_model_path,
             top_k_sim=vars["top_k_sim"],
@@ -1096,16 +1100,23 @@ elif mode == "Analysis":
         )
 
         two_dim_embs = reduce_dimensions(embs, typ=typ, fit_on_compass=False)
-        plot_words = [word.split("_")[0] for word in words]
-        plot_years = [word.split("_")[1] for word in words]
 
+        plot_years = [word.split("_")[1] for word in words]
+        plot_words = [word.split("_")[0] for word in words]
+        plot_text = [
+            word + get_sub(year) if word in selected_ngrams else word
+            for word, year in zip(plot_words, plot_years)
+        ]
         col1, col2 = figure1_block.beta_columns([8, 2])
         with st.spinner("Plotting"):
             fig = plotly_scatter(
                 x=two_dim_embs[:, 0],
                 y=two_dim_embs[:, 1],
-                color_by_values=plot_years,
-                text_annot=plot_words,
+                color_by_values=[
+                    word if ngram in selected_ngrams else f"Similar Words from {year}"
+                    for ngram, word, year in zip(plot_words, plot_text, plot_years)
+                ],
+                text_annot=plot_text,
                 title=plot_title,
             )
             plot(fig, col1, col2)
