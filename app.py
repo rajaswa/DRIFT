@@ -25,9 +25,11 @@ from src.analysis.track_trends_sim import compute_similarity_matrix_years
 from src.analysis.tracking_clusters import kmeans_clustering
 from src.utils import get_word_embeddings, plotly_line_dataframe, word_cloud
 from src.utils.misc import get_sub, get_super, reduce_dimensions
-from src.utils.statistics import find_productivity, freq_top_k
+from src.utils.statistics import find_productivity, freq_top_k, yake_keyword_extraction
 from src.utils.viz import plotly_heatmap, plotly_scatter
 from train_twec import train
+import plotly.graph_objects as go
+import plotly.express as px
 
 
 # Folder selection not directly support in Streamlit as of now
@@ -709,6 +711,45 @@ ANALYSIS_METHODS = {
             ),
         ),
     ),
+    "Keyword Visualisation": dict(
+        ABOUT="",
+        SUMMARY="A tag cloud is a novelty visual representation of text data, typically used to depict keyword metadata on websites, or to visualize free form text. Tags are usually single words, and the importance of each tag is shown with font size or color.",
+        COMPONENTS=dict(
+            data_path=dict(
+                component_var=sidebar_parameters,
+                typ="text_input",
+                variable_params={},
+                params=dict(
+                    label="Data Path",
+                    value="./data/",
+                    help="Directory path to the folder containing year-wise text files.",
+                ),
+            ),
+            top_k=dict(
+                component_var=sidebar_parameters,
+                typ="number_input",
+                variable_params={"value": "top_k"},
+                params=dict(
+                    label="K",
+                    min_value=1,
+                    format="%d",
+                    help="Top-K words to be chosen from.",
+                ),
+            ),
+            max_ngram_size=dict(
+                component_var=sidebar_parameters,
+                typ="number_input",
+                variable_params={"value": "max_ngram_size"},
+                params=dict(
+                    label="Max Ngram Size",
+                    min_value=1,
+                    value=2,
+                    format="%d",
+                    help="N-gram size.",
+                ),
+            ),
+        ),
+    ),
 }
 
 PREPROCESS = dict(
@@ -1287,3 +1328,46 @@ elif mode == "Analysis":
 
             if get_df() != {}:
                 st.write(pd.DataFrame.from_dict(get_df()))
+
+    elif analysis_type == "Keyword Visualisation":
+        variable_params = get_default_args(yake_keyword_extraction)
+        variable_params.update(get_default_args(freq_top_k))
+        print(variable_params)
+        vars = generate_analysis_components(analysis_type, variable_params)
+        years = get_years_from_data_path(vars["data_path"])
+        # compass_text = read_text_file(vars["data_path"], "compass")
+
+        with figure1_params.beta_expander("Plot Parameters"):
+            selected_year = st.select_slider(
+                label="Year",
+                options=years,
+                help="Year for which world cloud is to be generated",
+            )
+        text_file = os.path.join(vars["data_path"], selected_year + ".txt")
+
+        keywords = yake_keyword_extraction(
+            text_file,
+            top_k=vars["top_k"],
+            language="en",
+            max_ngram_size=vars["max_ngram_size"],
+            window_size=2,
+            deduplication_threshold=0.9,
+            deduplication_algo="seqm",
+        )
+
+        x = []
+        y = []
+        for keyword in keywords:
+            x.append(keyword[0])
+            y.append(1 / (1e5 * keyword[1]))
+        print(y)
+        col1, col2 = figure1_block.beta_columns([8, 2])
+        df = pd.DataFrame()
+        df["ngram"] = x
+        df["score"] = y
+        with st.spinner("Plotting"):
+            # fig = go.Figure(data=[go.Histogram(x=x,y=y)])
+            fig = px.bar(df, y="ngram", x="score", orientation="h")
+            plot(fig, col1, col2)
+
+        col1.dataframe(df)

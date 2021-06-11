@@ -80,7 +80,7 @@ def yake_keyword_extraction(
     text_file,
     top_k=20,
     language="en",
-    max_ngram_size=3,
+    max_ngram_size=2,
     window_size=2,
     deduplication_threshold=0.9,
     deduplication_algo="seqm",
