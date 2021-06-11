@@ -1,6 +1,7 @@
+import glob
 import inspect
 import os
-import glob
+
 
 # Need this here to prevent errors
 os.environ["PERSISTENT"] = "True"
@@ -23,9 +24,9 @@ from src.analysis.similarity_acc_matrix import (
     compute_acc_heatmap_between_years,
     compute_acceleration_matrix,
 )
+from src.analysis.topic_extraction_lda import extract_topics_lda
 from src.analysis.track_trends_sim import compute_similarity_matrix_years
 from src.analysis.tracking_clusters import kmeans_clustering
-from src.analysis.topic_extraction_lda import extract_topics_lda
 from src.utils import get_word_embeddings, plotly_line_dataframe, word_cloud
 from src.utils.misc import get_sub, get_super, reduce_dimensions
 from src.utils.statistics import find_productivity, freq_top_k, yake_keyword_extraction
@@ -1415,7 +1416,7 @@ elif mode == "Analysis":
 
         keywords_df = keywords_df.round(2)
         col1.dataframe(keywords_df.T)
-   
+
     elif analysis_type == "LDA Topic Modelling":
         variable_params = get_default_args(extract_topics_lda)
         vars = generate_analysis_components(analysis_type, variable_params)
@@ -1429,7 +1430,9 @@ elif mode == "Analysis":
             )
         year_paths = glob.glob(os.path.join(vars["data_path"], "*.txt"))
         year_paths.remove(os.path.join(vars["data_path"], "compass.txt"))
-        year_wise_topics, topic_wise_info = extract_topics_lda(year_paths, num_topics=vars["num_topics"], num_words=vars["num_words"])
+        year_wise_topics, topic_wise_info = extract_topics_lda(
+            year_paths, num_topics=vars["num_topics"], num_words=vars["num_words"]
+        )
         vars["num_topics"] = len(topic_wise_info)
         topic_wise_info_for_graph = []
         for topic_info in topic_wise_info:
@@ -1437,7 +1440,13 @@ elif mode == "Analysis":
             topic_info_for_graph_word = []
             info_str = topic_info[1]
             weight_ngram_pairs = info_str.split("+")
-            weight_ngram_pairs = [(weight_ngram_pair.strip().split("*")[0], weight_ngram_pair.strip().split("*")[1].replace("\"","")) for weight_ngram_pair in weight_ngram_pairs]
+            weight_ngram_pairs = [
+                (
+                    weight_ngram_pair.strip().split("*")[0],
+                    weight_ngram_pair.strip().split("*")[1].replace('"', ""),
+                )
+                for weight_ngram_pair in weight_ngram_pairs
+            ]
             for ele in weight_ngram_pairs:
                 topic_info_for_graph_wt.append(ele[0])
                 topic_info_for_graph_word.append(ele[1])
@@ -1446,7 +1455,9 @@ elif mode == "Analysis":
             df_topic_info["wt"] = topic_info_for_graph_wt
             topic_wise_info_for_graph.append(df_topic_info)
 
-        selected_year_idx = year_paths.index(os.path.join(vars["data_path"], f"{selected_year}.txt"))
+        selected_year_idx = year_paths.index(
+            os.path.join(vars["data_path"], f"{selected_year}.txt")
+        )
         selected_year_topics = year_wise_topics[selected_year_idx]
 
         dict_for_graph = {}
@@ -1454,13 +1465,21 @@ elif mode == "Analysis":
             dict_for_graph[int(selected_year_topic[0])] = selected_year_topic[1]
 
         st.write("Number of Topics: ", vars["num_topics"])
-        
-        topics_not_present = list(set([i for i in range(vars["num_topics"])]) - set(list(dict_for_graph.keys())))
+
+        topics_not_present = list(
+            set([i for i in range(vars["num_topics"])])
+            - set(list(dict_for_graph.keys()))
+        )
         for topic_not_present in topics_not_present:
             dict_for_graph[topic_not_present] = np.array(0.0).astype(np.float32)
-        st.write(dict_for_graph)
-        df_for_graph = pd.DataFrame.from_dict({"topic":list(dict_for_graph.keys()), "probability":list(dict_for_graph.values())})
-        
+
+        df_for_graph = pd.DataFrame.from_dict(
+            {
+                "topic": list(dict_for_graph.keys()),
+                "probability": list(dict_for_graph.values()),
+            }
+        )
+
         col1, col2 = figure1_block.beta_columns([8, 2])
 
         with st.spinner("Plotting"):
@@ -1468,7 +1487,9 @@ elif mode == "Analysis":
             fig = px.bar(df_for_graph, y="topic", x="probability", orientation="h")
             plot(fig, col1, col2)
 
-
+        # cols = figure1_block.beta_columns([1 for i in range(vars["num_topics"])])
+        # for i,ele in enumerate(topic_wise_info_for_graph):
+        #     cols[i].dataframe(ele)
 
         # keywords_df = keywords_df.round(2)
         # col1.dataframe(keywords_df.T)
