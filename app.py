@@ -1335,7 +1335,6 @@ elif mode == "Analysis":
         print(variable_params)
         vars = generate_analysis_components(analysis_type, variable_params)
         years = get_years_from_data_path(vars["data_path"])
-        # compass_text = read_text_file(vars["data_path"], "compass")
 
         with figure1_params.beta_expander("Plot Parameters"):
             selected_year = st.select_slider(
@@ -1345,7 +1344,7 @@ elif mode == "Analysis":
             )
         text_file = os.path.join(vars["data_path"], selected_year + ".txt")
 
-        keywords = yake_keyword_extraction(
+        keywords_df = yake_keyword_extraction(
             text_file,
             top_k=vars["top_k"],
             language="en",
@@ -1355,19 +1354,11 @@ elif mode == "Analysis":
             deduplication_algo="seqm",
         )
 
-        x = []
-        y = []
-        for keyword in keywords:
-            x.append(keyword[0])
-            y.append(1 / (1e5 * keyword[1]))
-        print(y)
         col1, col2 = figure1_block.beta_columns([8, 2])
-        df = pd.DataFrame()
-        df["ngram"] = x
-        df["score"] = y
+
         with st.spinner("Plotting"):
             # fig = go.Figure(data=[go.Histogram(x=x,y=y)])
-            fig = px.bar(df, y="ngram", x="score", orientation="h")
+            fig = px.bar(keywords_df, y="ngram", x="score", orientation="h")
             plot(fig, col1, col2)
 
-        col1.dataframe(df)
+        col1.dataframe(keywords_df)

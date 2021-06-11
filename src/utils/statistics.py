@@ -2,6 +2,7 @@ import os
 from itertools import islice
 
 import numpy as np
+import pandas as pd
 import streamlit as st
 from nltk import FreqDist, ngrams
 import yake
@@ -97,4 +98,14 @@ def yake_keyword_extraction(
         features=None,
     )
     keywords = custom_kw_extractor.extract_keywords(text)
-    return keywords
+
+    x = []
+    y = []
+    for keyword in keywords:
+        x.append(keyword[0])
+        y.append(1 / (1e5 * keyword[1]))
+
+    df = pd.DataFrame()
+    df["ngram"] = x
+    df["score"] = y
+    return df
