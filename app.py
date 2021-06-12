@@ -37,6 +37,7 @@ from src.utils.viz import (
     plotly_heatmap,
     plotly_histogram,
     plotly_scatter,
+    plotly_scatter_df,
 )
 from train_twec import train
 
@@ -1220,14 +1221,18 @@ elif mode == "Analysis":
 
         two_dim_embs = reduce_dimensions(embs, typ=typ, fit_on_compass=False)
 
+        clusters_df = pd.DataFrame({"X":two_dim_embs[:, 0], "Y":two_dim_embs[:, 1], "Label":list(map(str,labels)), "Word":keywords})
         col1, col2 = figure1_block.beta_columns([8, 2])
+        print(labels)
         with st.spinner("Plotting"):
-            fig = plotly_scatter(
-                x=two_dim_embs[:, 0],
-                y=two_dim_embs[:, 1],
-                color_by_values=labels,
-                text_annot=keywords,
+            fig = plotly_scatter_df(
+                clusters_df,
+                x_col="X",
+                y_col="Y",
+                color_col="Label",
+                text_annot="Word",
                 title=plot_title,
+                labels={"Label": "Cluster Label"}
             )
             plot(fig, col1, col2)
 

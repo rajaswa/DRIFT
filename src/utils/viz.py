@@ -83,6 +83,36 @@ def plotly_scatter(
     return fig
 
 
+def plotly_scatter_df(
+    df, x_col, y_col, color_col=None,size_col=None, facet_col=None, labels=None, text_annot=None, title=None, save_path=None
+):
+
+    fig = px.scatter(
+        df,
+        x=x_col,
+        y=y_col,
+        size=size_col,
+        color=color_col,
+        facet_col=facet_col,
+        text=text_annot,
+        title=title,
+        labels=labels,
+    )
+
+    fig.update_traces(textposition="top center")
+    fig.update_xaxes(showgrid=False, zeroline=False)
+    fig.update_yaxes(showgrid=False, zeroline=False)
+    # fig.update_layout(legend=dict(
+    #     orientation="h",
+    #     yanchor="bottom",
+    #     y=1.02,
+    #     xanchor="right",
+    #     x=1
+    # ))
+    if save_path:
+        fig.write_html(save_path)
+    return fig
+
 def plotly_histogram(
     df, x_label=None, y_label=None, orientation="h", title=None, save_path=None
 ):
