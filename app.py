@@ -9,7 +9,6 @@ os.environ["PERSISTENT"] = "True"
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import plotly.express as px
 import streamlit as st
 from nltk.corpus import stopwords
 from streamlit import caching
@@ -19,7 +18,6 @@ from src.analysis.semantic_drift import find_most_drifted_words
 from src.analysis.similarity_acc_matrix import (
     compute_acc_between_years,
     compute_acc_heatmap_between_years,
-    compute_acceleration_matrix,
 )
 from src.analysis.topic_extraction_lda import extract_topics_lda
 from src.analysis.track_trends_sim import compute_similarity_matrix_years
@@ -27,12 +25,11 @@ from src.analysis.tracking_clusters import kmeans_clustering
 from src.utils import get_word_embeddings, plotly_line_dataframe, word_cloud
 from src.utils.misc import (
     get_sub,
-    get_super,
     get_tail_from_data_path,
     reduce_dimensions,
 )
 from src.utils.statistics import find_productivity, freq_top_k, yake_keyword_extraction
-from src.utils.viz import embs_for_plotting, plotly_heatmap, plotly_scatter
+from src.utils.viz import embs_for_plotting, plotly_heatmap, plotly_histogram, plotly_scatter
 from train_twec import train
 
 
@@ -1479,7 +1476,7 @@ elif mode == "Analysis":
 
         with st.spinner("Plotting"):
             # fig = go.Figure(data=[go.Histogram(x=x,y=y)])
-            fig = px.bar(keywords_df, y="ngram", x="score", orientation="h")
+            fig = plotly_histogram(keywords_df, y="Ngram", x="Score", orientation="h", title="X")
             plot(fig, col1, col2)
 
         keywords_df = keywords_df.round(2)
@@ -1520,8 +1517,8 @@ elif mode == "Analysis":
                 topic_info_for_graph_wt.append(ele[0])
                 topic_info_for_graph_word.append(ele[1])
             df_topic_info = pd.DataFrame()
-            df_topic_info["word"] = topic_info_for_graph_word
-            df_topic_info["wt"] = topic_info_for_graph_wt
+            df_topic_info["Word"] = topic_info_for_graph_word
+            df_topic_info["WT"] = topic_info_for_graph_wt
             topic_wise_info_for_graph.append(df_topic_info)
 
         selected_year_idx = year_paths.index(
@@ -1544,16 +1541,15 @@ elif mode == "Analysis":
 
         df_for_graph = pd.DataFrame.from_dict(
             {
-                "topic": list(dict_for_graph.keys()),
-                "probability": list(dict_for_graph.values()),
+                "Topic": list(dict_for_graph.keys()),
+                "Probability": list(dict_for_graph.values()),
             }
         )
 
         col1, col2 = figure1_block.beta_columns([8, 2])
 
         with st.spinner("Plotting"):
-            # fig = go.Figure(data=[go.Histogram(x=x,y=y)])
-            fig = px.bar(df_for_graph, y="topic", x="probability", orientation="h")
+            fig = plotly_histogram(df_for_graph, y="Topic", x="Probability", orientation="h", title="X")
             plot(fig, col1, col2)
 
         topics_of_interest = [
@@ -1564,5 +1560,5 @@ elif mode == "Analysis":
         ]
 
         for topic_wise_info in topic_wise_info_list:
-            fig = px.bar(topic_wise_info, y="word", x="wt", orientation="h")
+            fig = plotly_histogram(topic_wise_info, y="Word", x="WT", orientation="h", title="X")
             st.write(fig)
