@@ -22,3 +22,4 @@ tika==1.24
 tqdm==4.61.0
 umap-learn==0.3.10
 wordcloud==1.8.1
+yake==0.4.8
