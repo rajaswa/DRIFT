@@ -87,7 +87,7 @@ def plotly_histogram(
     df, x_label=None, y_label=None, orientation="h", title=None, save_path=None
 ):
 
-    fig = px.bar(df, x=y, y=y, orientation=orientation, title=title)
+    fig = px.bar(df, x=x_label, y=y_label, orientation=orientation, title=title)
 
     fig.update_xaxes(side="top")
 
