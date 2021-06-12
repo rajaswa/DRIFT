@@ -83,7 +83,9 @@ def plotly_scatter(
     return fig
 
 
-def plotly_histogram(df, x_label=None, y_label=None, orientation="h", title=None, save_path=None):
+def plotly_histogram(
+    df, x_label=None, y_label=None, orientation="h", title=None, save_path=None
+):
 
     fig = px.bar(df, x=y, y=y, orientation=orientation, title=title)
 
@@ -92,7 +94,7 @@ def plotly_histogram(df, x_label=None, y_label=None, orientation="h", title=None
     if save_path:
         fig.write_html(save_path)
     return fig
-    
+
 
 def plotly_heatmap(
     arr,

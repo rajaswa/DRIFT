@@ -12,6 +12,13 @@ import streamlit as st
 from nltk.corpus import stopwords
 from streamlit import caching
 
+from app_utils import (
+    get_default_args,
+    get_productivity_for_range,
+    get_word_pair_sim_bw_models,
+    get_years_from_data_path,
+    read_text_file,
+)
 from preprocess_and_save_txt import preprocess_and_save
 from src.analysis.semantic_drift import find_most_drifted_words
 from src.analysis.similarity_acc_matrix import (
@@ -22,16 +29,16 @@ from src.analysis.topic_extraction_lda import extract_topics_lda
 from src.analysis.track_trends_sim import compute_similarity_matrix_years
 from src.analysis.tracking_clusters import kmeans_clustering
 from src.utils import get_word_embeddings, plotly_line_dataframe, word_cloud
-from src.utils.misc import (
-    get_sub,
-    get_tail_from_data_path,
-    reduce_dimensions,
+from src.utils.misc import get_sub, get_tail_from_data_path, reduce_dimensions
+from src.utils.statistics import freq_top_k, yake_keyword_extraction
+from src.utils.viz import (
+    embs_for_plotting,
+    plotly_heatmap,
+    plotly_histogram,
+    plotly_scatter,
 )
-from src.utils.statistics import find_productivity, freq_top_k, yake_keyword_extraction
-from src.utils.viz import embs_for_plotting, plotly_heatmap, plotly_histogram, plotly_scatter
 from train_twec import train
 
-from app_utils import get_default_args, get_productivity_for_range, get_word_pair_sim_bw_models, get_years_from_data_path, read_text_file
 
 # Folder selection not directly support in Streamlit as of now
 # https://github.com/streamlit/streamlit/issues/1019
@@ -126,6 +133,7 @@ def generate_components_from_dict(comp_dict, variable_params):
         vars[component_key] = get_component(component_var, typ, params)
 
     return vars
+
 
 def generate_analysis_components(analysis_type, variable_params):
     # print(ANALYSIS_METHODS[analysis_type])
@@ -1387,7 +1395,9 @@ elif mode == "Analysis":
 
         with st.spinner("Plotting"):
             # fig = go.Figure(data=[go.Histogram(x=x,y=y)])
-            fig = plotly_histogram(keywords_df, y="Ngram", x="Score", orientation="h", title="X")
+            fig = plotly_histogram(
+                keywords_df, y="Ngram", x="Score", orientation="h", title="X"
+            )
             plot(fig, col1, col2)
 
         keywords_df = keywords_df.round(2)
@@ -1460,7 +1470,9 @@ elif mode == "Analysis":
         col1, col2 = figure1_block.beta_columns([8, 2])
 
         with st.spinner("Plotting"):
-            fig = plotly_histogram(df_for_graph, y="Topic", x="Probability", orientation="h", title="X")
+            fig = plotly_histogram(
+                df_for_graph, y="Topic", x="Probability", orientation="h", title="X"
+            )
             plot(fig, col1, col2)
 
         topics_of_interest = [
@@ -1471,5 +1483,7 @@ elif mode == "Analysis":
         ]
 
         for topic_wise_info in topic_wise_info_list:
-            fig = plotly_histogram(topic_wise_info, y="Word", x="WT", orientation="h", title="X")
+            fig = plotly_histogram(
+                topic_wise_info, y="Word", x="WT", orientation="h", title="X"
+            )
             st.write(fig)
