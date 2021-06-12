@@ -1131,7 +1131,7 @@ elif mode == "Analysis":
             plot_words += similar_words
             two_dim_embs = reduce_dimensions(embeddings, typ=typ, fit_on_compass=False)
             col1, col2 = figure1_block.beta_columns([8, 2])
-            colors += [word if "_" not in word else "" for word in plot_words]
+            colors += [word if "_" not in word else word.split("_")[-1] for word in plot_words]
             plot_words = [
                 word.split("_")[0] if "_" in word else word for word in plot_words
             ]
