@@ -1131,7 +1131,9 @@ elif mode == "Analysis":
             plot_words += similar_words
             two_dim_embs = reduce_dimensions(embeddings, typ=typ, fit_on_compass=False)
             col1, col2 = figure1_block.beta_columns([8, 2])
-            colors += [word if "_" not in word else word.split("_")[-1] for word in plot_words]
+            colors += [
+                word if "_" not in word else word.split("_")[-1] for word in plot_words
+            ]
             plot_words = [
                 word.split("_")[0] if "_" in word else word for word in plot_words
             ]
@@ -1488,6 +1490,7 @@ elif mode == "Analysis":
 
     elif analysis_type == "LDA Topic Modelling":
         variable_params = get_default_args(extract_topics_lda)
+        variable_params["num_topics"] = 20
         vars = generate_analysis_components(analysis_type, variable_params)
         years = get_years_from_data_path(vars["data_path"])
 
@@ -1556,9 +1559,13 @@ elif mode == "Analysis":
             fig = px.bar(df_for_graph, y="topic", x="probability", orientation="h")
             plot(fig, col1, col2)
 
-        # cols = figure1_block.beta_columns([1 for i in range(vars["num_topics"])])
-        # for i,ele in enumerate(topic_wise_info_for_graph):
-        #     cols[i].dataframe(ele)
+        topics_of_interest = [
+            key for key in list(set(dict_for_graph.keys()) - set(topics_not_present))
+        ]
+        topic_wise_info_list = [
+            topic_wise_info_for_graph[index] for index in topics_of_interest
+        ]
 
-        # keywords_df = keywords_df.round(2)
-        # col1.dataframe(keywords_df.T)
+        for topic_wise_info in topic_wise_info_list:
+            fig = px.bar(topic_wise_info, y="word", x="wt", orientation="h")
+            st.write(fig)
