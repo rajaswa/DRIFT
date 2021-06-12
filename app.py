@@ -489,6 +489,18 @@ ANALYSIS_METHODS = {
                     help="Directory path to the folder containing year-wise model files.",
                 ),
             ),
+            top_k=dict(
+                component_var=sidebar_parameters,
+                typ="number_input",
+                variable_params={"value": "top_k"},
+                params=dict(
+                    label="K",
+                    value=200,
+                    min_value=1,
+                    format="%d",
+                    help="Top-K words on which we will calculate drift.",
+                ),
+            ),
             top_k_sim=dict(
                 component_var=sidebar_parameters,
                 typ="number_input",
@@ -1090,8 +1102,10 @@ elif mode == "Analysis":
 
     elif analysis_type == "Semantic Drift":
         variable_params = get_default_args(find_most_drifted_words)
+        variable_params.update(get_default_args(freq_top_k))
         del variable_params["words"]
         variable_params["top_k_sim"] = 10
+        variable_params["top_k"] = 100
         # print(variable_params)
         
         vars = generate_analysis_components(analysis_type, variable_params)
@@ -1113,10 +1127,18 @@ elif mode == "Analysis":
             plot_title = st.text_input(
                 label="Plot Title", value=f"{analysis_type} for range {year1}-{year2}"
             )
+        
+        list_top_k_freq = freq_top_k(
+            compass_text,
+            top_k=vars["top_k"],
+            n=1,
+            normalize=False,
+        )
+        list_top_k_freq = list(list_top_k_freq.keys())
 
         model_path_1 = os.path.join(vars["model_path"], year1 + ".model")
         model_path_2 = os.path.join(vars["model_path"], year2 + ".model")
-        distance_dict = find_most_drifted_words(year_1_path=model_path_1, year_2_path=model_path_2, words=[], top_k_drift=vars["top_k_drift"], distance_measure=vars["distance_measure"])
+        distance_dict = find_most_drifted_words(year_1_path=model_path_1, year_2_path=model_path_2, words=list_top_k_freq, top_k_drift=vars["top_k_drift"], distance_measure=vars["distance_measure"])
         selected_ngrams = st.selectbox(
             "Select N-grams from list", index=0, options=list(distance_dict.keys())
         )

@@ -152,7 +152,6 @@ def plotly_line_dataframe(df, x_col, y_col, word_col, title=None, save_path=None
 def embs_for_plotting(word, year_path, top_k_sim=10):
     year = get_tail_from_data_path(year_path)
     keywords, embs, sim_matrix = similarity_acc_matrix.compute_similarity_matrix_keywords(model_path=year_path, keywords=[], all_model_vectors=True)
-    print(keywords)
     word_idx = keywords.index(word)
 
     sim_vector = sim_matrix[word_idx]
@@ -164,7 +163,9 @@ def embs_for_plotting(word, year_path, top_k_sim=10):
     words.append(word + "_" + year)
     word_embs.append(embs[word_idx])
     for top_sim in top_sims:
+        if keywords[top_sim] == word:
+            continue       
         words.append(keywords[top_sim] + "_" + year)
-        word_embs.append(embs[top_sim])    
+        word_embs.append(embs[top_sim])
 
     return words, word_embs
