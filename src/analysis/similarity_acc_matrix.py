@@ -11,7 +11,9 @@ from ..utils import get_word_embeddings
 def compute_similarity_matrix_keywords(
     model_path, keywords=[], all_model_vectors=False
 ):
-    keywords, word_embs = get_word_embeddings(model_path, keywords, all_model_vectors=all_model_vectors, return_words=True)
+    keywords, word_embs = get_word_embeddings(
+        model_path, keywords, all_model_vectors=all_model_vectors, return_words=True
+    )
     word_embs = np.array(word_embs)
     sim_matrix = cosine_similarity(word_embs, word_embs)
 

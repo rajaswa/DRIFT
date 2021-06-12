@@ -5,8 +5,11 @@ import plotly.express as px
 import plotly.graph_objects as go
 from nltk.corpus import stopwords
 from wordcloud import WordCloud
+
 from src.utils.misc import get_tail_from_data_path
+
 from ..analysis import similarity_acc_matrix
+
 
 nltk.download("stopwords")
 nltk.download("wordnet")
@@ -149,11 +152,18 @@ def plotly_line_dataframe(df, x_col, y_col, word_col, title=None, save_path=None
         fig.write_html(save_path)
     return fig
 
-def embs_for_plotting(word, year_path, top_k_sim=10):
-    year = get_tail_from_data_path(year_path)
-    keywords, embs, sim_matrix = similarity_acc_matrix.compute_similarity_matrix_keywords(model_path=year_path, keywords=[], all_model_vectors=True)
-    word_idx = keywords.index(word)
 
+def embs_for_plotting(word, year_path, top_k_sim=10, skip_words=[]):
+    year = get_tail_from_data_path(year_path)
+    (
+        keywords,
+        embs,
+        sim_matrix,
+    ) = similarity_acc_matrix.compute_similarity_matrix_keywords(
+        model_path=year_path, keywords=[], all_model_vectors=True
+    )
+    word_idx = keywords.index(word)
+    print(skip_words)
     sim_vector = sim_matrix[word_idx]
     top_sims = np.argsort(sim_vector)
     top_sims = top_sims[-top_k_sim:]
@@ -162,10 +172,10 @@ def embs_for_plotting(word, year_path, top_k_sim=10):
     word_embs = []
     words.append(word + "_" + year)
     word_embs.append(embs[word_idx])
+    skip_words_modified = [skip_word + "_" + year for skip_word in skip_words]
     for top_sim in top_sims:
-        if keywords[top_sim] == word:
-            continue       
+        if keywords[top_sim] == word or keywords[top_sim] in skip_words_modified:
+            continue
         words.append(keywords[top_sim] + "_" + year)
         word_embs.append(embs[top_sim])
-
     return words, word_embs

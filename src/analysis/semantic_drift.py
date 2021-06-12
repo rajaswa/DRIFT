@@ -3,7 +3,12 @@ import os
 import numpy as np
 import streamlit as st
 from gensim.models.word2vec import Word2Vec
-from sklearn.metrics.pairwise import cosine_similarity, euclidean_distances, cosine_distances
+from sklearn.metrics.pairwise import (
+    cosine_distances,
+    cosine_similarity,
+    euclidean_distances,
+)
+
 from src.utils.words import get_word_embeddings
 
 from ..utils import intersection
@@ -109,9 +114,15 @@ from ..utils import intersection
 
 #     return words_for_plotting, embs_for_plotting
 
+
 @st.cache(persist=eval(os.getenv("PERSISTENT")))
-def find_most_drifted_words(year_1_path, year_2_path, words=[], top_k_drift=10, distance_measure="euclidean"):
-    assert distance_measure in ["euclidean", "cosine"], "distance_measure should be one of [\"euclidean\", \"cosine\"]"
+def find_most_drifted_words(
+    year_1_path, year_2_path, words=[], top_k_drift=10, distance_measure="euclidean"
+):
+    assert distance_measure in [
+        "euclidean",
+        "cosine",
+    ], 'distance_measure should be one of ["euclidean", "cosine"]'
     year_1_model = Word2Vec.load(year_1_path)
     year_2_model = Word2Vec.load(year_2_path)
 
@@ -126,12 +137,17 @@ def find_most_drifted_words(year_1_path, year_2_path, words=[], top_k_drift=10, 
     distance_dict = {}
     for word in common_vocab:
         if distance_measure == "euclidean":
-            distance_dict[word] = euclidean_distances(year_1_model.wv[word].reshape(1,-1), year_2_model.wv[word].reshape(1,-1))[0][0]
+            distance_dict[word] = euclidean_distances(
+                year_1_model.wv[word].reshape(1, -1),
+                year_2_model.wv[word].reshape(1, -1),
+            )[0][0]
         else:
-            distance_dict[word] = cosine_distances(year_1_model.wv[word].reshape(1,-1), year_2_model.wv[word].reshape(1,-1))[0][0]
-    distance_dict = dict(sorted(distance_dict.items(), key=lambda item: item[1])[:top_k_drift])
+            distance_dict[word] = cosine_distances(
+                year_1_model.wv[word].reshape(1, -1),
+                year_2_model.wv[word].reshape(1, -1),
+            )[0][0]
+    distance_dict = dict(
+        sorted(distance_dict.items(), key=lambda item: item[1])[:top_k_drift]
+    )
 
     return distance_dict
-
-
-

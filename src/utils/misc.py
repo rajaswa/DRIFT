@@ -1,5 +1,5 @@
-import os
 import json
+import os
 
 import numpy as np
 import umap.umap_ as umap
@@ -28,6 +28,7 @@ def get_super(x):
     super_s = "ᴬᴮᶜᴰᴱᶠᴳᴴᴵᴶᴷᴸᴹᴺᴼᴾQᴿˢᵀᵁⱽᵂˣʸᶻᵃᵇᶜᵈᵉᶠᵍʰᶦʲᵏˡᵐⁿᵒᵖ۹ʳˢᵗᵘᵛʷˣʸᶻ⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾"
     res = x.maketrans("".join(normal), "".join(super_s))
     return x.translate(res)
+
 
 def get_tail_from_data_path(data_path):
     return os.path.split(data_path)[-1].split(".")[0]

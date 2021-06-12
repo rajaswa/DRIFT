@@ -28,9 +28,14 @@ from src.analysis.topic_extraction_lda import extract_topics_lda
 from src.analysis.track_trends_sim import compute_similarity_matrix_years
 from src.analysis.tracking_clusters import kmeans_clustering
 from src.utils import get_word_embeddings, plotly_line_dataframe, word_cloud
-from src.utils.misc import get_sub, get_super, reduce_dimensions, get_tail_from_data_path
+from src.utils.misc import (
+    get_sub,
+    get_super,
+    get_tail_from_data_path,
+    reduce_dimensions,
+)
 from src.utils.statistics import find_productivity, freq_top_k, yake_keyword_extraction
-from src.utils.viz import plotly_heatmap, plotly_scatter, embs_for_plotting
+from src.utils.viz import embs_for_plotting, plotly_heatmap, plotly_scatter
 from train_twec import train
 
 
@@ -440,6 +445,17 @@ ANALYSIS_METHODS = {
                     min_value=1,
                     format="%d",
                     help="Top-K words to be chosen from.",
+                ),
+            ),
+            top_k_sim=dict(
+                component_var=sidebar_parameters,
+                typ="number_input",
+                variable_params={"value": "top_k_sim"},
+                params=dict(
+                    label="K (sim.)",
+                    min_value=2,
+                    format="%d",
+                    help="Top-K words for similarity.",
                 ),
             ),
             top_k_acc=dict(
@@ -1024,6 +1040,9 @@ elif mode == "Analysis":
     elif analysis_type == "Acceleration Plot":
         variable_params = get_default_args(compute_acc_between_years)
         variable_params.update(get_default_args(freq_top_k))
+        variable_params["top_k_sim"] = 10
+        variable_params["top_k"] = 200
+
         vars = generate_analysis_components(analysis_type, variable_params)
         years = get_years_from_data_path(vars["data_path"])
         compass_text = read_text_file(vars["data_path"], "compass")
@@ -1048,11 +1067,11 @@ elif mode == "Analysis":
         )
         choose_list = list(choose_list_freq.keys())
 
-        with figure1_params_expander:
-            selected_ngrams = st.multiselect(
-                "Selected N-grams", default=choose_list, options=choose_list
-            )
-
+        # with figure1_params_expander:
+        #     selected_ngrams = st.multiselect(
+        #         "Selected N-grams", default=choose_list, options=choose_list
+        #     )
+        selected_ngrams = choose_list
         word_pair_sim_df, word_pair_sim_df_words = get_word_pair_sim_bw_models(
             year1,
             year2,
@@ -1064,41 +1083,70 @@ elif mode == "Analysis":
 
         with figure1_params_expander:
             st.dataframe(word_pair_sim_df.T)
-            plot_year = st.select_slider(
-                "Year",
+            plot_years = st.multiselect(
+                "Select Years",
                 options=years,
-                value=years[-1],
+                default=[years[0], years[-1]],
                 help="Year for which plot is to be made.",
             )
-
-            plot_words_string = st.text_area(
-                label="Words to be plotted", value=",".join(word_pair_sim_df_words)
+            plot_word_1 = st.selectbox(
+                "Select the first word to be plotted", index=0, options=choose_list
             )
-
+            plot_word_2 = st.selectbox("Select word pair", index=1, options=choose_list)
+            target_calc_words = [plot_word_1, plot_word_2]
             typ = st.selectbox(
                 "Dimensionality Reduction Method", options=["tsne", "pca", "umap"]
             )
             plot_title = st.text_input(
                 label="Plot Title",
-                value=f"{analysis_type} for year {plot_year} given acc range {year1}-{year2}",
+                value=f"{analysis_type} for year given acceleration range {year1}-{year2}",
             )
-        plot_words = plot_words_string.split(",")
+        if plot_word_1 != plot_word_2:
+            word_embeddings = []
+            plot_words = []
+            colors = []
+            for plot_year in plot_years:
+                year_model_path = os.path.join(vars["model_path"], plot_year + ".model")
+                word_embeddings += get_word_embeddings(
+                    year_model_path, target_calc_words
+                )
+                plot_words += [word + get_sub(plot_year) for word in target_calc_words]
+            model_path_1 = os.path.join(vars["model_path"], year1 + ".model")
+            model_path_2 = os.path.join(vars["model_path"], year2 + ".model")
 
-        year_model_path = os.path.join(vars["model_path"], plot_year + ".model")
+            similar_words = []
+            similarity_embeddings = []
+            for plot_word in target_calc_words:
+                for model_path_iter in [model_path_1, model_path_2]:
+                    similar_words_temp, similarity_embeddings_temp = embs_for_plotting(
+                        plot_word,
+                        model_path_iter,
+                        top_k_sim=vars["top_k_sim"],
+                        skip_words=plot_words,
+                    )
+                    similar_words += similar_words_temp[1:]
+                    similarity_embeddings += similarity_embeddings_temp[1:]
 
-        word_embeddings = get_word_embeddings(year_model_path, plot_words)
+            embeddings = word_embeddings + similarity_embeddings
+            plot_words += similar_words
+            two_dim_embs = reduce_dimensions(embeddings, typ=typ, fit_on_compass=False)
+            col1, col2 = figure1_block.beta_columns([8, 2])
+            colors += [word if "_" not in word else "" for word in plot_words]
+            plot_words = [
+                word.split("_")[0] if "_" in word else word for word in plot_words
+            ]
 
-        two_dim_embs = reduce_dimensions(word_embeddings, typ=typ, fit_on_compass=False)
-
-        col1, col2 = figure1_block.beta_columns([8, 2])
-        with st.spinner("Plotting"):
-            fig = plotly_scatter(
-                two_dim_embs[:, 0],
-                two_dim_embs[:, 1],
-                text_annot=plot_words,
-                title=plot_title,
-            )
-            plot(fig, col1, col2)
+            with st.spinner("Plotting"):
+                fig = plotly_scatter(
+                    two_dim_embs[:, 0],
+                    two_dim_embs[:, 1],
+                    text_annot=plot_words,
+                    title=plot_title,
+                    color_by_values=colors,
+                )
+                plot(fig, col1, col2)
+        else:
+            st.error("Please select two different words to calculate acceleration!")
 
     elif analysis_type == "Semantic Drift":
         variable_params = get_default_args(find_most_drifted_words)
@@ -1107,11 +1155,10 @@ elif mode == "Analysis":
         variable_params["top_k_sim"] = 10
         variable_params["top_k"] = 100
         # print(variable_params)
-        
+
         vars = generate_analysis_components(analysis_type, variable_params)
         years = get_years_from_data_path(vars["data_path"])
         compass_text = read_text_file(vars["data_path"], "compass")
-
 
         figure1_params_expander = figure1_params.beta_expander("Plot Parameters")
         with figure1_params_expander:
@@ -1127,7 +1174,7 @@ elif mode == "Analysis":
             plot_title = st.text_input(
                 label="Plot Title", value=f"{analysis_type} for range {year1}-{year2}"
             )
-        
+
         list_top_k_freq = freq_top_k(
             compass_text,
             top_k=vars["top_k"],
@@ -1138,7 +1185,13 @@ elif mode == "Analysis":
 
         model_path_1 = os.path.join(vars["model_path"], year1 + ".model")
         model_path_2 = os.path.join(vars["model_path"], year2 + ".model")
-        distance_dict = find_most_drifted_words(year_1_path=model_path_1, year_2_path=model_path_2, words=list_top_k_freq, top_k_drift=vars["top_k_drift"], distance_measure=vars["distance_measure"])
+        distance_dict = find_most_drifted_words(
+            year_1_path=model_path_1,
+            year_2_path=model_path_2,
+            words=list_top_k_freq,
+            top_k_drift=vars["top_k_drift"],
+            distance_measure=vars["distance_measure"],
+        )
         selected_ngrams = st.selectbox(
             "Select N-grams from list", index=0, options=list(distance_dict.keys())
         )
@@ -1147,9 +1200,13 @@ elif mode == "Analysis":
         )
         if selected_ngrams_text != "":
             selected_ngrams = selected_ngrams_text
-        
-        words1, embs1 = embs_for_plotting(selected_ngrams, model_path_1, top_k_sim=vars["top_k_sim"])
-        words2, embs2 = embs_for_plotting(selected_ngrams, model_path_2, top_k_sim=vars["top_k_sim"])
+
+        words1, embs1 = embs_for_plotting(
+            selected_ngrams, model_path_1, top_k_sim=vars["top_k_sim"]
+        )
+        words2, embs2 = embs_for_plotting(
+            selected_ngrams, model_path_2, top_k_sim=vars["top_k_sim"]
+        )
         words = words1 + words2
         embs = embs1 + embs2
 
