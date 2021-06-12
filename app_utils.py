@@ -1,9 +1,10 @@
 import inspect
 import os
+from src.analysis.similarity_acc_matrix import compute_acc_between_years
 
 import pandas as pd
 
-from src.utils.statistics import find_productivity
+from src.utils.statistics import find_freq, find_norm_freq, find_productivity
 
 
 def get_default_args(func):
@@ -48,6 +49,30 @@ def get_productivity_for_range(
         {"Year": yearss, "Word": words, "Productivity": prodss}
     )
     return productivity_df
+
+def get_frequency_for_range(
+    start_year, end_year, selected_ngrams, years, data_path, n, normalize=False
+):
+    yearss = []
+    words = []
+    freqss = []
+    start_year_idx = years.index(start_year)
+    end_year_idx = years.index(end_year)
+    for year_idx in range(start_year_idx, end_year_idx + 1):
+        year = years[year_idx]
+        year_text = read_text_file(data_path, year)
+        if normalize:
+            freqs = find_norm_freq(year_text, n=n, sort=False)
+        else:
+            freqs = find_freq(year_text, n=n, sort=False)
+        for word in selected_ngrams:
+            yearss.append(year)
+            words.append(word)
+            freqss.append(freqs[word] if word in freqs else 0)
+    frequency_df = pd.DataFrame.from_dict(
+        {"Year": yearss, "Word": words, "Frequency": freqss}
+    )
+    return frequency_df
 
 
 def get_acceleration_bw_models(

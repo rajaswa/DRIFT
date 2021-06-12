@@ -14,6 +14,7 @@ from streamlit import caching
 
 from app_utils import (
     get_default_args,
+    get_frequency_for_range,
     get_productivity_for_range,
     get_word_pair_sim_bw_models,
     get_years_from_data_path,
@@ -58,7 +59,7 @@ def get_df():
     return {}
 
 
-def plot(obj, col1, col2, typ="plotly"):
+def plot(obj, col1, col2, typ="plotly", key="key"):
     formats = [".eps", ".pdf", ".svg", ".png", ".jpeg", ".webp"]
     col2.header("Save your graph")
     if typ == "plotly":
@@ -75,15 +76,15 @@ def plot(obj, col1, col2, typ="plotly"):
         formats.remove(".svg")
         col1.image(obj)
 
-    name = col2.text_input("Name", value="MyFigure")
+    name = col2.text_input("Name", value="MyFigure", key=key)
     format = col2.selectbox(
-        "Format", formats, help="The format to be used to save the file."
+        "Format", formats, help="The format to be used to save the file.", key=key
     )
     # Caveat: This only works on local host. See comment https://github.com/streamlit/streamlit/issues/1019#issuecomment-813001320
     # Caveat 2: The folder selection can only be done once and not repetitively
     # dirname = st.text_input('Selected folder:', filedialog.askdirectory(master=root))
 
-    if col2.button("Save"):
+    if col2.button("Save", key=key):
         with st.spinner(text="Saving"):
             save_name = f"{name}{format}"
             if typ == "plotly":
@@ -270,7 +271,7 @@ ANALYSIS_METHODS = {
             ),
         ),
     ),
-    "Productivity Plot": dict(
+    "Productivity/Frequency Plot": dict(
         ABOUT="",
         SUMMARY="Term productivity, that is, a measure for the ability of a concept (lexicalised as a singleword term) to produce new, subordinated concepts (lexicalised as multi-word terms).",
         COMPONENTS=dict(
@@ -301,7 +302,7 @@ ANALYSIS_METHODS = {
                 variable_params={"value": "top_k"},
                 params=dict(
                     label="K",
-                    min_value=1,
+                    min_value=0,
                     format="%d",
                     help="Top-K words to be chosen from.",
                 ),
@@ -905,7 +906,7 @@ elif mode == "Analysis":
             )
             plot(word_cloud_image, col1, col2, typ="PIL")
 
-    elif analysis_type == "Productivity Plot":
+    elif analysis_type == "Productivity/Frequency Plot":
         variable_params = get_default_args(freq_top_k)
         vars = generate_analysis_components(analysis_type, variable_params)
 
@@ -921,34 +922,64 @@ elif mode == "Analysis":
             selected_ngrams = st.multiselect(
                 "Selected N-grams", default=choose_list, options=choose_list
             )
+            custom_ngrams = st.text_area(
+                "Custom N-grams", value='', help="A comma-separated list of n-grams. Ensure that you only use the `n` you chose."
+            )
 
             start_year, end_year = st.select_slider(
                 "Range in years", options=years, value=(years[0], years[-1])
             )
-            plot_title = st.text_input(
-                label="Plot Title",
-                value=f"{analysis_type} for range {start_year}-{end_year}",
+            plot_title_prod = st.text_input(
+                label="Productivity Plot Title",
+                value=f"Productivity Plot for range {start_year}-{end_year}",
+            )
+            plot_title_freq = st.text_input(
+                label="Frequency Plot Title",
+                value=f"Frequency Plot for range {start_year}-{end_year}",
             )
 
+        if custom_ngrams.strip()!='':
+            custom_ngrams_list = [word.strip() for word in custom_ngrams.split(',') if word.strip()!='']
+            for ngram in custom_ngrams_list:
+                if len(ngram.split(' '))!=vars["n"]:
+                    raise ValueError(f"Found n-gram: `{ngram}` which does not have the specified value of n: {vars['n']}.")
+            selected_ngrams = selected_ngrams+custom_ngrams_list
+        
+        if selected_ngrams==[]:
+            raise ValueError("Found an empty list of n-grams. Please select some value of K > 0 or enter custom n-grams.")
+        
         productivity_df = get_productivity_for_range(
             start_year, end_year, selected_ngrams, years, vars["data_path"], vars["n"]
+        )
+        frequency_df = get_frequency_for_range(
+            start_year, end_year, selected_ngrams, years, vars["data_path"], vars["n"], vars["normalize"]
         )
         n_gram_freq_df = pd.DataFrame(
             list(choose_list_freq.items()), columns=["N-gram", "Frequency"]
         )
 
         # plot
-        col1, col2 = figure1_block.beta_columns([8, 2])
+        col11, col12 = figure1_block.beta_columns([8, 2])
         with st.spinner("Plotting"):
             fig = plotly_line_dataframe(
                 productivity_df,
                 x_col="Year",
                 y_col="Productivity",
                 word_col="Word",
-                title=plot_title,
+                title=plot_title_prod,
             )
-            plot(fig, col1, col2)
-        col1.dataframe(n_gram_freq_df.T)
+            plot(fig, col11, col12, key="prod")
+
+        col21, col22 = figure2_block.beta_columns([8, 2])
+        with st.spinner("Plotting"):
+            fig = plotly_line_dataframe(
+                frequency_df,
+                x_col="Year",
+                y_col="Frequency",
+                word_col="Word",
+                title=plot_title_freq,
+            )
+            plot(fig, col21, col22, key="freq")
 
     elif analysis_type == "Acceleration Plot":
         variable_params = get_default_args(compute_acc_between_years)
