@@ -1,4 +1,5 @@
-from enum import unique
+from src.utils.centripetal_catmull_rom_spline import centripetal_catmull_rom
+from src.utils.catmull_rom_spline import catmull_rom
 import matplotlib.pyplot as plt
 import nltk
 import numpy as np
@@ -93,7 +94,7 @@ def plotly_scatter(
     return fig
 
 def plotly_scatter_df(
-    df, x_col, y_col, color_col=None,size_col=None, facet_col=None, labels=None, text_annot=None, title=None, contour_dict=None, colorscale=None, save_path=None
+    df, x_col, y_col, color_col=None,size_col=None, facet_col=None, labels=None, text_annot=None, title=None, contour_dict=None, colorscale=None, label_to_vertices_map=None, save_path=None
 ):
     if colorscale is not None:
         colors = df[color_col].apply(int).values
@@ -116,12 +117,17 @@ def plotly_scatter_df(
         template='simple_white'
     )
 
+    
+    if contour_dict is not None:
+        fig.add_trace(go.Contour(z=contour_dict['Z'],y=contour_dict['Y'], x=contour_dict['X'], opacity=0.3, colorscale=colorscale, showscale=False))
+    if label_to_vertices_map is not None:
+        for label,vertices in label_to_vertices_map.items():
+            vertices = np.concatenate([vertices, vertices[0].reshape(1, -1)], axis=0)
+            x_interpolated, y_interpolated = catmull_rom(vertices[:,0],vertices[:,1], res=1000)
+            fig.add_trace(go.Scatter(x=x_interpolated, y=y_interpolated, name=str(label), mode='none', showlegend=False, fill='toself', opacity=0.3, fillcolor=get_colorscale_color_from_value(colorscale, int(label)/max(df[color_col].apply(int)))))
     fig.update_traces(textposition="top center")
     fig.update_xaxes(showgrid=False, zeroline=False)
     fig.update_yaxes(showgrid=False, zeroline=False)
-    if contour_dict is not None:
-        fig.add_trace(go.Contour(z=contour_dict['Z'],y=contour_dict['Y'], x=contour_dict['X'], opacity=0.3, colorscale=colorscale, showscale=False))
-
     if save_path:
         fig.write_html(save_path)
     return fig

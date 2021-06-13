@@ -18,7 +18,7 @@ from nltk.corpus import stopwords
 from streamlit import caching
 
 from app_utils import (
-    get_contour_matrix_convex_hull,
+    get_curve_hull_objects,
     get_default_args,
     get_frequency_for_range,
     get_productivity_for_range,
@@ -1220,11 +1220,8 @@ elif mode == "Analysis":
         two_dim_embs = reduce_dimensions(embs, typ=typ, fit_on_compass=False)
         labels, k_opt, kmeans = kmeans_embeddings(two_dim_embs, k_opt=None if vars["n_clusters"]==0 else vars["n_clusters"], k_max=vars["max_clusters"],method=vars["method"], return_fitted_model=True)
         figure1_block.write(f"Optimal Number of Clusters: {k_opt}")
-
-        X,Y,Z = get_contour_matrix_convex_hull(two_dim_embs, labels)
         
-        print(Z)
-        
+        label_to_vertices_map = get_curve_hull_objects(two_dim_embs, labels)
 
         clusters_df = pd.DataFrame({"X":two_dim_embs[:, 0], "Y":two_dim_embs[:, 1], "Label":list(map(str,labels)), "Word":keywords})
         col1, col2 = figure1_block.beta_columns([8, 2])
@@ -1237,8 +1234,8 @@ elif mode == "Analysis":
                 text_annot="Word",
                 title=plot_title,
                 labels={"Label": "Cluster Label"},
-                contour_dict={"X":X,"Y":Y,"Z":Z},
                 colorscale=colorscale,
+                label_to_vertices_map=label_to_vertices_map
             )
             plot(fig, col1, col2)
 
@@ -1346,10 +1343,6 @@ elif mode == "Analysis":
                     )
                     for k in sim_dict
                 ]
-                # get_df()["add"] = ["fpfe", "onfpo;wnf"]
-
-            # selected_ngram = st.selectbox(label="Choose a Word", freq)
-            # selected_ngram = st.text_input("Type Word")
 
         if get_df() != {}:
             next_word_module = st.empty()
