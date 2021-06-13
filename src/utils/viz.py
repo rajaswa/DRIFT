@@ -1,3 +1,4 @@
+from enum import unique
 import matplotlib.pyplot as plt
 import nltk
 import numpy as np
@@ -9,6 +10,15 @@ from wordcloud import WordCloud
 from src.utils.misc import get_tail_from_data_path
 
 from ..analysis import similarity_acc_matrix
+
+import plotly.io as pio
+
+def get_colorscale_color_from_value(colorscale, float_value):
+    idx = 0
+    while idx<len(colorscale)-1:
+        if colorscale[idx][0]<=float_value and colorscale[idx+1][0]>=float_value:
+            return colorscale[idx][1]
+        idx+=1
 
 
 nltk.download("stopwords")
@@ -82,33 +92,36 @@ def plotly_scatter(
         fig.write_html(save_path)
     return fig
 
-
 def plotly_scatter_df(
-    df, x_col, y_col, color_col=None,size_col=None, facet_col=None, labels=None, text_annot=None, title=None, save_path=None
+    df, x_col, y_col, color_col=None,size_col=None, facet_col=None, labels=None, text_annot=None, title=None, contour_dict=None, colorscale=None, save_path=None
 ):
-
+    if colorscale is not None:
+        colors = df[color_col].apply(int).values
+        unique_colors = np.sort(np.unique(colors))
+        unique_colors_norm = unique_colors/unique_colors.max()
+        color_discrete_map = {str(unique_colors[idx]):get_colorscale_color_from_value(colorscale, norm_color) for idx,norm_color in enumerate(unique_colors_norm)}
+    else:
+        color_discrete_map = None
     fig = px.scatter(
         df,
         x=x_col,
         y=y_col,
         size=size_col,
         color=color_col,
+        color_discrete_map=color_discrete_map,
         facet_col=facet_col,
         text=text_annot,
         title=title,
         labels=labels,
+        template='simple_white'
     )
 
     fig.update_traces(textposition="top center")
     fig.update_xaxes(showgrid=False, zeroline=False)
     fig.update_yaxes(showgrid=False, zeroline=False)
-    # fig.update_layout(legend=dict(
-    #     orientation="h",
-    #     yanchor="bottom",
-    #     y=1.02,
-    #     xanchor="right",
-    #     x=1
-    # ))
+    if contour_dict is not None:
+        fig.add_trace(go.Contour(z=contour_dict['Z'],y=contour_dict['Y'], x=contour_dict['X'], opacity=0.3, colorscale=colorscale, showscale=False))
+
     if save_path:
         fig.write_html(save_path)
     return fig

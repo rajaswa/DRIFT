@@ -1,6 +1,11 @@
 import glob
 import os
+import plotly.io as pio
 
+template = "simple_white"
+pio.templates.default = template
+plotly_template = pio.templates[template]
+colorscale = plotly_template.layout['colorscale']['diverging']
 
 # Need this here to prevent errors
 os.environ["PERSISTENT"] = "True"
@@ -13,6 +18,7 @@ from nltk.corpus import stopwords
 from streamlit import caching
 
 from app_utils import (
+    get_contour_matrix_convex_hull,
     get_default_args,
     get_frequency_for_range,
     get_productivity_for_range,
@@ -28,7 +34,7 @@ from src.analysis.similarity_acc_matrix import (
 )
 from src.analysis.topic_extraction_lda import extract_topics_lda
 from src.analysis.track_trends_sim import compute_similarity_matrix_years
-from src.analysis.tracking_clusters import kmeans_clustering
+from src.analysis.tracking_clusters import kmeans_clustering, kmeans_embeddings
 from src.utils import get_word_embeddings, plotly_line_dataframe, word_cloud
 from src.utils.misc import get_sub, get_tail_from_data_path, reduce_dimensions
 from src.utils.statistics import freq_top_k, yake_keyword_extraction
@@ -1209,21 +1215,19 @@ elif mode == "Analysis":
 
         year_model_path = os.path.join(vars["model_path"], selected_year + ".model")
 
-        keywords, embs, labels, k_opt = kmeans_clustering(
-            selected_ngrams,
-            year_model_path,
-            k_opt=None if vars["n_clusters"] == 0 else vars["n_clusters"],
-            k_max=vars["max_clusters"],
-            method=vars["method"],
-        )
 
+        keywords,embs = get_word_embeddings(year_model_path, selected_ngrams, all_model_vectors=False, return_words=True, filter_missing_words=True)
+        two_dim_embs = reduce_dimensions(embs, typ=typ, fit_on_compass=False)
+        labels, k_opt, kmeans = kmeans_embeddings(two_dim_embs, k_opt=None if vars["n_clusters"]==0 else vars["n_clusters"], k_max=vars["max_clusters"],method=vars["method"], return_fitted_model=True)
         figure1_block.write(f"Optimal Number of Clusters: {k_opt}")
 
-        two_dim_embs = reduce_dimensions(embs, typ=typ, fit_on_compass=False)
+        X,Y,Z = get_contour_matrix_convex_hull(two_dim_embs, labels)
+        
+        print(Z)
+        
 
         clusters_df = pd.DataFrame({"X":two_dim_embs[:, 0], "Y":two_dim_embs[:, 1], "Label":list(map(str,labels)), "Word":keywords})
         col1, col2 = figure1_block.beta_columns([8, 2])
-        print(labels)
         with st.spinner("Plotting"):
             fig = plotly_scatter_df(
                 clusters_df,
@@ -1232,7 +1236,9 @@ elif mode == "Analysis":
                 color_col="Label",
                 text_annot="Word",
                 title=plot_title,
-                labels={"Label": "Cluster Label"}
+                labels={"Label": "Cluster Label"},
+                contour_dict={"X":X,"Y":Y,"Z":Z},
+                colorscale=colorscale,
             )
             plot(fig, col1, col2)
 
