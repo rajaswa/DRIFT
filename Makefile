@@ -10,7 +10,9 @@ ${VENV}:
 
 env: ${VENV} install_req
 	
-install_req:	
+install_req:
+	sudo apt-get install swig
+	pip install --upgrade pip	
 	pip install --upgrade -r requirements.txt
 
 # black --check --line-length 88 --target-version py38

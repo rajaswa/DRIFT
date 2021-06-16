@@ -1,12 +1,17 @@
+import os
+from src.utils.words import get_word_embeddings
+
 import faiss
 import numpy as np
-from gensim.models.word2vec import Word2Vec
+import streamlit as st
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
-from tqdm.auto import tqdm
+# TO-DO: Switch to FaissKMeans class, based on this: https://towardsdatascience.com/k-means-8x-faster-27x-lower-error-than-scikit-learns-in-25-lines-eaedc7a3a0c8
 
-
-def kmeans_train(X, n_cluster, method="faiss"):
+def kmeans_train(X, n_cluster, method="faiss", return_fitted_model=False):
+    assert method in ["faiss", "sklearn"], "method should be one of " + str(
+        ["faiss", "sklearn"]
+    )
     if method == "faiss":
         kmeans = faiss.Kmeans(
             d=X.shape[1],
@@ -19,30 +24,34 @@ def kmeans_train(X, n_cluster, method="faiss"):
             n_clusters=n_cluster,
         ).fit(X)
         labels = np.array(kmeans.labels_)
+    if return_fitted_model:
+        return labels, kmeans
+    else:
+        return labels
 
-    return labels
-
-
-def kmeans_clustering(
-    keywords, model_path, save_path, k_opt=None, k_max=10, method="faiss"
-):
-    assert method in ["faiss", "sklearn"], "method should be one of " + str(
-        ["faiss", "sklearn"]
-    )
-
-    model = Word2Vec.load(model_path)
-    keywords = [keyword for keyword in keywords if keyword in model.wv.vocab]
-    X = np.array([model.wv[keyword] for keyword in keywords])
-
+def kmeans_embeddings(embs, k_opt=None, k_max=10, method="faiss", return_fitted_model=False):
     if k_opt is None:
 
         silhouette_scores = []
-        for n_cluster in range(2, k_max + 1):
-            labels = kmeans_train(X, n_cluster, method)
-            silhouette_scores.append(silhouette_score(X, labels, metric="euclidean"))
+        for n_cluster in range(2, min(k_max + 1, len(embs))):
+            labels = kmeans_train(embs, n_cluster, method)
+            silhouette_scores.append(silhouette_score(embs, labels, metric="euclidean"))
 
         k_opt = 2 + silhouette_scores.index(max(silhouette_scores))
 
-    labels = kmeans_train(X, k_opt, method)
+    if return_fitted_model:
+        labels, kmeans = kmeans_train(embs, k_opt, method, return_fitted_model)
+        return labels, k_opt, kmeans
+    else:
+        labels = kmeans_train(embs, k_opt, method, return_fitted_model)
+        return labels, k_opt
 
-    return keywords, X, labels
+def kmeans_clustering(keywords, model_path, k_opt=None, k_max=10, method="faiss", return_fitted_model=False):
+    embs = get_word_embeddings(model_path, keywords, all_model_vectors=False, return_words=False, filter_missing_words=True)
+    if return_fitted_model:
+        labels, kmeans = kmeans_embeddings(embs, k_opt=k_opt, k_max=k_max, method=method, return_fitted_model=return_fitted_model)
+        return keywords, embs, labels, k_opt, kmeans
+    else:
+        labels = kmeans_embeddings(embs, k_opt=k_opt, k_max=k_max, method=method, return_fitted_model=return_fitted_model)
+        return keywords, embs, labels, k_opt
+    

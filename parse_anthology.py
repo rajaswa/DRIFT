@@ -23,6 +23,7 @@ def innertext(elt):
 
 
 def get_abstract_from_pdf(paper_url):
+    print(f"Getting PDF from URL: {paper_url}")
     _buffer = StringIO()
     data = parser.from_file(paper_url, xmlContent=True)
     xhtml_data = BeautifulSoup(data["content"])
@@ -122,21 +123,20 @@ def main():
     print("Running " + cmd)
     os.system(cmd)
 
-    # find the paths all XML files
     lst_of_xml_files = glob.glob("acl-anthology/data/xml/*.xml")
+    lst_of_xml_files.sort()
 
     all_conf = {}
 
     for path in tqdm(lst_of_xml_files):
         with open(path) as xml_file:
             xml = xml_file.read()
-            if xml.find("<abstract>") == -1:
+            if not args.use_pdf and xml.find("<abstract>") == -1:
                 continue
             tree = ET.fromstring(xml)
 
             for vol_node in tree.iter("volume"):
 
-                # year
                 year = vol_node.find(".//year")
                 if year is None:
                     continue
@@ -149,7 +149,7 @@ def main():
                 publisher_keys = []
                 booktitle_keys = []
                 common_info_dict = {}
-                # publisher
+
                 publisher = vol_node.find(".//publisher")
 
                 if publisher is None:
@@ -164,12 +164,8 @@ def main():
                 else:
                     publisher = innertext(publisher)
 
-                # if publisher not in all_conf[year]:
-                #     all_conf[year][publisher] = {}
                 publisher_keys.append(publisher)
                 common_info_dict["publisher"] = publisher
-
-                # booktitle
 
                 booktitle = vol_node.find(".//booktitle")
                 if booktitle is None:
@@ -185,8 +181,6 @@ def main():
                 else:
                     booktitle = innertext(booktitle)
 
-                # if booktitle not in all_conf[year][publisher]:
-                #     all_conf[year][publisher][booktitle] = {}
                 booktitle_keys.append(booktitle)
                 common_info_dict["book_title"] = booktitle
 
@@ -201,8 +195,6 @@ def main():
                     common_info_dict["url"] = innertext(url)
                 else:
                     common_info_dict["url"] = None
-
-                # all_conf[year][publisher][booktitle]["papers"] = []
 
                 for node in vol_node.iter("paper"):
                     paper_dict = {}
@@ -227,7 +219,7 @@ def main():
                                     author_name += " " + elem.text
                                 paper_dict["authors"].append(author_name)
                             else:
-                                if args.use_pdf:
+                                if not args.use_pdf:
                                     paper_dict[elem.tag] = innertext(elem)
                                     if elem.tag == "abstract":
                                         if (
@@ -238,9 +230,6 @@ def main():
                                         ):
                                             lang_flag = 0
                                             break
-                                        # paper_dict["preprocessed_abstract"] = preprocess(
-                                        #     paper_dict["abstract"]
-                                        # )
                                 else:
                                     if elem.tag == "abstract":
                                         continue
@@ -273,7 +262,8 @@ def main():
                                     ] = preprocess_text(paper_dict["abstract"])
 
                     if lang_flag == 1:
-                        all_conf[year].append(paper_dict.update(common_info_dict))
+                        paper_dict.update(common_info_dict)
+                        all_conf[year].append(paper_dict)
 
     with open(json_save_path, "w") as f:
         json.dump(all_conf, f)

@@ -3,7 +3,6 @@
     "python.formatting.blackArgs": [
         "--line-length 88 "
     ],
-    "editor.formatOnSave": true,
     "python.linting.enabled": true,
     "python.linting.lintOnSave": true,
     "python.linting.flake8Enabled": true,

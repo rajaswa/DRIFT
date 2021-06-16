@@ -1,11 +1,23 @@
+import os
 from itertools import islice
 
 import numpy as np
+import pandas as pd
+import streamlit as st
+import yake
 from nltk import FreqDist, ngrams
 
 
+def find_ngrams_for_sentences(sentences, n=1):
+    sentence_list = sentences.split("\n")
+    ngrams_list = []
+    for sentence in sentence_list:
+        ngrams_list += list(ngrams(sentence.split(), n))
+    return ngrams_list
+
+
 def find_freq(text, n=1, sort=False):
-    ngrams_lst = list(ngrams(text.split(), n))
+    ngrams_lst = find_ngrams_for_sentences(text, n)
     gram_count_mapping = dict(FreqDist(ngrams_lst))
     gram_count_mapping = {" ".join(k): v for k, v in gram_count_mapping.items()}
     if sort:
@@ -23,7 +35,8 @@ def find_norm_freq(text, n=1, sort=False):
     return gram_count_mapping
 
 
-def find_productivity(words, text, n=2):
+@st.cache(persist=eval(os.getenv("PERSISTENT")))
+def find_productivity(words, text, n=1):
     fdist = find_freq(text=text, n=n, sort=True)
     ngrams_lst = list(fdist.keys())
     prods = {}
@@ -49,7 +62,8 @@ def find_productivity(words, text, n=2):
     return prods
 
 
-def freq_top_k(text, top_k=200, n=1, normalize=False):
+@st.cache(persist=eval(os.getenv("PERSISTENT")))
+def freq_top_k(text, top_k=20, n=1, normalize=False):
     if normalize:
         sorted_gram_count_mapping = find_norm_freq(text, n=n, sort=True)
     else:
@@ -61,3 +75,37 @@ def freq_top_k(text, top_k=200, n=1, normalize=False):
         )
 
     return sorted_gram_count_mapping
+
+
+def yake_keyword_extraction(
+    text_file,
+    top_k=20,
+    language="en",
+    max_ngram_size=2,
+    window_size=2,
+    deduplication_threshold=0.9,
+    deduplication_algo="seqm",
+):
+    with open(text_file, "r") as f:
+        text = f.read()
+    custom_kw_extractor = yake.KeywordExtractor(
+        lan=language,
+        n=max_ngram_size,
+        dedupLim=deduplication_threshold,
+        dedupFunc=deduplication_algo,
+        windowsSize=window_size,
+        top=top_k,
+        features=None,
+    )
+    keywords = custom_kw_extractor.extract_keywords(text)
+
+    x = []
+    y = []
+    for keyword in keywords:
+        x.append(keyword[0])
+        y.append(1 / (1e5 * keyword[1]))
+
+    df = pd.DataFrame()
+    df["ngram"] = x
+    df["score"] = y
+    return df

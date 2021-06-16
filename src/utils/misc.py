@@ -1,9 +1,37 @@
 import json
+import os
 
 import numpy as np
 import umap.umap_ as umap
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
+
+
+def list_chunks(lst, n):
+    """Yield successive n-sized chunks from lst."""
+    for i in range(0, len(lst), n):
+        yield lst[i : i + n]
+
+
+def get_sub(x, rev=False):
+    normal = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-=()"
+    sub_s = "ₐ₈CDₑբGₕᵢⱼₖₗₘₙₒₚQᵣₛₜᵤᵥwₓᵧZₐ♭꜀ᑯₑբ₉ₕᵢⱼₖₗₘₙₒₚ૧ᵣₛₜᵤᵥwₓᵧ₂₀₁₂₃₄₅₆₇₈₉₊₋₌₍₎"
+    if rev:
+        res = x.maketrans("".join(sub_s), "".join(normal))
+    else:
+        res = x.maketrans("".join(normal), "".join(sub_s))
+    return x.translate(res)
+
+
+def get_super(x):
+    normal = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-=()"
+    super_s = "ᴬᴮᶜᴰᴱᶠᴳᴴᴵᴶᴷᴸᴹᴺᴼᴾQᴿˢᵀᵁⱽᵂˣʸᶻᵃᵇᶜᵈᵉᶠᵍʰᶦʲᵏˡᵐⁿᵒᵖ۹ʳˢᵗᵘᵛʷˣʸᶻ⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾"
+    res = x.maketrans("".join(normal), "".join(super_s))
+    return x.translate(res)
+
+
+def get_tail_from_data_path(data_path):
+    return os.path.split(data_path)[-1].split(".")[0]
 
 
 def intersection(lst1, lst2):
