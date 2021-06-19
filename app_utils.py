@@ -3,9 +3,9 @@ import os
 from src.analysis.similarity_acc_matrix import compute_acc_between_years
 
 import pandas as pd
-
+import numpy as np
+from scipy.spatial import ConvexHull
 from src.utils.statistics import find_freq, find_norm_freq, find_productivity
-
 
 def get_default_args(func):
     signature = inspect.signature(func)
@@ -118,3 +118,20 @@ def read_text_file(data_path, name):
     with open(os.path.join(data_path, name + ".txt"), encoding="utf-8") as f:
         words = f.read()
     return words
+
+def get_curve_hull_objects(embeds, labels):
+    label_to_point_map = {}
+    for idx, label in enumerate(labels):
+        if label not in label_to_point_map:
+            label_to_point_map[label]=[embeds[idx]]
+        else:
+            label_to_point_map[label]+=[embeds[idx]]
+
+    label_to_vertices_map={}
+    for label, label_points in label_to_point_map.items():
+        label_points = np.array(label_points)
+        hull = ConvexHull(label_points)
+        vertices = label_points[hull.vertices]
+        label_to_vertices_map[label]=vertices
+
+    return label_to_vertices_map

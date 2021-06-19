@@ -7,8 +7,11 @@ from nltk.corpus import stopwords
 from tqdm.auto import tqdm
 
 
-def get_word_embeddings(model_path, words, all_model_vectors=False, return_words=False):
+def get_word_embeddings(model_path, words, all_model_vectors=False, return_words=False, filter_missing_words=False):
     model = Word2Vec.load(model_path)
+
+    if filter_missing_words:
+        words = [word for word in words if word in model.wv.vocab]
 
     if all_model_vectors:
         # overwrite keywords
