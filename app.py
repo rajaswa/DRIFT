@@ -1041,7 +1041,7 @@ elif mode == "Analysis":
             plot_years = st.multiselect(
                 "Select Years",
                 options=years,
-                default=[years[0], years[-1]],
+                default=[year1, year2],
                 help="Year for which plot is to be made.",
             )
             plot_word_1 = st.selectbox(
@@ -1056,7 +1056,12 @@ elif mode == "Analysis":
                 label="Plot Title",
                 value=f"{analysis_type} for year given acceleration range {year1}-{year2}",
             )
-        if plot_word_1 != plot_word_2:
+        if plot_word_1 == plot_word_2 :
+            st.error("Please select two different words to calculate acceleration!")
+
+        elif len(plot_years) < 2:
+            st.error("Please select at least two years to calculate acceleration!")
+        else:
             word_embeddings = []
             plot_words = []
             colors = []
@@ -1102,8 +1107,6 @@ elif mode == "Analysis":
                     color_by_values=colors,
                 )
                 plot(fig, col1, col2)
-        else:
-            st.error("Please select two different words to calculate acceleration!")
 
     elif analysis_type == "Semantic Drift":
         variable_params = get_default_args(find_most_drifted_words)
@@ -1428,13 +1431,12 @@ elif mode == "Analysis":
             deduplication_threshold=0.9,
             deduplication_algo="seqm",
         )
-
         col1, col2 = figure1_block.beta_columns([8, 2])
 
         with st.spinner("Plotting"):
             # fig = go.Figure(data=[go.Histogram(x=x,y=y)])
             fig = plotly_histogram(
-                keywords_df, y="Ngram", x="Score", orientation="h", title="X"
+                keywords_df, y_label="ngram", x_label="score", orientation="h", title="X"
             )
             plot(fig, col1, col2)
 
@@ -1509,7 +1511,7 @@ elif mode == "Analysis":
 
         with st.spinner("Plotting"):
             fig = plotly_histogram(
-                df_for_graph, y="Topic", x="Probability", orientation="h", title="X"
+                df_for_graph, y_label="Topic", x_label="Probability", orientation="h", title="X"
             )
             plot(fig, col1, col2)
 
@@ -1522,6 +1524,6 @@ elif mode == "Analysis":
 
         for topic_wise_info in topic_wise_info_list:
             fig = plotly_histogram(
-                topic_wise_info, y="Word", x="WT", orientation="h", title="X"
+                topic_wise_info, y_label="Word", x_label="WT", orientation="h", title="X"
             )
             st.write(fig)
