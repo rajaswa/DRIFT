@@ -30,17 +30,18 @@ def get_years_from_data_path(data_path):
 
 
 def get_productivity_for_range(
-    start_year, end_year, selected_ngrams, years, data_path, n
+    start_year, end_year, selected_ngrams, years, data_path, n, normalize=False
 ):
     yearss = []
     words = []
     prodss = []
+    
     start_year_idx = years.index(start_year)
     end_year_idx = years.index(end_year)
     for year_idx in range(start_year_idx, end_year_idx + 1):
         year = years[year_idx]
         year_text = read_text_file(data_path, year)
-        prods = find_productivity(selected_ngrams, year_text, n)
+        prods = find_productivity(selected_ngrams, year_text, n, normalize)
         for word, productivity in prods.items():
             yearss.append(year)
             words.append(word)

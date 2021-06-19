@@ -41,7 +41,7 @@ from src.utils.viz import (
 )
 from train_twec import train
 
-
+from src.analysis.productivity_inference import cluster_productivity
 # Folder selection not directly support in Streamlit as of now
 # https://github.com/streamlit/streamlit/issues/1019
 # import tkinter as tk
@@ -398,7 +398,7 @@ ANALYSIS_METHODS = {
     ),
     "Semantic Drift": dict(
         ABOUT="",
-        SUMMARY="A tag cloud is a novelty visual representation of text data, typically used to depict keyword metadata on websites, or to visualize free form text. Tags are usually single words, and the importance of each tag is shown with font size or color.",
+        SUMMARY="Computing the semantic drift of words, i.e.,  change in meaning, by finding the Euclidean/Cosine Distance between two representations of the word from different years and showing the drift on a t-SNE plot",
         COMPONENTS=dict(
             data_path=dict(
                 component_var=sidebar_parameters,
@@ -948,19 +948,21 @@ elif mode == "Analysis":
         
         if selected_ngrams==[]:
             raise ValueError("Found an empty list of n-grams. Please select some value of K > 0 or enter custom n-grams.")
-        
         productivity_df = get_productivity_for_range(
-            start_year, end_year, selected_ngrams, years, vars["data_path"], vars["n"]
+            start_year, end_year, selected_ngrams, years, vars["data_path"], 2, vars["normalize"]
         )
         frequency_df = get_frequency_for_range(
             start_year, end_year, selected_ngrams, years, vars["data_path"], vars["n"], vars["normalize"]
         )
+       
+        final_clusters = cluster_productivity(productivity_df, frequency_df)        
+
         n_gram_freq_df = pd.DataFrame(
             list(choose_list_freq.items()), columns=["N-gram", "Frequency"]
         )
 
         # plot
-        col11, col12 = figure1_block.beta_columns([8, 2])
+        col11, col12 = figure1_block.beta_columns([6, 4])
         with st.spinner("Plotting"):
             fig = plotly_line_dataframe(
                 productivity_df,
@@ -971,7 +973,7 @@ elif mode == "Analysis":
             )
             plot(fig, col11, col12, key="prod")
 
-        col21, col22 = figure2_block.beta_columns([8, 2])
+        col21, col22 = figure2_block.beta_columns([6, 4])
         with st.spinner("Plotting"):
             fig = plotly_line_dataframe(
                 frequency_df,
@@ -981,6 +983,8 @@ elif mode == "Analysis":
                 title=plot_title_freq,
             )
             plot(fig, col21, col22, key="freq")
+        st.write("Clusters")
+        st.write(final_clusters)
 
     elif analysis_type == "Acceleration Plot":
         variable_params = get_default_args(compute_acc_between_years)
@@ -1223,7 +1227,6 @@ elif mode == "Analysis":
 
         clusters_df = pd.DataFrame({"X":two_dim_embs[:, 0], "Y":two_dim_embs[:, 1], "Label":list(map(str,labels)), "Word":keywords})
         col1, col2 = figure1_block.beta_columns([8, 2])
-        print(labels)
         with st.spinner("Plotting"):
             fig = plotly_scatter_df(
                 clusters_df,
@@ -1405,7 +1408,6 @@ elif mode == "Analysis":
     elif analysis_type == "Keyword Visualisation":
         variable_params = get_default_args(yake_keyword_extraction)
         variable_params.update(get_default_args(freq_top_k))
-        print(variable_params)
         vars = generate_analysis_components(analysis_type, variable_params)
         years = get_years_from_data_path(vars["data_path"])
 

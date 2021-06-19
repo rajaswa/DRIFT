@@ -191,6 +191,8 @@ def word_cloud(
 def plotly_line_dataframe(df, x_col, y_col, word_col, title=None, save_path=None):
 
     fig = px.line(df, x=x_col, y=y_col, color=word_col, title=title)
+    fig.update_xaxes(showgrid=False, zeroline=False)
+    fig.update_yaxes(showgrid=False, zeroline=False)
     if save_path:
         fig.write_html(save_path)
     return fig
@@ -206,7 +208,7 @@ def embs_for_plotting(word, year_path, top_k_sim=10, skip_words=[]):
         model_path=year_path, keywords=[], all_model_vectors=True
     )
     word_idx = keywords.index(word)
-    print(skip_words)
+    # print(skip_words)
     sim_vector = sim_matrix[word_idx]
     top_sims = np.argsort(sim_vector)
     top_sims = top_sims[-top_k_sim:]
