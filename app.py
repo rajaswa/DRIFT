@@ -1,11 +1,13 @@
 import glob
 import os
+
 import plotly.io as pio
+
 
 template = "simple_white"
 pio.templates.default = template
 plotly_template = pio.templates[template]
-colorscale = plotly_template.layout['colorscale']['diverging']
+colorscale = plotly_template.layout["colorscale"]["diverging"]
 
 # Need this here to prevent errors
 os.environ["PERSISTENT"] = "True"
@@ -27,6 +29,7 @@ from app_utils import (
     read_text_file,
 )
 from preprocess_and_save_txt import preprocess_and_save
+from src.analysis.productivity_inference import cluster_productivity
 from src.analysis.semantic_drift import find_most_drifted_words
 from src.analysis.similarity_acc_matrix import (
     compute_acc_between_years,
@@ -47,7 +50,7 @@ from src.utils.viz import (
 )
 from train_twec import train
 
-from src.analysis.productivity_inference import cluster_productivity
+
 # Folder selection not directly support in Streamlit as of now
 # https://github.com/streamlit/streamlit/issues/1019
 # import tkinter as tk
@@ -930,7 +933,9 @@ elif mode == "Analysis":
                 "Selected N-grams", default=choose_list, options=choose_list
             )
             custom_ngrams = st.text_area(
-                "Custom N-grams", value='', help="A comma-separated list of n-grams. Ensure that you only use the `n` you chose."
+                "Custom N-grams",
+                value="",
+                help="A comma-separated list of n-grams. Ensure that you only use the `n` you chose.",
             )
 
             start_year, end_year = st.select_slider(
@@ -945,23 +950,41 @@ elif mode == "Analysis":
                 value=f"Frequency Plot for range {start_year}-{end_year}",
             )
 
-        if custom_ngrams.strip()!='':
-            custom_ngrams_list = [word.strip() for word in custom_ngrams.split(',') if word.strip()!='']
+        if custom_ngrams.strip() != "":
+            custom_ngrams_list = [
+                word.strip() for word in custom_ngrams.split(",") if word.strip() != ""
+            ]
             for ngram in custom_ngrams_list:
-                if len(ngram.split(' '))!=vars["n"]:
-                    raise ValueError(f"Found n-gram: `{ngram}` which does not have the specified value of n: {vars['n']}.")
-            selected_ngrams = selected_ngrams+custom_ngrams_list
-        
-        if selected_ngrams==[]:
-            raise ValueError("Found an empty list of n-grams. Please select some value of K > 0 or enter custom n-grams.")
+                if len(ngram.split(" ")) != vars["n"]:
+                    raise ValueError(
+                        f"Found n-gram: `{ngram}` which does not have the specified value of n: {vars['n']}."
+                    )
+            selected_ngrams = selected_ngrams + custom_ngrams_list
+
+        if selected_ngrams == []:
+            raise ValueError(
+                "Found an empty list of n-grams. Please select some value of K > 0 or enter custom n-grams."
+            )
         productivity_df = get_productivity_for_range(
-            start_year, end_year, selected_ngrams, years, vars["data_path"], 2, vars["normalize"]
+            start_year,
+            end_year,
+            selected_ngrams,
+            years,
+            vars["data_path"],
+            2,
+            vars["normalize"],
         )
         frequency_df = get_frequency_for_range(
-            start_year, end_year, selected_ngrams, years, vars["data_path"], vars["n"], vars["normalize"]
+            start_year,
+            end_year,
+            selected_ngrams,
+            years,
+            vars["data_path"],
+            vars["n"],
+            vars["normalize"],
         )
-       
-        final_clusters = cluster_productivity(productivity_df, frequency_df)        
+
+        final_clusters = cluster_productivity(productivity_df, frequency_df)
 
         n_gram_freq_df = pd.DataFrame(
             list(choose_list_freq.items()), columns=["N-gram", "Frequency"]
@@ -1056,7 +1079,7 @@ elif mode == "Analysis":
                 label="Plot Title",
                 value=f"{analysis_type} for year given acceleration range {year1}-{year2}",
             )
-        if plot_word_1 == plot_word_2 :
+        if plot_word_1 == plot_word_2:
             st.error("Please select two different words to calculate acceleration!")
 
         elif len(plot_years) < 2:
@@ -1201,10 +1224,10 @@ elif mode == "Analysis":
 
         figure1_params_expander = figure1_params.beta_expander("Plot Parameters")
         with figure1_params_expander:
-            selected_year = st.select_slider(
-                "Range in years", options=years, value=years[0]
+            year1, year2 = st.select_slider(
+                "Range in years", options=years, value=(years[-4], years[-1])
             )
-
+        selected_years = [str(i) for i in range(int(year1), int(year2) + 1)]
         choose_list_freq = freq_top_k(compass_text, top_k=vars["top_k"], n=1)
 
         keywords_list = list(choose_list_freq.keys())
@@ -1216,35 +1239,50 @@ elif mode == "Analysis":
             typ = st.selectbox(
                 "Dimensionality Reduction Method", options=["tsne", "pca", "umap"]
             )
-            plot_title = st.text_input(
-                label="Plot Title", value=f"{analysis_type} for year {selected_year}"
+
+        for selected_year in selected_years:
+            year_model_path = os.path.join(vars["model_path"], selected_year + ".model")
+            keywords, embs = get_word_embeddings(
+                year_model_path,
+                selected_ngrams,
+                all_model_vectors=False,
+                return_words=True,
+                filter_missing_words=True,
             )
-
-        year_model_path = os.path.join(vars["model_path"], selected_year + ".model")
-
-
-        keywords,embs = get_word_embeddings(year_model_path, selected_ngrams, all_model_vectors=False, return_words=True, filter_missing_words=True)
-        two_dim_embs = reduce_dimensions(embs, typ=typ, fit_on_compass=False)
-        labels, k_opt, kmeans = kmeans_embeddings(two_dim_embs, k_opt=None if vars["n_clusters"]==0 else vars["n_clusters"], k_max=vars["max_clusters"],method=vars["method"], return_fitted_model=True)
-        figure1_block.write(f"Optimal Number of Clusters: {k_opt}")
-        
-        label_to_vertices_map = get_curve_hull_objects(two_dim_embs, labels)
-
-        clusters_df = pd.DataFrame({"X":two_dim_embs[:, 0], "Y":two_dim_embs[:, 1], "Label":list(map(str,labels)), "Word":keywords})
-        col1, col2 = figure1_block.beta_columns([8, 2])
-        with st.spinner("Plotting"):
-            fig = plotly_scatter_df(
-                clusters_df,
-                x_col="X",
-                y_col="Y",
-                color_col="Label",
-                text_annot="Word",
-                title=plot_title,
-                labels={"Label": "Cluster Label"},
-                colorscale=colorscale,
-                label_to_vertices_map=label_to_vertices_map
+            two_dim_embs = reduce_dimensions(embs, typ=typ, fit_on_compass=False)
+            labels, k_opt, kmeans = kmeans_embeddings(
+                two_dim_embs,
+                k_opt=None if vars["n_clusters"] == 0 else vars["n_clusters"],
+                k_max=vars["max_clusters"],
+                method=vars["method"],
+                return_fitted_model=True,
             )
-            plot(fig, col1, col2)
+            figure1_block.write(f"Optimal Number of Clusters: {k_opt}")
+
+            label_to_vertices_map = get_curve_hull_objects(two_dim_embs, labels)
+
+            clusters_df = pd.DataFrame(
+                {
+                    "X": two_dim_embs[:, 0],
+                    "Y": two_dim_embs[:, 1],
+                    "Label": list(map(str, labels)),
+                    "Word": keywords,
+                }
+            )
+            col1, col2 = figure1_block.beta_columns([8, 2])
+            with st.spinner("Plotting"):
+                fig = plotly_scatter_df(
+                    clusters_df,
+                    x_col="X",
+                    y_col="Y",
+                    color_col="Label",
+                    text_annot="Word",
+                    title=f"{analysis_type} for year {selected_year}",
+                    labels={"Label": "Cluster Label"},
+                    colorscale=colorscale,
+                    label_to_vertices_map=label_to_vertices_map,
+                )
+                plot(fig, col1, col2, key="tracking_clusters_" + selected_year)
 
     elif analysis_type == "Acceleration Heatmap":
         variable_params = get_default_args(compute_acc_heatmap_between_years)
@@ -1302,6 +1340,7 @@ elif mode == "Analysis":
                 title=plot_title,
             )
             plot(fig, col1, col2)
+
     elif analysis_type == "Track Trends with Similarity":
 
         variable_params = get_default_args(compute_similarity_matrix_years)
@@ -1436,7 +1475,11 @@ elif mode == "Analysis":
         with st.spinner("Plotting"):
             # fig = go.Figure(data=[go.Histogram(x=x,y=y)])
             fig = plotly_histogram(
-                keywords_df, y_label="ngram", x_label="score", orientation="h", title="X"
+                keywords_df,
+                y_label="ngram",
+                x_label="score",
+                orientation="h",
+                title="X",
             )
             plot(fig, col1, col2)
 
@@ -1511,7 +1554,11 @@ elif mode == "Analysis":
 
         with st.spinner("Plotting"):
             fig = plotly_histogram(
-                df_for_graph, y_label="Topic", x_label="Probability", orientation="h", title="X"
+                df_for_graph,
+                y_label="Topic",
+                x_label="Probability",
+                orientation="h",
+                title="X",
             )
             plot(fig, col1, col2)
 
@@ -1524,6 +1571,10 @@ elif mode == "Analysis":
 
         for topic_wise_info in topic_wise_info_list:
             fig = plotly_histogram(
-                topic_wise_info, y_label="Word", x_label="WT", orientation="h", title="X"
+                topic_wise_info,
+                y_label="Word",
+                x_label="WT",
+                orientation="h",
+                title="X",
             )
             st.write(fig)
