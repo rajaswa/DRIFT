@@ -1,3 +1,5 @@
+from src.utils.centripetal_catmull_rom_spline import centripetal_catmull_rom
+from src.utils.catmull_rom_spline import catmull_rom
 import matplotlib.pyplot as plt
 import nltk
 import numpy as np
@@ -9,6 +11,7 @@ from wordcloud import WordCloud
 
 from src.utils.catmull_rom_spline import catmull_rom
 from src.utils.centripetal_catmull_rom_spline import centripetal_catmull_rom
+
 from src.utils.misc import get_tail_from_data_path
 
 from ..analysis import similarity_acc_matrix
@@ -20,6 +23,7 @@ def get_colorscale_color_from_value(colorscale, float_value):
         if colorscale[idx][0] <= float_value and colorscale[idx + 1][0] >= float_value:
             return colorscale[idx][1]
         idx += 1
+
 
 
 nltk.download("stopwords")
@@ -84,8 +88,17 @@ def plotly_scatter(
         text=text_annot,
         color_continuous_scale="Spectral",
         title=title,
+
     )
 
+    
+    if contour_dict is not None:
+        fig.add_trace(go.Contour(z=contour_dict['Z'],y=contour_dict['Y'], x=contour_dict['X'], opacity=0.3, colorscale=colorscale, showscale=False))
+    if label_to_vertices_map is not None:
+        for label,vertices in label_to_vertices_map.items():
+            vertices = np.concatenate([vertices, vertices[0].reshape(1, -1)], axis=0)
+            x_interpolated, y_interpolated = catmull_rom(vertices[:,0],vertices[:,1], res=1000)
+            fig.add_trace(go.Scatter(x=x_interpolated, y=y_interpolated, name=str(label), mode='none', showlegend=False, fill='toself', opacity=0.3, fillcolor=get_colorscale_color_from_value(colorscale, int(label)/max(df[color_col].apply(int)))))
     fig.update_traces(textposition="top center")
     fig.update_xaxes(showgrid=False, zeroline=False)
     fig.update_yaxes(showgrid=False, zeroline=False)
@@ -93,6 +106,17 @@ def plotly_scatter(
         fig.write_html(save_path)
     return fig
 
+def plotly_histogram(
+    df, x_label=None, y_label=None, orientation="h", title=None, save_path=None
+):
+
+    fig = px.bar(df, x=x_label, y=y_label, orientation=orientation, title=title)
+
+    fig.update_xaxes(side="top")
+
+    if save_path:
+        fig.write_html(save_path)
+    return fig
 
 def plotly_scatter_df(
     df,
@@ -254,6 +278,7 @@ def plotly_line_dataframe(df, x_col, y_col, word_col, title=None, save_path=None
     fig = px.line(df, x=x_col, y=y_col, color=word_col, title=title)
     fig.update_xaxes(showgrid=False, zeroline=False)
     fig.update_yaxes(showgrid=False, zeroline=False)
+
     if save_path:
         fig.write_html(save_path)
     return fig
@@ -269,7 +294,6 @@ def embs_for_plotting(word, year_path, top_k_sim=10, skip_words=[]):
         model_path=year_path, keywords=[], all_model_vectors=True
     )
     word_idx = keywords.index(word)
-    # print(skip_words)
     sim_vector = sim_matrix[word_idx]
     top_sims = np.argsort(sim_vector)
     top_sims = top_sims[-top_k_sim:]

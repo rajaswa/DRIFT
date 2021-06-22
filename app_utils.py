@@ -8,7 +8,6 @@ from scipy.spatial import ConvexHull
 from src.analysis.similarity_acc_matrix import compute_acc_between_years
 from src.utils.statistics import find_freq, find_norm_freq, find_productivity
 
-
 def get_default_args(func):
     signature = inspect.signature(func)
     return {
@@ -44,6 +43,7 @@ def get_productivity_for_range(
         year = years[year_idx]
         year_text = read_text_file(data_path, year)
         prods = find_productivity(selected_ngrams, year_text, n, normalize)
+
         for word, productivity in prods.items():
             yearss.append(year)
             words.append(word)
@@ -52,7 +52,6 @@ def get_productivity_for_range(
         {"Year": yearss, "Word": words, "Productivity": prodss}
     )
     return productivity_df
-
 
 def get_frequency_for_range(
     start_year, end_year, selected_ngrams, years, data_path, n, normalize=False
@@ -122,7 +121,6 @@ def read_text_file(data_path, name):
         words = f.read()
     return words
 
-
 def get_curve_hull_objects(embeds, labels):
     label_to_point_map = {}
     for idx, label in enumerate(labels):
@@ -132,6 +130,7 @@ def get_curve_hull_objects(embeds, labels):
             label_to_point_map[label] += [embeds[idx]]
 
     label_to_vertices_map = {}
+
     for label, label_points in label_to_point_map.items():
         label_points = np.array(label_points)
         hull = ConvexHull(label_points)
@@ -139,3 +138,4 @@ def get_curve_hull_objects(embeds, labels):
         label_to_vertices_map[label] = vertices
 
     return label_to_vertices_map
+

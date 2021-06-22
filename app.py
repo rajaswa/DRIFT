@@ -9,6 +9,7 @@ pio.templates.default = template
 plotly_template = pio.templates[template]
 colorscale = plotly_template.layout["colorscale"]["diverging"]
 
+
 # Need this here to prevent errors
 os.environ["PERSISTENT"] = "True"
 
@@ -30,6 +31,7 @@ from app_utils import (
 )
 from preprocess_and_save_txt import preprocess_and_save
 from src.analysis.productivity_inference import cluster_productivity
+
 from src.analysis.semantic_drift import find_most_drifted_words
 from src.analysis.similarity_acc_matrix import (
     compute_acc_between_years,
@@ -992,6 +994,7 @@ elif mode == "Analysis":
 
         # plot
         col11, col12 = figure1_block.beta_columns([6, 4])
+
         with st.spinner("Plotting"):
             fig = plotly_line_dataframe(
                 productivity_df,
@@ -1003,6 +1006,7 @@ elif mode == "Analysis":
             plot(fig, col11, col12, key="prod")
 
         col21, col22 = figure2_block.beta_columns([6, 4])
+
         with st.spinner("Plotting"):
             fig = plotly_line_dataframe(
                 frequency_df,
@@ -1065,6 +1069,7 @@ elif mode == "Analysis":
                 "Select Years",
                 options=years,
                 default=[year1, year2],
+
                 help="Year for which plot is to be made.",
             )
             plot_word_1 = st.selectbox(
@@ -1228,6 +1233,7 @@ elif mode == "Analysis":
                 "Range in years", options=years, value=(years[-4], years[-1])
             )
         selected_years = [str(i) for i in range(int(year1), int(year2) + 1)]
+
         choose_list_freq = freq_top_k(compass_text, top_k=vars["top_k"], n=1)
 
         keywords_list = list(choose_list_freq.keys())
@@ -1283,6 +1289,7 @@ elif mode == "Analysis":
                     label_to_vertices_map=label_to_vertices_map,
                 )
                 plot(fig, col1, col2, key="tracking_clusters_" + selected_year)
+
 
     elif analysis_type == "Acceleration Heatmap":
         variable_params = get_default_args(compute_acc_heatmap_between_years)
@@ -1340,6 +1347,7 @@ elif mode == "Analysis":
                 title=plot_title,
             )
             plot(fig, col1, col2)
+
 
     elif analysis_type == "Track Trends with Similarity":
 

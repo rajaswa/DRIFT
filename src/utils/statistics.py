@@ -42,6 +42,7 @@ def find_productivity(words, text, n=2, normalize=False):
         fdist = find_norm_freq(text=text, n=n, sort=True)
     else:
         fdist = find_freq(text=text, n=n, sort=True)
+
     ngrams_lst = list(fdist.keys())
     prods = {}
     for word in words:

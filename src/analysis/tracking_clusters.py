@@ -1,5 +1,4 @@
 import os
-
 import faiss
 import numpy as np
 import streamlit as st
@@ -37,6 +36,7 @@ def kmeans_train(X, n_cluster, method="faiss", return_fitted_model=False):
 def kmeans_embeddings(
     embs, k_opt=None, k_max=10, method="faiss", return_fitted_model=False
 ):
+
     if k_opt is None:
 
         silhouette_scores = []
@@ -52,7 +52,6 @@ def kmeans_embeddings(
     else:
         labels = kmeans_train(embs, k_opt, method, return_fitted_model)
         return labels, k_opt
-
 
 def kmeans_clustering(
     keywords,

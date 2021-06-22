@@ -14,6 +14,7 @@ def get_word_embeddings(
     return_words=False,
     filter_missing_words=False,
 ):
+
     model = Word2Vec.load(model_path)
 
     if filter_missing_words:
