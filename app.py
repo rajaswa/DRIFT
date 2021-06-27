@@ -1407,7 +1407,6 @@ elif mode == "Analysis":
                     ele.split("(")[0]
                     for ele in list(pd.DataFrame.from_dict(get_df()).iloc[:, -1])
                 ],
-                key="bruh",
             )
             gen_next_word_button = next_word_form.form_submit_button(
                 label="Generate Next Word"
