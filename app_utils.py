@@ -6,7 +6,10 @@ import pandas as pd
 from scipy.spatial import ConvexHull
 
 from src.analysis.similarity_acc_matrix import compute_acc_between_years
+from src.analysis.track_trends_sim import compute_similarity_matrix_years
+from src.utils.misc import get_sub, get_tail_from_data_path
 from src.utils.statistics import find_freq, find_norm_freq, find_productivity
+
 
 def get_default_args(func):
     signature = inspect.signature(func)
@@ -52,6 +55,7 @@ def get_productivity_for_range(
         {"Year": yearss, "Word": words, "Productivity": prodss}
     )
     return productivity_df
+
 
 def get_frequency_for_range(
     start_year, end_year, selected_ngrams, years, data_path, n, normalize=False
@@ -121,6 +125,7 @@ def read_text_file(data_path, name):
         words = f.read()
     return words
 
+
 def get_curve_hull_objects(embeds, labels):
     label_to_point_map = {}
     for idx, label in enumerate(labels):
@@ -139,3 +144,41 @@ def get_curve_hull_objects(embeds, labels):
 
     return label_to_vertices_map
 
+
+def create_word_to_entry_dict(word, model_path, sim_dict):
+    return {
+        "{}{}".format(word, get_sub(get_tail_from_data_path(model_path))): [
+            "{}{} ({})".format(
+                k.split("_")[0],
+                get_sub(get_tail_from_data_path(k.split("_")[1])),
+                round(float(sim_dict[k]), 2),
+            )
+            for k in sim_dict
+        ]
+    }
+
+
+def get_dict_with_new_words(model_paths, selected_ngram, top_k_sim):
+    sim_dict = compute_similarity_matrix_years(
+        model_paths, selected_ngram, top_k_sim=top_k_sim
+    )
+    return create_word_to_entry_dict(selected_ngram, model_paths[0], sim_dict)
+
+
+def word_to_entry_dict(word_year, year1, year2, years, stride, top_k_sim):
+    # TO-DO: Need better logic here. `eighy-eighty2008` becomes `eightyeight2008`
+    # TO-DO: `2016a2020` appears as `a`, `20162020`
+    word_pure = "".join([i for i in word_year if not i.isdigit()]).strip()
+    year = int(
+        get_sub("".join([i for i in word_year if i.isdigit()]).strip(), rev=True)
+    ) - int(year1)
+
+    if str(year + int(year1)) == year2:
+        return {}
+
+    else:
+        model_paths = [
+            os.path.join(vars["model_path"], str(yr) + ".model")
+            for yr in years[year : min(stride + year + 1, len(years))]
+        ]
+        return get_dict_with_new_words(model_paths, word_pure, top_k_sim)

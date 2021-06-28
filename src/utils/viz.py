@@ -1,5 +1,3 @@
-from src.utils.centripetal_catmull_rom_spline import centripetal_catmull_rom
-from src.utils.catmull_rom_spline import catmull_rom
 import matplotlib.pyplot as plt
 import nltk
 import numpy as np
@@ -11,7 +9,6 @@ from wordcloud import WordCloud
 
 from src.utils.catmull_rom_spline import catmull_rom
 from src.utils.centripetal_catmull_rom_spline import centripetal_catmull_rom
-
 from src.utils.misc import get_tail_from_data_path
 
 from ..analysis import similarity_acc_matrix
@@ -23,7 +20,6 @@ def get_colorscale_color_from_value(colorscale, float_value):
         if colorscale[idx][0] <= float_value and colorscale[idx + 1][0] >= float_value:
             return colorscale[idx][1]
         idx += 1
-
 
 
 nltk.download("stopwords")
@@ -88,23 +84,46 @@ def plotly_scatter(
         text=text_annot,
         color_continuous_scale="Spectral",
         title=title,
-
     )
 
-    
     if contour_dict is not None:
-        fig.add_trace(go.Contour(z=contour_dict['Z'],y=contour_dict['Y'], x=contour_dict['X'], opacity=0.3, colorscale=colorscale, showscale=False))
+        fig.add_trace(
+            go.Contour(
+                z=contour_dict["Z"],
+                y=contour_dict["Y"],
+                x=contour_dict["X"],
+                opacity=0.3,
+                colorscale=colorscale,
+                showscale=False,
+            )
+        )
     if label_to_vertices_map is not None:
-        for label,vertices in label_to_vertices_map.items():
+        for label, vertices in label_to_vertices_map.items():
             vertices = np.concatenate([vertices, vertices[0].reshape(1, -1)], axis=0)
-            x_interpolated, y_interpolated = catmull_rom(vertices[:,0],vertices[:,1], res=1000)
-            fig.add_trace(go.Scatter(x=x_interpolated, y=y_interpolated, name=str(label), mode='none', showlegend=False, fill='toself', opacity=0.3, fillcolor=get_colorscale_color_from_value(colorscale, int(label)/max(df[color_col].apply(int)))))
+            x_interpolated, y_interpolated = catmull_rom(
+                vertices[:, 0], vertices[:, 1], res=1000
+            )
+            fig.add_trace(
+                go.Scatter(
+                    x=x_interpolated,
+                    y=y_interpolated,
+                    name=str(label),
+                    mode="none",
+                    showlegend=False,
+                    fill="toself",
+                    opacity=0.3,
+                    fillcolor=get_colorscale_color_from_value(
+                        colorscale, int(label) / max(df[color_col].apply(int))
+                    ),
+                )
+            )
     fig.update_traces(textposition="top center")
     fig.update_xaxes(showgrid=False, zeroline=False)
     fig.update_yaxes(showgrid=False, zeroline=False)
     if save_path:
         fig.write_html(save_path)
     return fig
+
 
 def plotly_histogram(
     df, x_label=None, y_label=None, orientation="h", title=None, save_path=None
@@ -117,6 +136,7 @@ def plotly_histogram(
     if save_path:
         fig.write_html(save_path)
     return fig
+
 
 def plotly_scatter_df(
     df,

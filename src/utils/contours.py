@@ -78,7 +78,6 @@ def get_contour_matrix_using_kdtree(embeds, labels, dist_bound=25, steps=50):
     Y = Y.ravel().reshape(-1, 1)
     points = np.concatenate([X, Y], axis=1)
 
-
     Z = []
     tree = KDTree(embeds)
     distances, indices = tree.query(points, k=3)
@@ -123,7 +122,6 @@ def get_contour_matrix_using_triangulation(embeds, labels, steps=500):
     Y = Y.ravel().reshape(-1, 1)
     points = np.concatenate([X, Y], axis=1)
 
-
     Z = {}
     tri = Delaunay(embeds)
     for indice_triple in tri.simplices:
@@ -167,7 +165,6 @@ def get_contour_matrix_kdree_and_triangulation(embeds, labels, dist_bound=2, ste
     X = X.ravel().reshape(-1, 1)
     Y = Y.ravel().reshape(-1, 1)
     points = np.concatenate([X, Y], axis=1)
-
 
     Z = {}
     tri = Delaunay(embeds)
@@ -219,7 +216,6 @@ def get_contour_matrix_convex_hull(embeds, labels, steps=500):
     X = X.ravel().reshape(-1, 1)
     Y = Y.ravel().reshape(-1, 1)
     points = np.concatenate([X, Y], axis=1)
-
 
     label_to_point_map = {}
     for idx, label in enumerate(labels):

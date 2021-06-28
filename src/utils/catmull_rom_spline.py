@@ -5,7 +5,6 @@
 import numpy as np
 
 
-
 def catmull_rom_one_point(x, v0, v1, v2, v3):
     """Computes interpolated y-coord for given x-coord using Catmull-Rom.
     Computes an interpolated y-coordinate for the given x-coordinate between
@@ -37,7 +36,6 @@ def catmull_rom(p_x, p_y, res):
     # create arrays for spline points
     x_intpol = np.empty(res * (len(p_x) - 1) + 1)
     y_intpol = np.empty(res * (len(p_x) - 1) + 1)
-
 
     # set the last x- and y-coord, the others will be set in the loop
     x_intpol[-1] = p_x[-1]
@@ -86,4 +84,3 @@ def catmull_rom(p_x, p_y, res):
             )
 
     return (x_intpol, y_intpol)
-

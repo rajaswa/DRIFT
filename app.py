@@ -3,6 +3,8 @@ import os
 
 import plotly.io as pio
 
+from src.analysis.track_trends_sim import compute_similarity_matrix_years
+
 
 template = "simple_white"
 pio.templates.default = template
@@ -23,25 +25,26 @@ from streamlit import caching
 from app_utils import (
     get_curve_hull_objects,
     get_default_args,
+    get_dict_with_new_words,
     get_frequency_for_range,
     get_productivity_for_range,
     get_word_pair_sim_bw_models,
     get_years_from_data_path,
     read_text_file,
+    word_to_entry_dict,
 )
 from preprocess_and_save_txt import preprocess_and_save
+from session import _get_state
 from src.analysis.productivity_inference import cluster_productivity
-
 from src.analysis.semantic_drift import find_most_drifted_words
 from src.analysis.similarity_acc_matrix import (
     compute_acc_between_years,
     compute_acc_heatmap_between_years,
 )
 from src.analysis.topic_extraction_lda import extract_topics_lda
-from src.analysis.track_trends_sim import compute_similarity_matrix_years
 from src.analysis.tracking_clusters import kmeans_clustering, kmeans_embeddings
 from src.utils import get_word_embeddings, plotly_line_dataframe, word_cloud
-from src.utils.misc import get_sub, get_tail_from_data_path, reduce_dimensions
+from src.utils.misc import get_sub, reduce_dimensions
 from src.utils.statistics import freq_top_k, yake_keyword_extraction
 from src.utils.viz import (
     embs_for_plotting,
@@ -66,9 +69,9 @@ from train_twec import train
 np.random.seed(42)
 
 
-@st.cache(allow_output_mutation=True)
-def get_df():
-    return {}
+# @st.cache(allow_output_mutation=True)
+# def get_sim_dict():
+#     return OrderedDict()
 
 
 def plot(obj, col1, col2, typ="plotly", key="key"):
@@ -149,8 +152,6 @@ def generate_components_from_dict(comp_dict, variable_params):
 
 
 def generate_analysis_components(analysis_type, variable_params):
-    # print(ANALYSIS_METHODS[analysis_type])
-    # print(variable_params)
     sidebar_summary_text.write(ANALYSIS_METHODS[analysis_type]["SUMMARY"])
     figure1_title.header(analysis_type)
 
@@ -166,6 +167,9 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+state = _get_state()
+
 
 # LAYOUT
 main = st.beta_container()
@@ -1069,7 +1073,6 @@ elif mode == "Analysis":
                 "Select Years",
                 options=years,
                 default=[year1, year2],
-
                 help="Year for which plot is to be made.",
             )
             plot_word_1 = st.selectbox(
@@ -1290,7 +1293,6 @@ elif mode == "Analysis":
                 )
                 plot(fig, col1, col2, key="tracking_clusters_" + selected_year)
 
-
     elif analysis_type == "Acceleration Heatmap":
         variable_params = get_default_args(compute_acc_heatmap_between_years)
         variable_params.update(get_default_args(freq_top_k))
@@ -1348,7 +1350,6 @@ elif mode == "Analysis":
             )
             plot(fig, col1, col2)
 
-
     elif analysis_type == "Track Trends with Similarity":
 
         variable_params = get_default_args(compute_similarity_matrix_years)
@@ -1358,101 +1359,61 @@ elif mode == "Analysis":
         years = get_years_from_data_path(vars["data_path"])
         compass_text = read_text_file(vars["data_path"], "compass")
         stride = vars["stride"]
+
         # n = st.sidebar.number_input("N", value=freq_default_values_dict['n'], min_value=1, format="%d", help="N in N-gram for productivity calculation.")
 
+        # TO-DO: SHOULD WE SWITCH TO YEAR WISE TEXT INSTEAD?
         choose_list_freq = freq_top_k(
             compass_text, top_k=vars["top_k"], n=1, normalize=True
         )
         keywords_list = list(choose_list_freq.keys())
         figure1_params_expander = figure1_params.beta_expander("Plot Parameters")
+        compass_model_path = os.path.join(vars["model_path"], "compass.model")
         with figure1_params_expander:
             year1, year2 = st.select_slider(
                 "Range in years",
                 options=years,
                 value=(years[0], years[-1]),
             )
-            st.text(body=", ".join(keywords_list))
-            selected_ngram = st.text_input(label="Type a Word", value="language")
-            years = years[years.index(year1) : years.index(year2) + 1]
-            model_paths = [
-                os.path.join(vars["model_path"], str(year) + ".model")
-                for year in years[: min(stride + 1, len(years))]
-            ]
-            compass_model_path = os.path.join(vars["model_path"], "compass.model")
-            if st.button("Generate Dataframe"):
-                get_df().clear()
-                sim_dict = compute_similarity_matrix_years(
-                    model_paths, selected_ngram, top_k_sim=vars["top_k_sim"]
-                )
+            st.text(body="Top K words: " + ", ".join(keywords_list))
 
-                get_df()[
-                    "{}{}".format(
-                        selected_ngram, get_sub(get_tail_from_data_path(model_paths[0]))
-                    )
-                ] = [
-                    "{}{} ({})".format(
-                        k.split("_")[0],
-                        get_sub(get_tail_from_data_path(k.split("_")[1])),
-                        round(float(sim_dict[k]), 2),
-                    )
-                    for k in sim_dict
-                ]
+        years = years[years.index(year1) : years.index(year2) + 1]
 
-        if get_df() != {}:
-            next_word_module = st.empty()
-            next_word_form = next_word_module.form(key="next_word_form")
-            next_word = next_word_form.selectbox(
-                "Select a Word",
-                [
-                    ele.split("(")[0]
-                    for ele in list(pd.DataFrame.from_dict(get_df()).iloc[:, -1])
-                ],
+        model_paths = [
+            os.path.join(vars["model_path"], str(year) + ".model")
+            for year in years[: min(stride + 1, len(years))]
+        ]
+
+        selected_ngram = figure1_plot.text_input(
+            label="Type a Word", value=keywords_list[0]
+        )
+        select_list = figure1_plot.empty()
+
+        if figure1_plot.button("Generate Dataframe"):
+            state.sim_dict = get_dict_with_new_words(
+                model_paths, selected_ngram, top_k_sim=vars["top_k_sim"]
             )
-            gen_next_word_button = next_word_form.form_submit_button(
-                label="Generate Next Word"
+
+        if state.sim_dict != {} and state.sim_dict is not None:
+            state.new_word = select_list.selectbox(
+                "Select Next Word",
+                [ele.split("(")[0] for ele in list(state.sim_dict.values())[-1]],
             )
-            # gen_next_word_button = next_word_form.button(label='Generate Next Word')
+            if figure2_plot.button("Generate Next Column"):
+                state.sim_dict = {
+                    **state.sim_dict,
+                    **word_to_entry_dict(
+                        state.new_word, year1, year2, years, stride, vars["top_k_sim"]
+                    ),
+                }
 
-            if gen_next_word_button:
-                next_word_pure = "".join([i for i in next_word if i.isalpha()]).strip()
-                next_year = int(
-                    get_sub(
-                        "".join([i for i in next_word if i.isdigit()]).strip(), rev=True
-                    )
-                ) - int(year1)
-                if str(next_year + int(year1)) == year2:
-                    st.success("Analysis complete!")
-                else:
-                    model_paths = [
-                        os.path.join(vars["model_path"], str(year) + ".model")
-                        for year in years[
-                            next_year : min(stride + next_year + 1, len(years))
-                        ]
-                    ]
-                    sim_dict = compute_similarity_matrix_years(
-                        model_paths, next_word_pure, top_k_sim=vars["top_k_sim"]
-                    )
+        if figure2_plot.button(label="Clear Data"):
+            state.clear()
 
-                    get_df()[
-                        "{}{}".format(
-                            next_word_pure,
-                            get_sub(get_tail_from_data_path(model_paths[0])),
-                        )
-                    ] = [
-                        "{}{} ({})".format(
-                            k.split("_")[0],
-                            get_sub(get_tail_from_data_path(k.split("_")[1])),
-                            round(float(sim_dict[k]), 2),
-                        )
-                        for k in sim_dict
-                    ]
-
-            clear_data = st.button(label="Clear Data")
-            if clear_data:
-                get_df().clear()
-
-            if get_df() != {}:
-                st.write(pd.DataFrame.from_dict(get_df()))
+        if state.sim_dict != {} and state.sim_dict is not None:
+            df = pd.DataFrame(state.sim_dict)
+            figure2_plot.write(df)
+        state.sync()
 
     elif analysis_type == "Keyword Visualisation":
         variable_params = get_default_args(yake_keyword_extraction)

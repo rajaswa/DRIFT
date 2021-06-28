@@ -1,4 +1,5 @@
 import os
+
 import faiss
 import numpy as np
 import streamlit as st
@@ -52,6 +53,7 @@ def kmeans_embeddings(
     else:
         labels = kmeans_train(embs, k_opt, method, return_fitted_model)
         return labels, k_opt
+
 
 def kmeans_clustering(
     keywords,
