@@ -1,23 +1,13 @@
 import glob
 import os
 
-import plotly.io as pio
-
-from src.analysis.track_trends_sim import compute_similarity_matrix_years
-
-
-template = "simple_white"
-pio.templates.default = template
-plotly_template = pio.templates[template]
-colorscale = plotly_template.layout["colorscale"]["diverging"]
-
 
 # Need this here to prevent errors
 os.environ["PERSISTENT"] = "True"
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import plotly.io as pio
 import streamlit as st
 from nltk.corpus import stopwords
 from streamlit import caching
@@ -42,6 +32,7 @@ from src.analysis.similarity_acc_matrix import (
     compute_acc_heatmap_between_years,
 )
 from src.analysis.topic_extraction_lda import extract_topics_lda
+from src.analysis.track_trends_sim import compute_similarity_matrix_years
 from src.analysis.tracking_clusters import kmeans_clustering, kmeans_embeddings
 from src.utils import get_word_embeddings, plotly_line_dataframe, word_cloud
 from src.utils.misc import get_sub, reduce_dimensions
@@ -54,6 +45,12 @@ from src.utils.viz import (
     plotly_scatter_df,
 )
 from train_twec import train
+
+
+template = "simple_white"
+pio.templates.default = template
+plotly_template = pio.templates[template]
+colorscale = plotly_template.layout["colorscale"]["diverging"]
 
 
 # Folder selection not directly support in Streamlit as of now
@@ -133,7 +130,7 @@ def get_component(component_var, typ, params):
 
 
 def generate_components_from_dict(comp_dict, variable_params):
-    vars = {}
+    vars_ = {}
 
     for component_key, component_dict in comp_dict.items():
         component_var = component_dict["component_var"]
@@ -146,19 +143,19 @@ def generate_components_from_dict(comp_dict, variable_params):
                 for key, value in component_variable_params.items()
             }
         )
-        vars[component_key] = get_component(component_var, typ, params)
+        vars_[component_key] = get_component(component_var, typ, params)
 
-    return vars
+    return vars_
 
 
 def generate_analysis_components(analysis_type, variable_params):
     sidebar_summary_text.write(ANALYSIS_METHODS[analysis_type]["SUMMARY"])
     figure1_title.header(analysis_type)
 
-    vars = generate_components_from_dict(
+    vars_ = generate_components_from_dict(
         ANALYSIS_METHODS[analysis_type]["COMPONENTS"], variable_params
     )
-    return vars
+    return vars_
 
 
 st.set_page_config(
@@ -872,16 +869,18 @@ if mode == "Train":
     variable_params = get_default_args(train)
     variable_params.update(get_default_args(preprocess_and_save))
     with sidebar.beta_expander("Preprocessing"):
-        preprocess_vars = generate_components_from_dict(
+        preprocess_vars_ = generate_components_from_dict(
             PREPROCESS["COMPONENTS"], variable_params
         )
         if st.button("Preprocess"):
-            preprocess_and_save(**preprocess_vars, streamlit=True, component=main)
+            preprocess_and_save(**preprocess_vars_, streamlit=True, component=main)
 
     with sidebar.beta_expander("Training"):
-        train_vars = generate_components_from_dict(TRAIN["COMPONENTS"], variable_params)
+        train_vars_ = generate_components_from_dict(
+            TRAIN["COMPONENTS"], variable_params
+        )
         if st.button("Train"):
-            train(**train_vars, streamlit=True, component=main)
+            train(**train_vars_, streamlit=True, component=main)
 
 elif mode == "Analysis":
     analysis_type = sidebar_analysis_type.selectbox(
@@ -894,10 +893,10 @@ elif mode == "Analysis":
     if analysis_type == "WordCloud":
         # setup
         variable_params = get_default_args(word_cloud)
-        vars = generate_analysis_components(analysis_type, variable_params)
+        vars_ = generate_analysis_components(analysis_type, variable_params)
 
         # get words
-        years = get_years_from_data_path(vars["data_path"])
+        years = get_years_from_data_path(vars_["data_path"])
         with figure1_params.beta_expander("Plot Parameters"):
             selected_year = st.select_slider(
                 label="Year",
@@ -905,7 +904,7 @@ elif mode == "Analysis":
                 help="Year for which world cloud is to be generated",
             )
 
-        words = read_text_file(vars["data_path"], selected_year)
+        words = read_text_file(vars_["data_path"], selected_year)
 
         # plot
         col1, col2 = figure1_plot.beta_columns([8, 2])
@@ -913,24 +912,27 @@ elif mode == "Analysis":
             word_cloud_image = word_cloud(
                 words=words,
                 stop_words=COMMON["STOPWORDS"],
-                max_words=vars["max_words"],
-                min_font_size=vars["min_font_size"],
-                max_font_size=vars["max_font_size"],
-                background_color=vars["background_color"],
-                width=vars["width"],
-                height=vars["height"],
+                max_words=vars_["max_words"],
+                min_font_size=vars_["min_font_size"],
+                max_font_size=vars_["max_font_size"],
+                background_color=vars_["background_color"],
+                width=vars_["width"],
+                height=vars_["height"],
             )
             plot(word_cloud_image, col1, col2, typ="PIL")
 
     elif analysis_type == "Productivity/Frequency Plot":
         variable_params = get_default_args(freq_top_k)
-        vars = generate_analysis_components(analysis_type, variable_params)
+        vars_ = generate_analysis_components(analysis_type, variable_params)
 
-        years = get_years_from_data_path(vars["data_path"])
-        compass_text = read_text_file(vars["data_path"], "compass")
+        years = get_years_from_data_path(vars_["data_path"])
+        compass_text = read_text_file(vars_["data_path"], "compass")
 
         choose_list_freq = freq_top_k(
-            compass_text, top_k=vars["top_k"], n=vars["n"], normalize=vars["normalize"]
+            compass_text,
+            top_k=vars_["top_k"],
+            n=vars_["n"],
+            normalize=vars_["normalize"],
         )
         choose_list = list(choose_list_freq.keys())
 
@@ -961,9 +963,9 @@ elif mode == "Analysis":
                 word.strip() for word in custom_ngrams.split(",") if word.strip() != ""
             ]
             for ngram in custom_ngrams_list:
-                if len(ngram.split(" ")) != vars["n"]:
+                if len(ngram.split(" ")) != vars_["n"]:
                     raise ValueError(
-                        f"Found n-gram: `{ngram}` which does not have the specified value of n: {vars['n']}."
+                        f"Found n-gram: `{ngram}` which does not have the specified value of n: {vars_['n']}."
                     )
             selected_ngrams = selected_ngrams + custom_ngrams_list
 
@@ -976,18 +978,18 @@ elif mode == "Analysis":
             end_year,
             selected_ngrams,
             years,
-            vars["data_path"],
+            vars_["data_path"],
             2,
-            vars["normalize"],
+            vars_["normalize"],
         )
         frequency_df = get_frequency_for_range(
             start_year,
             end_year,
             selected_ngrams,
             years,
-            vars["data_path"],
-            vars["n"],
-            vars["normalize"],
+            vars_["data_path"],
+            vars_["n"],
+            vars_["normalize"],
         )
 
         final_clusters = cluster_productivity(productivity_df, frequency_df)
@@ -1029,17 +1031,17 @@ elif mode == "Analysis":
         variable_params["top_k_sim"] = 10
         variable_params["top_k"] = 200
 
-        vars = generate_analysis_components(analysis_type, variable_params)
-        years = get_years_from_data_path(vars["data_path"])
-        compass_text = read_text_file(vars["data_path"], "compass")
+        vars_ = generate_analysis_components(analysis_type, variable_params)
+        years = get_years_from_data_path(vars_["data_path"])
+        compass_text = read_text_file(vars_["data_path"], "compass")
 
         figure1_params_expander = figure1_params.beta_expander("Plot Parameters")
 
         with figure1_params_expander:
             year1, year2 = st.select_slider(
                 "Range in years",
-                options=years if vars["p2f"] else years[::-1],
-                value=(years[0], years[-1]) if vars["p2f"] else (years[-1], years[0]),
+                options=years if vars_["p2f"] else years[::-1],
+                value=(years[0], years[-1]) if vars_["p2f"] else (years[-1], years[0]),
             )
 
         # TO-DO: Check if n is needed here
@@ -1047,7 +1049,7 @@ elif mode == "Analysis":
 
         choose_list_freq = freq_top_k(
             compass_text,
-            top_k=vars["top_k"],
+            top_k=vars_["top_k"],
             n=1,
             normalize=False,
         )
@@ -1061,10 +1063,10 @@ elif mode == "Analysis":
         word_pair_sim_df, word_pair_sim_df_words = get_word_pair_sim_bw_models(
             year1,
             year2,
-            vars["model_path"],
+            vars_["model_path"],
             selected_ngrams,
             False,
-            vars["top_k_acc"],
+            vars_["top_k_acc"],
         )
 
         with figure1_params_expander:
@@ -1097,13 +1099,15 @@ elif mode == "Analysis":
             plot_words = []
             colors = []
             for plot_year in plot_years:
-                year_model_path = os.path.join(vars["model_path"], plot_year + ".model")
+                year_model_path = os.path.join(
+                    vars_["model_path"], plot_year + ".model"
+                )
                 word_embeddings += get_word_embeddings(
                     year_model_path, target_calc_words
                 )
                 plot_words += [word + get_sub(plot_year) for word in target_calc_words]
-            model_path_1 = os.path.join(vars["model_path"], year1 + ".model")
-            model_path_2 = os.path.join(vars["model_path"], year2 + ".model")
+            model_path_1 = os.path.join(vars_["model_path"], year1 + ".model")
+            model_path_2 = os.path.join(vars_["model_path"], year2 + ".model")
 
             similar_words = []
             similarity_embeddings = []
@@ -1112,7 +1116,7 @@ elif mode == "Analysis":
                     similar_words_temp, similarity_embeddings_temp = embs_for_plotting(
                         plot_word,
                         model_path_iter,
-                        top_k_sim=vars["top_k_sim"],
+                        top_k_sim=vars_["top_k_sim"],
                         skip_words=plot_words,
                     )
                     similar_words += similar_words_temp[1:]
@@ -1147,9 +1151,9 @@ elif mode == "Analysis":
         variable_params["top_k"] = 100
         # print(variable_params)
 
-        vars = generate_analysis_components(analysis_type, variable_params)
-        years = get_years_from_data_path(vars["data_path"])
-        compass_text = read_text_file(vars["data_path"], "compass")
+        vars_ = generate_analysis_components(analysis_type, variable_params)
+        years = get_years_from_data_path(vars_["data_path"])
+        compass_text = read_text_file(vars_["data_path"], "compass")
 
         figure1_params_expander = figure1_params.beta_expander("Plot Parameters")
         with figure1_params_expander:
@@ -1168,20 +1172,20 @@ elif mode == "Analysis":
 
         list_top_k_freq = freq_top_k(
             compass_text,
-            top_k=vars["top_k"],
+            top_k=vars_["top_k"],
             n=1,
             normalize=False,
         )
         list_top_k_freq = list(list_top_k_freq.keys())
 
-        model_path_1 = os.path.join(vars["model_path"], year1 + ".model")
-        model_path_2 = os.path.join(vars["model_path"], year2 + ".model")
+        model_path_1 = os.path.join(vars_["model_path"], year1 + ".model")
+        model_path_2 = os.path.join(vars_["model_path"], year2 + ".model")
         distance_dict = find_most_drifted_words(
             year_1_path=model_path_1,
             year_2_path=model_path_2,
             words=list_top_k_freq,
-            top_k_drift=vars["top_k_drift"],
-            distance_measure=vars["distance_measure"],
+            top_k_drift=vars_["top_k_drift"],
+            distance_measure=vars_["distance_measure"],
         )
         selected_ngrams = st.selectbox(
             "Select N-grams from list", index=0, options=list(distance_dict.keys())
@@ -1193,10 +1197,10 @@ elif mode == "Analysis":
             selected_ngrams = selected_ngrams_text
 
         words1, embs1 = embs_for_plotting(
-            selected_ngrams, model_path_1, top_k_sim=vars["top_k_sim"]
+            selected_ngrams, model_path_1, top_k_sim=vars_["top_k_sim"]
         )
         words2, embs2 = embs_for_plotting(
-            selected_ngrams, model_path_2, top_k_sim=vars["top_k_sim"]
+            selected_ngrams, model_path_2, top_k_sim=vars_["top_k_sim"]
         )
         words = words1 + words2
         embs = embs1 + embs2
@@ -1226,9 +1230,9 @@ elif mode == "Analysis":
     elif analysis_type == "Tracking Clusters":
         variable_params = get_default_args(kmeans_clustering)
         variable_params.update(get_default_args(freq_top_k))
-        vars = generate_analysis_components(analysis_type, variable_params)
-        years = get_years_from_data_path(vars["data_path"])
-        compass_text = read_text_file(vars["data_path"], "compass")
+        vars_ = generate_analysis_components(analysis_type, variable_params)
+        years = get_years_from_data_path(vars_["data_path"])
+        compass_text = read_text_file(vars_["data_path"], "compass")
 
         figure1_params_expander = figure1_params.beta_expander("Plot Parameters")
         with figure1_params_expander:
@@ -1237,7 +1241,7 @@ elif mode == "Analysis":
             )
         selected_years = [str(i) for i in range(int(year1), int(year2) + 1)]
 
-        choose_list_freq = freq_top_k(compass_text, top_k=vars["top_k"], n=1)
+        choose_list_freq = freq_top_k(compass_text, top_k=vars_["top_k"], n=1)
 
         keywords_list = list(choose_list_freq.keys())
 
@@ -1250,7 +1254,9 @@ elif mode == "Analysis":
             )
 
         for selected_year in selected_years:
-            year_model_path = os.path.join(vars["model_path"], selected_year + ".model")
+            year_model_path = os.path.join(
+                vars_["model_path"], selected_year + ".model"
+            )
             keywords, embs = get_word_embeddings(
                 year_model_path,
                 selected_ngrams,
@@ -1261,9 +1267,9 @@ elif mode == "Analysis":
             two_dim_embs = reduce_dimensions(embs, typ=typ, fit_on_compass=False)
             labels, k_opt, kmeans = kmeans_embeddings(
                 two_dim_embs,
-                k_opt=None if vars["n_clusters"] == 0 else vars["n_clusters"],
-                k_max=vars["max_clusters"],
-                method=vars["method"],
+                k_opt=None if vars_["n_clusters"] == 0 else vars_["n_clusters"],
+                k_max=vars_["max_clusters"],
+                method=vars_["method"],
                 return_fitted_model=True,
             )
             figure1_block.write(f"Optimal Number of Clusters: {k_opt}")
@@ -1296,16 +1302,16 @@ elif mode == "Analysis":
     elif analysis_type == "Acceleration Heatmap":
         variable_params = get_default_args(compute_acc_heatmap_between_years)
         variable_params.update(get_default_args(freq_top_k))
-        vars = generate_analysis_components(analysis_type, variable_params)
-        years = get_years_from_data_path(vars["data_path"])
-        compass_text = read_text_file(vars["data_path"], "compass")
+        vars_ = generate_analysis_components(analysis_type, variable_params)
+        years = get_years_from_data_path(vars_["data_path"])
+        compass_text = read_text_file(vars_["data_path"], "compass")
 
         # TO-DO: Check if n is needed here
         # n = st.sidebar.number_input("N", value=freq_default_values_dict['n'], min_value=1, format="%d", help="N in N-gram for productivity calculation.")
 
         choose_list_freq = freq_top_k(
             compass_text,
-            top_k=vars["top_k"],
+            top_k=vars_["top_k"],
             n=1,
             normalize=False,
         )
@@ -1321,7 +1327,7 @@ elif mode == "Analysis":
 
         year_2 = col_1_2.selectbox("Year 2", options=years, index=len(years) - 1)
 
-        if not vars["p2f"]:
+        if not vars_["p2f"]:
             year_2, year_1 = year_1, year_2
 
         with figure1_params_expander:
@@ -1329,8 +1335,8 @@ elif mode == "Analysis":
                 label="Plot Title", value=f"{analysis_type} for range {year_1}-{year_2}"
             )
 
-        model_path_1 = os.path.join(vars["model_path"], year_1 + ".model")
-        model_path_2 = os.path.join(vars["model_path"], year_2 + ".model")
+        model_path_1 = os.path.join(vars_["model_path"], year_1 + ".model")
+        model_path_2 = os.path.join(vars_["model_path"], year_2 + ".model")
 
         # print(len(selected_ngrams))
         acc_matrix = compute_acc_heatmap_between_years(
@@ -1355,20 +1361,20 @@ elif mode == "Analysis":
         variable_params = get_default_args(compute_similarity_matrix_years)
         variable_params["stride"] = 3
         variable_params.update(get_default_args(freq_top_k))
-        vars = generate_analysis_components(analysis_type, variable_params)
-        years = get_years_from_data_path(vars["data_path"])
-        compass_text = read_text_file(vars["data_path"], "compass")
-        stride = vars["stride"]
+        vars_ = generate_analysis_components(analysis_type, variable_params)
+        years = get_years_from_data_path(vars_["data_path"])
+        compass_text = read_text_file(vars_["data_path"], "compass")
+        stride = vars_["stride"]
 
         # n = st.sidebar.number_input("N", value=freq_default_values_dict['n'], min_value=1, format="%d", help="N in N-gram for productivity calculation.")
 
         # TO-DO: SHOULD WE SWITCH TO YEAR WISE TEXT INSTEAD?
         choose_list_freq = freq_top_k(
-            compass_text, top_k=vars["top_k"], n=1, normalize=True
+            compass_text, top_k=vars_["top_k"], n=1, normalize=True
         )
         keywords_list = list(choose_list_freq.keys())
         figure1_params_expander = figure1_params.beta_expander("Plot Parameters")
-        compass_model_path = os.path.join(vars["model_path"], "compass.model")
+        compass_model_path = os.path.join(vars_["model_path"], "compass.model")
         with figure1_params_expander:
             year1, year2 = st.select_slider(
                 "Range in years",
@@ -1380,7 +1386,7 @@ elif mode == "Analysis":
         years = years[years.index(year1) : years.index(year2) + 1]
 
         model_paths = [
-            os.path.join(vars["model_path"], str(year) + ".model")
+            os.path.join(vars_["model_path"], str(year) + ".model")
             for year in years[: min(stride + 1, len(years))]
         ]
 
@@ -1391,7 +1397,7 @@ elif mode == "Analysis":
 
         if figure1_plot.button("Generate Dataframe"):
             state.sim_dict = get_dict_with_new_words(
-                model_paths, selected_ngram, top_k_sim=vars["top_k_sim"]
+                model_paths, selected_ngram, top_k_sim=vars_["top_k_sim"]
             )
 
         if state.sim_dict != {} and state.sim_dict is not None:
@@ -1403,7 +1409,13 @@ elif mode == "Analysis":
                 state.sim_dict = {
                     **state.sim_dict,
                     **word_to_entry_dict(
-                        state.new_word, year1, year2, years, stride, vars["top_k_sim"]
+                        state.new_word,
+                        year1,
+                        year2,
+                        years,
+                        stride,
+                        vars_["top_k_sim"],
+                        vars_["model_path"],
                     ),
                 }
 
@@ -1418,8 +1430,8 @@ elif mode == "Analysis":
     elif analysis_type == "Keyword Visualisation":
         variable_params = get_default_args(yake_keyword_extraction)
         variable_params.update(get_default_args(freq_top_k))
-        vars = generate_analysis_components(analysis_type, variable_params)
-        years = get_years_from_data_path(vars["data_path"])
+        vars_ = generate_analysis_components(analysis_type, variable_params)
+        years = get_years_from_data_path(vars_["data_path"])
 
         with figure1_params.beta_expander("Plot Parameters"):
             selected_year = st.select_slider(
@@ -1427,13 +1439,13 @@ elif mode == "Analysis":
                 options=years,
                 help="Year for which world cloud is to be generated",
             )
-        text_file = os.path.join(vars["data_path"], selected_year + ".txt")
+        text_file = os.path.join(vars_["data_path"], selected_year + ".txt")
 
         keywords_df = yake_keyword_extraction(
             text_file,
-            top_k=vars["top_k"],
+            top_k=vars_["top_k"],
             language="en",
-            max_ngram_size=vars["max_ngram_size"],
+            max_ngram_size=vars_["max_ngram_size"],
             window_size=2,
             deduplication_threshold=0.9,
             deduplication_algo="seqm",
@@ -1457,8 +1469,8 @@ elif mode == "Analysis":
     elif analysis_type == "LDA Topic Modelling":
         variable_params = get_default_args(extract_topics_lda)
         variable_params["num_topics"] = 20
-        vars = generate_analysis_components(analysis_type, variable_params)
-        years = get_years_from_data_path(vars["data_path"])
+        vars_ = generate_analysis_components(analysis_type, variable_params)
+        years = get_years_from_data_path(vars_["data_path"])
 
         with figure1_params.beta_expander("Plot Parameters"):
             selected_year = st.select_slider(
@@ -1466,12 +1478,12 @@ elif mode == "Analysis":
                 options=years,
                 help="Year for which the topical analysis is to be shown.",
             )
-        year_paths = glob.glob(os.path.join(vars["data_path"], "*.txt"))
-        year_paths.remove(os.path.join(vars["data_path"], "compass.txt"))
+        year_paths = glob.glob(os.path.join(vars_["data_path"], "*.txt"))
+        year_paths.remove(os.path.join(vars_["data_path"], "compass.txt"))
         year_wise_topics, topic_wise_info = extract_topics_lda(
-            year_paths, num_topics=vars["num_topics"], num_words=vars["num_words"]
+            year_paths, num_topics=vars_["num_topics"], num_words=vars_["num_words"]
         )
-        vars["num_topics"] = len(topic_wise_info)
+        vars_["num_topics"] = len(topic_wise_info)
         topic_wise_info_for_graph = []
         for topic_info in topic_wise_info:
             topic_info_for_graph_wt = []
@@ -1494,7 +1506,7 @@ elif mode == "Analysis":
             topic_wise_info_for_graph.append(df_topic_info)
 
         selected_year_idx = year_paths.index(
-            os.path.join(vars["data_path"], f"{selected_year}.txt")
+            os.path.join(vars_["data_path"], f"{selected_year}.txt")
         )
         selected_year_topics = year_wise_topics[selected_year_idx]
 
@@ -1502,10 +1514,10 @@ elif mode == "Analysis":
         for selected_year_topic in selected_year_topics:
             dict_for_graph[int(selected_year_topic[0])] = selected_year_topic[1]
 
-        st.write("Number of Topics: ", vars["num_topics"])
+        st.write("Number of Topics: ", vars_["num_topics"])
 
         topics_not_present = list(
-            set([i for i in range(vars["num_topics"])])
+            set([i for i in range(vars_["num_topics"])])
             - set(list(dict_for_graph.keys()))
         )
         for topic_not_present in topics_not_present:

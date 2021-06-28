@@ -165,7 +165,7 @@ def get_dict_with_new_words(model_paths, selected_ngram, top_k_sim):
     return create_word_to_entry_dict(selected_ngram, model_paths[0], sim_dict)
 
 
-def word_to_entry_dict(word_year, year1, year2, years, stride, top_k_sim):
+def word_to_entry_dict(word_year, year1, year2, years, stride, top_k_sim, model_path):
     # TO-DO: Need better logic here. `eighy-eighty2008` becomes `eightyeight2008`
     # TO-DO: `2016a2020` appears as `a`, `20162020`
     word_pure = "".join([i for i in word_year if not i.isdigit()]).strip()
@@ -178,7 +178,7 @@ def word_to_entry_dict(word_year, year1, year2, years, stride, top_k_sim):
 
     else:
         model_paths = [
-            os.path.join(vars["model_path"], str(yr) + ".model")
+            os.path.join(model_path, str(yr) + ".model")
             for yr in years[year : min(stride + year + 1, len(years))]
         ]
         return get_dict_with_new_words(model_paths, word_pure, top_k_sim)
