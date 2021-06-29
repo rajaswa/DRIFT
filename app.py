@@ -1468,7 +1468,7 @@ elif mode == "Analysis":
 
     elif analysis_type == "LDA Topic Modelling":
         variable_params = get_default_args(extract_topics_lda)
-        variable_params["num_topics"] = 20
+        variable_params["num_topics"] = 2
         vars_ = generate_analysis_components(analysis_type, variable_params)
         years = get_years_from_data_path(vars_["data_path"])
 
@@ -1548,8 +1548,8 @@ elif mode == "Analysis":
         topic_wise_info_list = [
             topic_wise_info_for_graph[index] for index in topics_of_interest
         ]
-
         for topic_wise_info in topic_wise_info_list:
+            topic_wise_info = topic_wise_info.sort_values(by=["WT"])
             fig = plotly_histogram(
                 topic_wise_info,
                 y_label="Word",
