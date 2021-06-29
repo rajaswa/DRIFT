@@ -1,12 +1,16 @@
 import os
-from src.utils.words import get_word_embeddings
 
 import faiss
 import numpy as np
 import streamlit as st
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
+
+from src.utils.words import get_word_embeddings
+
+
 # TO-DO: Switch to FaissKMeans class, based on this: https://towardsdatascience.com/k-means-8x-faster-27x-lower-error-than-scikit-learns-in-25-lines-eaedc7a3a0c8
+
 
 def kmeans_train(X, n_cluster, method="faiss", return_fitted_model=False):
     assert method in ["faiss", "sklearn"], "method should be one of " + str(
@@ -29,7 +33,11 @@ def kmeans_train(X, n_cluster, method="faiss", return_fitted_model=False):
     else:
         return labels
 
-def kmeans_embeddings(embs, k_opt=None, k_max=10, method="faiss", return_fitted_model=False):
+
+def kmeans_embeddings(
+    embs, k_opt=None, k_max=10, method="faiss", return_fitted_model=False
+):
+
     if k_opt is None:
 
         silhouette_scores = []
@@ -46,12 +54,37 @@ def kmeans_embeddings(embs, k_opt=None, k_max=10, method="faiss", return_fitted_
         labels = kmeans_train(embs, k_opt, method, return_fitted_model)
         return labels, k_opt
 
-def kmeans_clustering(keywords, model_path, k_opt=None, k_max=10, method="faiss", return_fitted_model=False):
-    embs = get_word_embeddings(model_path, keywords, all_model_vectors=False, return_words=False, filter_missing_words=True)
+
+def kmeans_clustering(
+    keywords,
+    model_path,
+    k_opt=None,
+    k_max=10,
+    method="faiss",
+    return_fitted_model=False,
+):
+    embs = get_word_embeddings(
+        model_path,
+        keywords,
+        all_model_vectors=False,
+        return_words=False,
+        filter_missing_words=True,
+    )
     if return_fitted_model:
-        labels, kmeans = kmeans_embeddings(embs, k_opt=k_opt, k_max=k_max, method=method, return_fitted_model=return_fitted_model)
+        labels, kmeans = kmeans_embeddings(
+            embs,
+            k_opt=k_opt,
+            k_max=k_max,
+            method=method,
+            return_fitted_model=return_fitted_model,
+        )
         return keywords, embs, labels, k_opt, kmeans
     else:
-        labels = kmeans_embeddings(embs, k_opt=k_opt, k_max=k_max, method=method, return_fitted_model=return_fitted_model)
+        labels = kmeans_embeddings(
+            embs,
+            k_opt=k_opt,
+            k_max=k_max,
+            method=method,
+            return_fitted_model=return_fitted_model,
+        )
         return keywords, embs, labels, k_opt
-    

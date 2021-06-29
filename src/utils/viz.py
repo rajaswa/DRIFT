@@ -1,25 +1,25 @@
-from src.utils.centripetal_catmull_rom_spline import centripetal_catmull_rom
-from src.utils.catmull_rom_spline import catmull_rom
 import matplotlib.pyplot as plt
 import nltk
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
+import plotly.io as pio
 from nltk.corpus import stopwords
 from wordcloud import WordCloud
 
+from src.utils.catmull_rom_spline import catmull_rom
+from src.utils.centripetal_catmull_rom_spline import centripetal_catmull_rom
 from src.utils.misc import get_tail_from_data_path
 
 from ..analysis import similarity_acc_matrix
 
-import plotly.io as pio
 
 def get_colorscale_color_from_value(colorscale, float_value):
     idx = 0
-    while idx<len(colorscale)-1:
-        if colorscale[idx][0]<=float_value and colorscale[idx+1][0]>=float_value:
+    while idx < len(colorscale) - 1:
+        if colorscale[idx][0] <= float_value and colorscale[idx + 1][0] >= float_value:
             return colorscale[idx][1]
-        idx+=1
+        idx += 1
 
 
 nltk.download("stopwords")
@@ -74,28 +74,9 @@ def pyplot_scatter_embeddings(
 
 
 def plotly_scatter(
-    x, y, color_by_values=None, text_annot=None, title=None, save_path=None
-):
-
-    fig = px.scatter(
-        x=x,
-        y=y,
-        color=color_by_values,
-        text=text_annot,
-        color_continuous_scale="Spectral",
-        title=title,
-    )
-
-    fig.update_traces(textposition="top center")
-    fig.update_xaxes(showgrid=False, zeroline=False)
-    fig.update_yaxes(showgrid=False, zeroline=False)
-    if save_path:
-        fig.write_html(save_path)
-    return fig
-
-def plotly_scatter_df(
     df, x_col, y_col, color_col=None,size_col=None, facet_col=None, labels=None, text_annot=None, title=None, contour_dict=None, colorscale=None, label_to_vertices_map=None, save_path=None
 ):
+
     if colorscale is not None:
         colors = df[color_col].apply(int).values
         unique_colors = np.sort(np.unique(colors))
@@ -117,7 +98,7 @@ def plotly_scatter_df(
         template='simple_white'
     )
 
-    
+
     if contour_dict is not None:
         fig.add_trace(go.Contour(z=contour_dict['Z'],y=contour_dict['Y'], x=contour_dict['X'], opacity=0.3, colorscale=colorscale, showscale=False))
     if label_to_vertices_map is not None:
@@ -131,6 +112,100 @@ def plotly_scatter_df(
     if save_path:
         fig.write_html(save_path)
     return fig
+
+
+def plotly_histogram(
+    df, x_label=None, y_label=None, orientation="h", title=None, save_path=None
+):
+
+    fig = px.bar(df, x=x_label, y=y_label, orientation=orientation, title=title)
+
+    fig.update_xaxes(side="top")
+
+    if save_path:
+        fig.write_html(save_path)
+    return fig
+
+
+def plotly_scatter_df(
+    df,
+    x_col,
+    y_col,
+    color_col=None,
+    size_col=None,
+    facet_col=None,
+    labels=None,
+    text_annot=None,
+    title=None,
+    contour_dict=None,
+    colorscale=None,
+    label_to_vertices_map=None,
+    save_path=None,
+):
+    if colorscale is not None:
+        colors = df[color_col].apply(int).values
+        unique_colors = np.sort(np.unique(colors))
+        unique_colors_norm = unique_colors / unique_colors.max()
+        color_discrete_map = {
+            str(unique_colors[idx]): get_colorscale_color_from_value(
+                colorscale, norm_color
+            )
+            for idx, norm_color in enumerate(unique_colors_norm)
+        }
+    else:
+        color_discrete_map = None
+    fig = px.scatter(
+        df,
+        x=x_col,
+        y=y_col,
+        size=size_col,
+        color=color_col,
+        color_discrete_map=color_discrete_map,
+        facet_col=facet_col,
+        text=text_annot,
+        title=title,
+        labels=labels,
+        template="simple_white",
+    )
+
+    if contour_dict is not None:
+        fig.add_trace(
+            go.Contour(
+                z=contour_dict["Z"],
+                y=contour_dict["Y"],
+                x=contour_dict["X"],
+                opacity=0.3,
+                colorscale=colorscale,
+                showscale=False,
+            )
+        )
+    if label_to_vertices_map is not None:
+        for label, vertices in label_to_vertices_map.items():
+            vertices = np.concatenate([vertices, vertices[0].reshape(1, -1)], axis=0)
+            x_interpolated, y_interpolated = catmull_rom(
+                vertices[:, 0], vertices[:, 1], res=1000
+            )
+            fig.add_trace(
+                go.Scatter(
+                    x=x_interpolated,
+                    y=y_interpolated,
+                    name=str(label),
+                    mode="none",
+                    showlegend=False,
+                    fill="toself",
+                    opacity=0.3,
+                    fillcolor=get_colorscale_color_from_value(
+                        colorscale, int(label) / max(df[color_col].apply(int))
+                    ),
+                )
+            )
+    fig.update_traces(textposition="top center")
+    fig.update_xaxes(showgrid=False, zeroline=False)
+    fig.update_yaxes(showgrid=False, zeroline=False)
+    if save_path:
+        fig.write_html(save_path)
+    return fig
+
 
 def plotly_histogram(
     df, x_label=None, y_label=None, orientation="h", title=None, save_path=None
@@ -210,6 +285,9 @@ def word_cloud(
 def plotly_line_dataframe(df, x_col, y_col, word_col, title=None, save_path=None):
 
     fig = px.line(df, x=x_col, y=y_col, color=word_col, title=title)
+    fig.update_xaxes(showgrid=False, zeroline=False)
+    fig.update_yaxes(showgrid=False, zeroline=False)
+
     if save_path:
         fig.write_html(save_path)
     return fig
@@ -225,7 +303,6 @@ def embs_for_plotting(word, year_path, top_k_sim=10, skip_words=[]):
         model_path=year_path, keywords=[], all_model_vectors=True
     )
     word_idx = keywords.index(word)
-    print(skip_words)
     sim_vector = sim_matrix[word_idx]
     top_sims = np.argsort(sim_vector)
     top_sims = top_sims[-top_k_sim:]

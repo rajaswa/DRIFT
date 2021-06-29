@@ -16,13 +16,12 @@ def compute_similarity_matrix_years(model_paths, keyword, top_k_sim=5):
             del second_year_vocab[word_remove_idx]
             second_year_embs = np.delete(second_year_embs, word_remove_idx, axis=0)
         sim_vec = cosine_similarity(first_year_embs, second_year_embs)[0]
-        sim_dict = {
-            **sim_dict,
-            **{
+        sim_dict.update(
+            {
                 word + "_" + model_path: sim_vec[i]
                 for i, word in enumerate(second_year_vocab)
-            },
-        }
+            }
+        )
     sim_dict = dict(sorted(sim_dict.items(), key=lambda item: item[1], reverse=True))
     sim_dict_wo_dup = {}
     sim_dups = []

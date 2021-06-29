@@ -36,8 +36,13 @@ def find_norm_freq(text, n=1, sort=False):
 
 
 @st.cache(persist=eval(os.getenv("PERSISTENT")))
-def find_productivity(words, text, n=1):
-    fdist = find_freq(text=text, n=n, sort=True)
+def find_productivity(words, text, n=2, normalize=False):
+
+    if normalize:
+        fdist = find_norm_freq(text=text, n=n, sort=True)
+    else:
+        fdist = find_freq(text=text, n=n, sort=True)
+
     ngrams_lst = list(fdist.keys())
     prods = {}
     for word in words:
