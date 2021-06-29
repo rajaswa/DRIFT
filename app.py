@@ -65,6 +65,13 @@ colorscale = plotly_template.layout["colorscale"]["diverging"]
 
 np.random.seed(42)
 
+pos_tag_dict = {}
+with open('nltk_pos_tag_list.txt') as f:
+    for line in f:
+        line_split = line.strip().split('\t')
+        tag = line_split[0]
+        desc = line_split[1]
+        pos_tag_dict[tag]=desc
 
 # @st.cache(allow_output_mutation=True)
 # def get_sim_dict():
@@ -320,6 +327,29 @@ ANALYSIS_METHODS = {
                     help="Top-K words to be chosen from.",
                 ),
             ),
+
+            filter_pos_tags=dict(
+                component_var=sidebar_parameters,
+                typ="multiselect",
+                variable_params={"default": "filter_pos_tags"},
+                params=dict(
+                    label="POS-Tags Filter",
+                    options=list(pos_tag_dict.keys()),
+                    format_func=lambda x:x+' : '+pos_tag_dict[x],
+                    help="The POS Tags that should be selected. If empty, no filtering is done.",
+                ),
+            ),
+
+            tfidf=dict(
+                component_var=sidebar_parameters,
+                typ="checkbox",
+                variable_params={"value": "tfidf"},
+                params=dict(
+                    label="Use TF-IDF",
+                    help="Whether to use TF-IDF for selection instead of frequency.",
+                ),
+            ),
+
             normalize=dict(
                 component_var=sidebar_parameters,
                 typ="checkbox",
@@ -924,7 +954,6 @@ elif mode == "Analysis":
     elif analysis_type == "Productivity/Frequency Plot":
         variable_params = get_default_args(freq_top_k)
         vars_ = generate_analysis_components(analysis_type, variable_params)
-
         years = get_years_from_data_path(vars_["data_path"])
         compass_text = read_text_file(vars_["data_path"], "compass")
 
@@ -933,6 +962,8 @@ elif mode == "Analysis":
             top_k=vars_["top_k"],
             n=vars_["n"],
             normalize=vars_["normalize"],
+            filter_pos_tags = vars_["filter_pos_tags"],
+            tfidf = vars_["tfidf"]
         )
         choose_list = list(choose_list_freq.keys())
 
