@@ -166,10 +166,10 @@ def generate_analysis_components(analysis_type, variable_params):
 
 
 st.set_page_config(
-    page_title="Diachronic Analysis",
-    page_icon="",
+    page_title="DRIFT",
     layout="wide",
     initial_sidebar_state="expanded",
+    page_icon = "./misc/images/logo_letter_png.png"
 )
 
 state = _get_state()
@@ -194,6 +194,7 @@ figure2_params = figure2_block.beta_container()
 figure2_plot = figure2_block.beta_container()
 
 sidebar = st.sidebar.beta_container()
+sidebar_image = sidebar.empty()
 sidebar_title = sidebar.empty()
 sidebar_mode = sidebar.empty()
 sidebar_analysis_type = sidebar.empty()
@@ -206,7 +207,7 @@ sidebar_parameters = sidebar.beta_container()
 # COMMON RESOURCES
 
 COMMON = dict(
-    TITLE="Diachronic",
+    TITLE="DRIFT: Diachronic Analysis of Scientific Literature",
     SIDEBAR_TITLE="Settings",
     SIDEBAR_SUMMARY_HEADER="Summary",
     STOPWORDS=list(set(stopwords.words("english"))),
@@ -992,6 +993,7 @@ TRAIN = dict(
 # SIDEBAR COMMON SETUP
 title.title(COMMON["TITLE"])
 sidebar_title.title(COMMON["SIDEBAR_TITLE"])
+sidebar_image.markdown('<img src="https://i.ibb.co/FV8rwYd/Driftlogo1.png" style="display: block;margin-left: auto;margin-right: auto;width:65px;height:120px;">',unsafe_allow_html=True)
 
 with settings.beta_expander("App Settings"):
     display_caching_option()
