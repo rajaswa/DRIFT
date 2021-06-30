@@ -86,3 +86,20 @@ def save_npy(arr, save_path):
     if save_path is not None:
         with open(save_path, "wb") as npy_f:
             np.save(npy_f, arr)
+
+
+def remove_keywords_util(remove_keywords_path, sorted_gram_count_mapping):
+    with open(remove_keywords_path, "r") as f:
+        removed_keywords = f.read().split(",")
+    sorted_gram_count_mapping = {
+        key: sorted_gram_count_mapping[key]
+        for key in sorted_gram_count_mapping.keys()
+        if key not in removed_keywords
+    }
+    return sorted_gram_count_mapping
+
+
+def length_removed_keywords(remove_keywords_path):
+    with open(remove_keywords_path, "r") as f:
+        len_keywords = len(f.read().split(","))
+    return len_keywords

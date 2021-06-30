@@ -31,6 +31,8 @@ def get_tfidf_features(sentences, sort=True, filter_pos_tags=[]):
         result_dict = {k: v for k, v in result_dict_tuple}
     return result_dict
 
+from .misc import length_removed_keywords, remove_keywords_util
+
 
 @st.cache(persist=eval(os.getenv("PERSISTENT")))
 def get_stanford_tags(sentences):
@@ -76,7 +78,6 @@ def find_norm_freq(text, n=1, sort=False, filter_pos_tags=[]):
 
 @st.cache(persist=eval(os.getenv("PERSISTENT")))
 def find_productivity(words, text, n=2, normalize=False, filter_pos_tags=[]):
-
     if normalize:
         fdist = find_norm_freq(text=text, n=n, sort=True, filter_pos_tags=filter_pos_tags)
     else:
@@ -132,25 +133,28 @@ def yake_keyword_extraction(
     window_size=2,
     deduplication_threshold=0.9,
     deduplication_algo="seqm",
+    remove_keywords_path="./removed_keywords/removedphrases.txt",
 ):
     with open(text_file, "r") as f:
         text = f.read()
+    if remove_keywords_path is not None and os.path.isfile(remove_keywords_path):
+        len_rem_keywords = length_removed_keywords(remove_keywords_path)
+    else:
+        len_rem_keywords = 0
     custom_kw_extractor = yake.KeywordExtractor(
         lan=language,
         n=max_ngram_size,
         dedupLim=deduplication_threshold,
         dedupFunc=deduplication_algo,
         windowsSize=window_size,
-        top=top_k,
+        top=top_k + len_rem_keywords,
         features=None,
     )
     keywords = custom_kw_extractor.extract_keywords(text)
-
-    x = []
-    y = []
-    for keyword in keywords:
-        x.append(keyword[0])
-        y.append(1 / (1e5 * keyword[1]))
+    if remove_keywords_path is not None and os.path.isfile(remove_keywords_path):
+        keywords = remove_keywords_util(remove_keywords_path, dict(keywords))
+    x = list(keywords.keys())
+    y = [1 / (1e5 * keywords[key]) for key in keywords.keys()]
 
     df = pd.DataFrame()
     df["ngram"] = x
