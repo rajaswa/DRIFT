@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./misc/images/logo.png" alt="Logo" height=10% width=10%/>
+  <img src="./misc/images/logo_svg.svg" alt="Logo" height=10% width=10%/>
 </p>
 
 DRIFT is a tool for diachronic analysis of scientific articles. We would love to know about any issues found on this repository. Please create an issue for any query, or contact us at sharmabhee@gmail.com.
