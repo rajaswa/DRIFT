@@ -65,6 +65,13 @@ colorscale = plotly_template.layout["colorscale"]["diverging"]
 
 np.random.seed(42)
 
+pos_tag_dict = {}
+with open('nltk_pos_tag_list.txt') as f:
+    for line in f:
+        line_split = line.strip().split('\t')
+        tag = line_split[0]
+        desc = line_split[1]
+        pos_tag_dict[tag]=desc
 
 # @st.cache(allow_output_mutation=True)
 # def get_sim_dict():
@@ -320,6 +327,27 @@ ANALYSIS_METHODS = {
                     help="Top-K words to be chosen from.",
                 ),
             ),
+            filter_pos_tags=dict(
+                component_var=sidebar_parameters,
+                typ="multiselect",
+                variable_params={"default": "filter_pos_tags"},
+                params=dict(
+                    label="POS-Tags Filter",
+                    options=list(pos_tag_dict.keys()),
+                    format_func=lambda x:x+' : '+pos_tag_dict[x],
+                    help="The POS Tags that should be selected. If empty, no filtering is done.",
+                ),
+            ),
+
+            tfidf=dict(
+                component_var=sidebar_parameters,
+                typ="checkbox",
+                variable_params={"value": "tfidf"},
+                params=dict(
+                    label="Use TF-IDF",
+                    help="Whether to use TF-IDF for selection instead of frequency.",
+                ),
+            ),
             normalize=dict(
                 component_var=sidebar_parameters,
                 typ="checkbox",
@@ -372,6 +400,27 @@ ANALYSIS_METHODS = {
                     min_value=1,
                     format="%d",
                     help="Top-K words to be chosen from.",
+                ),
+            ),
+            filter_pos_tags=dict(
+                component_var=sidebar_parameters,
+                typ="multiselect",
+                variable_params={"default": "filter_pos_tags"},
+                params=dict(
+                    label="POS-Tags Filter",
+                    options=list(pos_tag_dict.keys()),
+                    format_func=lambda x:x+' : '+pos_tag_dict[x],
+                    help="The POS Tags that should be selected. If empty, no filtering is done.",
+                ),
+            ),
+
+            tfidf=dict(
+                component_var=sidebar_parameters,
+                typ="checkbox",
+                variable_params={"value": "tfidf"},
+                params=dict(
+                    label="Use TF-IDF",
+                    help="Whether to use TF-IDF for selection instead of frequency.",
                 ),
             ),
             top_k_sim=dict(
@@ -444,6 +493,27 @@ ANALYSIS_METHODS = {
                     help="Top-K words on which we will calculate drift.",
                 ),
             ),
+            filter_pos_tags=dict(
+                component_var=sidebar_parameters,
+                typ="multiselect",
+                variable_params={"default": "filter_pos_tags"},
+                params=dict(
+                    label="POS-Tags Filter",
+                    options=list(pos_tag_dict.keys()),
+                    format_func=lambda x:x+' : '+pos_tag_dict[x],
+                    help="The POS Tags that should be selected. If empty, no filtering is done.",
+                ),
+            ),
+
+            tfidf=dict(
+                component_var=sidebar_parameters,
+                typ="checkbox",
+                variable_params={"value": "tfidf"},
+                params=dict(
+                    label="Use TF-IDF",
+                    help="Whether to use TF-IDF for selection instead of frequency.",
+                ),
+            ),
             top_k_sim=dict(
                 component_var=sidebar_parameters,
                 typ="number_input",
@@ -511,6 +581,27 @@ ANALYSIS_METHODS = {
                     min_value=1,
                     format="%d",
                     help="Top-K words to be chosen from.",
+                ),
+            ),
+            filter_pos_tags=dict(
+                component_var=sidebar_parameters,
+                typ="multiselect",
+                variable_params={"default": "filter_pos_tags"},
+                params=dict(
+                    label="POS-Tags Filter",
+                    options=list(pos_tag_dict.keys()),
+                    format_func=lambda x:x+' : '+pos_tag_dict[x],
+                    help="The POS Tags that should be selected. If empty, no filtering is done.",
+                ),
+            ),
+
+            tfidf=dict(
+                component_var=sidebar_parameters,
+                typ="checkbox",
+                variable_params={"value": "tfidf"},
+                params=dict(
+                    label="Use TF-IDF",
+                    help="Whether to use TF-IDF for selection instead of frequency.",
                 ),
             ),
             n_clusters=dict(
@@ -592,6 +683,27 @@ ANALYSIS_METHODS = {
                     help="Top-K words to be chosen from.",
                 ),
             ),
+            filter_pos_tags=dict(
+                component_var=sidebar_parameters,
+                typ="multiselect",
+                variable_params={"default": "filter_pos_tags"},
+                params=dict(
+                    label="POS-Tags Filter",
+                    options=list(pos_tag_dict.keys()),
+                    format_func=lambda x:x+' : '+pos_tag_dict[x],
+                    help="The POS Tags that should be selected. If empty, no filtering is done.",
+                ),
+            ),
+
+            tfidf=dict(
+                component_var=sidebar_parameters,
+                typ="checkbox",
+                variable_params={"value": "tfidf"},
+                params=dict(
+                    label="Use TF-IDF",
+                    help="Whether to use TF-IDF for selection instead of frequency.",
+                ),
+            ),
             p2f=dict(
                 component_var=sidebar_parameters,
                 typ="checkbox",
@@ -637,6 +749,27 @@ ANALYSIS_METHODS = {
                     min_value=1,
                     format="%d",
                     help="Top-K words to be chosen from.",
+                ),
+            ),
+            filter_pos_tags=dict(
+                component_var=sidebar_parameters,
+                typ="multiselect",
+                variable_params={"default": "filter_pos_tags"},
+                params=dict(
+                    label="POS-Tags Filter",
+                    options=list(pos_tag_dict.keys()),
+                    format_func=lambda x:x+' : '+pos_tag_dict[x],
+                    help="The POS Tags that should be selected. If empty, no filtering is done.",
+                ),
+            ),
+
+            tfidf=dict(
+                component_var=sidebar_parameters,
+                typ="checkbox",
+                variable_params={"value": "tfidf"},
+                params=dict(
+                    label="Use TF-IDF",
+                    help="Whether to use TF-IDF for selection instead of frequency.",
                 ),
             ),
             top_k_sim=dict(
@@ -933,6 +1066,8 @@ elif mode == "Analysis":
             top_k=vars_["top_k"],
             n=vars_["n"],
             normalize=vars_["normalize"],
+            filter_pos_tags = vars_["filter_pos_tags"],
+            tfidf = vars_["tfidf"]
         )
         choose_list = list(choose_list_freq.keys())
 
@@ -1052,6 +1187,8 @@ elif mode == "Analysis":
             top_k=vars_["top_k"],
             n=1,
             normalize=False,
+            filter_pos_tags = vars_["filter_pos_tags"],
+            tfidf = vars_["tfidf"]
         )
         choose_list = list(choose_list_freq.keys())
 
@@ -1175,6 +1312,8 @@ elif mode == "Analysis":
             top_k=vars_["top_k"],
             n=1,
             normalize=False,
+            filter_pos_tags = vars_["filter_pos_tags"],
+            tfidf = vars_["tfidf"]
         )
         list_top_k_freq = list(list_top_k_freq.keys())
 
@@ -1241,7 +1380,8 @@ elif mode == "Analysis":
             )
         selected_years = [str(i) for i in range(int(year1), int(year2) + 1)]
 
-        choose_list_freq = freq_top_k(compass_text, top_k=vars_["top_k"], n=1)
+        choose_list_freq = freq_top_k(compass_text, top_k=vars_["top_k"], n=1, filter_pos_tags = vars_["filter_pos_tags"],
+            tfidf = vars_["tfidf"])
 
         keywords_list = list(choose_list_freq.keys())
 
@@ -1314,6 +1454,8 @@ elif mode == "Analysis":
             top_k=vars_["top_k"],
             n=1,
             normalize=False,
+            filter_pos_tags = vars_["filter_pos_tags"],
+            tfidf = vars_["tfidf"]
         )
         choose_list = list(choose_list_freq.keys())
         figure1_params_expander = figure1_params.beta_expander("Plot Parameters")
@@ -1389,16 +1531,16 @@ elif mode == "Analysis":
             os.path.join(vars_["model_path"], str(year) + ".model")
             for year in years[: min(stride + 1, len(years))]
         ]
-
         selected_ngram = figure1_plot.text_input(
             label="Type a Word", value=keywords_list[0]
         )
-        select_list = figure1_plot.empty()
 
         if figure1_plot.button("Generate Dataframe"):
             state.sim_dict = get_dict_with_new_words(
                 model_paths, selected_ngram, top_k_sim=vars_["top_k_sim"]
             )
+
+        select_list = figure1_plot.empty()
 
         if state.sim_dict != {} and state.sim_dict is not None:
             state.new_word = select_list.selectbox(
@@ -1468,7 +1610,7 @@ elif mode == "Analysis":
 
     elif analysis_type == "LDA Topic Modelling":
         variable_params = get_default_args(extract_topics_lda)
-        variable_params["num_topics"] = 2
+        variable_params["num_topics"] = 20
         vars_ = generate_analysis_components(analysis_type, variable_params)
         years = get_years_from_data_path(vars_["data_path"])
 
