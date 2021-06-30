@@ -74,35 +74,18 @@ def pyplot_scatter_embeddings(
 
 
 
+
 def plotly_scatter(
-    df,
-    x_col,
-    y_col,
-    color_col=None,
-    size_col=None,
-    facet_col=None,
-    labels=None,
-    text_annot=None,
-    title=None,
-    contour_dict=None,
-    colorscale=None,
-    label_to_vertices_map=None,
-    save_path=None,
+    x, y, color_by_values=None, text_annot=None, title=None, save_path=None
 ):
     fig = px.scatter(
-        df,
-        x=x_col,
-        y=y_col,
-        size=size_col,
-        color=color_col,
-        color_discrete_map=color_discrete_map,
-        facet_col=facet_col,
+        x=x,
+        y=y,
+        color=color_by_values,
         text=text_annot,
+        color_continuous_scale="Spectral",
         title=title,
-        labels=labels,
-        template="simple_white",
     )
-
     fig.update_traces(textposition="top center")
     fig.update_xaxes(showgrid=False, zeroline=False)
     fig.update_yaxes(showgrid=False, zeroline=False)
