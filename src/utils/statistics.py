@@ -7,6 +7,8 @@ import streamlit as st
 import yake
 from nltk import FreqDist, ngrams
 
+from .misc import length_removed_keywords, remove_keywords_util
+
 
 def find_ngrams_for_sentences(sentences, n=1):
     sentence_list = sentences.split("\n")
@@ -68,11 +70,21 @@ def find_productivity(words, text, n=2, normalize=False):
 
 
 @st.cache(persist=eval(os.getenv("PERSISTENT")))
-def freq_top_k(text, top_k=20, n=1, normalize=False):
+def freq_top_k(
+    text,
+    top_k=20,
+    n=1,
+    normalize=False,
+    remove_keywords_path="./removed_keywords/removedphrases.txt",
+):
     if normalize:
         sorted_gram_count_mapping = find_norm_freq(text, n=n, sort=True)
     else:
         sorted_gram_count_mapping = find_freq(text, n=n, sort=True)
+    if remove_keywords_path is not None and os.path.isfile(remove_keywords_path):
+        sorted_gram_count_mapping = remove_keywords_util(
+            remove_keywords_path, sorted_gram_count_mapping
+        )
 
     if top_k < len(sorted_gram_count_mapping):
         sorted_gram_count_mapping = dict(
@@ -90,25 +102,28 @@ def yake_keyword_extraction(
     window_size=2,
     deduplication_threshold=0.9,
     deduplication_algo="seqm",
+    remove_keywords_path="./removed_keywords/removedphrases.txt",
 ):
     with open(text_file, "r") as f:
         text = f.read()
+    if remove_keywords_path is not None and os.path.isfile(remove_keywords_path):
+        len_rem_keywords = length_removed_keywords(remove_keywords_path)
+    else:
+        len_rem_keywords = 0
     custom_kw_extractor = yake.KeywordExtractor(
         lan=language,
         n=max_ngram_size,
         dedupLim=deduplication_threshold,
         dedupFunc=deduplication_algo,
         windowsSize=window_size,
-        top=top_k,
+        top=top_k + len_rem_keywords,
         features=None,
     )
     keywords = custom_kw_extractor.extract_keywords(text)
-
-    x = []
-    y = []
-    for keyword in keywords:
-        x.append(keyword[0])
-        y.append(1 / (1e5 * keyword[1]))
+    if remove_keywords_path is not None and os.path.isfile(remove_keywords_path):
+        keywords = remove_keywords_util(remove_keywords_path, dict(keywords))
+    x = list(keywords.keys())
+    y = [1 / (1e5 * keywords[key]) for key in keywords.keys()]
 
     df = pd.DataFrame()
     df["ngram"] = x
