@@ -361,7 +361,7 @@ ANALYSIS_METHODS = {
     ),
     "Acceleration Plot": dict(
         ABOUT="",
-        SUMMARY="A tag cloud is a novelty visual representation of text data, typically used to depict keyword metadata on websites, or to visualize free form text. Tags are usually single words, and the importance of each tag is shown with font size or color.",
+        SUMMARY="A pair of words converges/diverges over time. Acceleration is a measure of convergence of a pair of keywords. This module identifies fast converging keywords and depicts this convergence on a t-SNE plot.",
         COMPONENTS=dict(
             note=dict(
                 component_var=figure1_block,
@@ -550,7 +550,7 @@ ANALYSIS_METHODS = {
     ),
     "Tracking Clusters": dict(
         ABOUT="",
-        SUMMARY="A tag cloud is a novelty visual representation of text data, typically used to depict keyword metadata on websites, or to visualize free form text. Tags are usually single words, and the importance of each tag is shown with font size or color.",
+        SUMMARY="Cluster word embeddings for different years and track how these clusters change over a time period.",
         COMPONENTS=dict(
             data_path=dict(
                 component_var=sidebar_parameters,
@@ -642,7 +642,7 @@ ANALYSIS_METHODS = {
     ),
     "Acceleration Heatmap": dict(
         ABOUT="",
-        SUMMARY="A tag cloud is a novelty visual representation of text data, typically used to depict keyword metadata on websites, or to visualize free form text. Tags are usually single words, and the importance of each tag is shown with font size or color.",
+        SUMMARY="A pair of words converges/diverges over time. Acceleration is a measure of convergence of a pair of keywords. This module identifies fast converging keywords and depicts the convergence using a heatmap.",
         COMPONENTS=dict(
             note=dict(
                 component_var=figure1_params,
@@ -718,7 +718,7 @@ ANALYSIS_METHODS = {
     ),
     "Track Trends with Similarity": dict(
         ABOUT="",
-        SUMMARY="A tag cloud is a novelty visual representation of text data, typically used to depict keyword metadata on websites, or to visualize free form text. Tags are usually single words, and the importance of each tag is shown with font size or color.",
+        SUMMARY="We identify trends by recursively finding most similar words over years. In this way, we are able to chart the trajectory of a word from one year to another.",
         COMPONENTS=dict(
             data_path=dict(
                 component_var=sidebar_parameters,
@@ -798,7 +798,7 @@ ANALYSIS_METHODS = {
     ),
     "Keyword Visualisation": dict(
         ABOUT="",
-        SUMMARY="A tag cloud is a novelty visual representation of text data, typically used to depict keyword metadata on websites, or to visualize free form text. Tags are usually single words, and the importance of each tag is shown with font size or color.",
+        SUMMARY="Bar Graph visualisations for keywords (words vs score).",
         COMPONENTS=dict(
             data_path=dict(
                 component_var=sidebar_parameters,
@@ -837,7 +837,7 @@ ANALYSIS_METHODS = {
     ),
     "LDA Topic Modelling": dict(
         ABOUT="",
-        SUMMARY="A tag cloud is a novelty visual representation of text data, typically used to depict keyword metadata on websites, or to visualize free form text. Tags are usually single words, and the importance of each tag is shown with font size or color.",
+        SUMMARY="LDA clusters the text data into imaginary topics. Every topic can be represented as a probability distribution over ngrams and every document can be represented as a probability distribution over these generated topics.",
         COMPONENTS=dict(
             data_path=dict(
                 component_var=sidebar_parameters,
