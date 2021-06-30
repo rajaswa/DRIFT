@@ -1511,8 +1511,7 @@ elif mode == "Analysis":
 
         # TO-DO: SHOULD WE SWITCH TO YEAR WISE TEXT INSTEAD?
         choose_list_freq = freq_top_k(
-            compass_text, top_k=vars_["top_k"], n=1, normalize=True, filter_pos_tags = vars_["filter_pos_tags"],
-            tfidf = vars_["tfidf"]
+            compass_text, top_k=vars_["top_k"], n=1, normalize=True
         )
         keywords_list = list(choose_list_freq.keys())
         figure1_params_expander = figure1_params.beta_expander("Plot Parameters")
@@ -1531,16 +1530,16 @@ elif mode == "Analysis":
             os.path.join(vars_["model_path"], str(year) + ".model")
             for year in years[: min(stride + 1, len(years))]
         ]
-
         selected_ngram = figure1_plot.text_input(
             label="Type a Word", value=keywords_list[0]
         )
-        select_list = figure1_plot.empty()
 
         if figure1_plot.button("Generate Dataframe"):
             state.sim_dict = get_dict_with_new_words(
                 model_paths, selected_ngram, top_k_sim=vars_["top_k_sim"]
             )
+
+        select_list = figure1_plot.empty()
 
         if state.sim_dict != {} and state.sim_dict is not None:
             state.new_word = select_list.selectbox(
@@ -1563,7 +1562,7 @@ elif mode == "Analysis":
 
         if figure2_plot.button(label="Clear Data"):
             state.clear()
-
+            
         if state.sim_dict != {} and state.sim_dict is not None:
             df = pd.DataFrame(state.sim_dict)
             figure2_plot.write(df)
