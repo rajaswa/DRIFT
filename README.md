@@ -1,11 +1,12 @@
-# Kronos
+<p align="center">
+  <img src="./misc/images/logo.png" alt="Logo" height=6% width=6%/>
+</p>
 
-Kronos is a tool for diachronic analysis of scientific articles. We would love to know about any issues found on this repository. Please create an issue for any query, or contact us at sharmabhee@gmail.com.
+DRIFT is a tool for diachronic analysis of scientific articles. We would love to know about any issues found on this repository. Please create an issue for any query, or contact us at sharmabhee@gmail.com.
 
 Pre-print: Coming Soon!
 
 ## Abstract
-
 
 
 ## Updates
@@ -111,9 +112,9 @@ The app has two modes: **Train** and **Analysis**.
 You can cite our work as:
 
 ```sh
-@unpublished{sharma2021kronos ,
+@unpublished{sharma2021DRIFT ,
 author = {Abheesht Sharma and Gunjan Chhablani and Harshit Pandey and Rajaswa Patil},
-title = {Kronos: A Tool for Diachronic Analysis of Scientific Articles},
+title = {DRIFT: A Tool for Diachronic Analysis of Scientific Articles},
 note = {Under Review at EMNLP 2021 (Demo Track)},
 year = {2021}
 }
@@ -121,5 +122,5 @@ year = {2021}
 OR
 
 ```sh
-A. Sharma, G. Chhablani, H. Pandey, R. Patil, "Kronos: A Tool for Diachronic Analysis of Scientific Articles", Under Review at EMNLP 2021 (Demo Track), 2021.
+A. Sharma, G. Chhablani, H. Pandey, R. Patil, "DRIFT: A Tool for Diachronic Analysis of Scientific Articles", Under Review at EMNLP 2021 (Demo Track), 2021.
 ```
