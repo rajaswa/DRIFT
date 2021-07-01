@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 import yake
-from nltk import FreqDist, ngrams, word_tokenize
+from nltk import FreqDist, StanfordTagger, ngrams, word_tokenize
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 
