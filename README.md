@@ -1,8 +1,19 @@
 <p align="center">
-  <img src="./misc/images/logo_svg.svg" alt="Logo" height=10% width=10%/>
+  <img src="./misc/images/logo_svg.svg" alt="Logo" height=12.5% width=12.5%/>
 </p>
 
-DRIFT is a tool for diachronic analysis of scientific articles. We would love to know about any issues found on this repository. Please create an issue for any query, or contact us at sharmabhee@gmail.com.
+<div align='center'>
+
+  [![GitHub license](https://img.shields.io/github/license/rajaswa/DRIFT)](https://github.com/rajaswa/DRIFT/blob/main/LICENSE)
+  [![GitHub stars](https://img.shields.io/github/stars/rajaswa/DRIFT)](https://github.com/rajaswa/DRIFT/stargazers)
+  [![GitHub forks](https://img.shields.io/github/forks/rajaswa/DRIFT)](https://github.com/rajaswa/DRIFT/network)
+  [![GitHub issues](https://img.shields.io/github/issues/rajaswa/DRIFT)](https://github.com/rajaswa/DRIFT/issues)
+  
+</div>
+
+**DRIFT is A Tool for Diachronic Analysis of Scientific Literature**. We would love to know about any issues found on this repository. Please create an issue for any query, or contact us [here](mailto:sharmabhee@gmail.com).
+
+---
 
 Pre-print: Coming Soon!
 
@@ -114,7 +125,7 @@ You can cite our work as:
 ```sh
 @unpublished{sharma2021DRIFT ,
 author = {Abheesht Sharma and Gunjan Chhablani and Harshit Pandey and Rajaswa Patil},
-title = {DRIFT: A Tool for Diachronic Analysis of Scientific Articles},
+title = {DRIFT: A Tool for Diachronic Analysis of Scientific Literature},
 note = {Under Review at EMNLP 2021 (Demo Track)},
 year = {2021}
 }
@@ -122,5 +133,5 @@ year = {2021}
 OR
 
 ```sh
-A. Sharma, G. Chhablani, H. Pandey, R. Patil, "DRIFT: A Tool for Diachronic Analysis of Scientific Articles", Under Review at EMNLP 2021 (Demo Track), 2021.
+A. Sharma, G. Chhablani, H. Pandey, R. Patil, "DRIFT: A Tool for Diachronic Analysis of Scientific Literature", Under Review at EMNLP 2021 (Demo Track), 2021.
 ```
