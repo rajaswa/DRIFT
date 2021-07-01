@@ -229,7 +229,7 @@ The user has to select a word and click on ```Generate Dataframe```. This gives 
 
 #### Keyword Visualisation
 
-Here, we use the [YAKE Keyword Extraction](https://www.sciencedirect.com/science/article/abs/pii/S0020025519308588) method to extract keywords.
+Here, we use the [YAKE Keyword Extraction](https://www.sciencedirect.com/science/article/abs/pii/S0020025519308588) method to extract keywords. You can read more about YAKE [here](https://amitness.com/keyphrase-extraction/).
 
 In our code, we use an [open source implementation](https://github.com/LIAAD/yake) of YAKE.
 
