@@ -1,22 +1,32 @@
 import os
 from itertools import islice
 
+import nltk
 import numpy as np
 import pandas as pd
 import streamlit as st
 import yake
-import nltk
-from nltk import word_tokenize, FreqDist, ngrams
+from nltk import FreqDist, ngrams, word_tokenize
 from sklearn.feature_extraction.text import TfidfVectorizer
+
 
 @st.cache(persist=eval(os.getenv("PERSISTENT")))
 def get_tfidf_features(sentences, sort=True, filter_pos_tags=[]):
     new_text = sentences
-    if filter_pos_tags!=[]:
-        new_text = ''
+    if filter_pos_tags != []:
+        new_text = ""
         pos_tags = get_stanford_tags(sentences)
         for sentence in pos_tags:
-            new_text+=' '.join([word for word, word_class in sentence if word_class in filter_pos_tags])+"\n"        
+            new_text += (
+                " ".join(
+                    [
+                        word
+                        for word, word_class in sentence
+                        if word_class in filter_pos_tags
+                    ]
+                )
+                + "\n"
+            )
 
     lines = new_text.split("\n")
     vectorizer = TfidfVectorizer()
@@ -31,6 +41,7 @@ def get_tfidf_features(sentences, sort=True, filter_pos_tags=[]):
         result_dict = {k: v for k, v in result_dict_tuple}
     return result_dict
 
+
 from .misc import length_removed_keywords, remove_keywords_util
 
 
@@ -42,6 +53,7 @@ def get_stanford_tags(sentences):
         pos_tags.append(pos_tagged)
     return pos_tags
 
+
 def find_ngrams_for_sentences(sentences, n=1):
     sentence_list = sentences.split("\n")
     ngrams_list = []
@@ -49,14 +61,24 @@ def find_ngrams_for_sentences(sentences, n=1):
         ngrams_list += list(ngrams(sentence.split(), n))
     return ngrams_list
 
+
 @st.cache(persist=eval(os.getenv("PERSISTENT")))
 def find_freq(text, n=1, sort=False, filter_pos_tags=[]):
     new_text = text
-    if filter_pos_tags!=[]:
-        new_text = ''
+    if filter_pos_tags != []:
+        new_text = ""
         pos_tags = get_stanford_tags(text)
         for sentence in pos_tags:
-            new_text+=' '.join([word for word, word_class in sentence if word_class in filter_pos_tags])+"\n"        
+            new_text += (
+                " ".join(
+                    [
+                        word
+                        for word, word_class in sentence
+                        if word_class in filter_pos_tags
+                    ]
+                )
+                + "\n"
+            )
 
     ngrams_lst = find_ngrams_for_sentences(new_text, n)
     gram_count_mapping = dict(FreqDist(ngrams_lst))
@@ -68,9 +90,12 @@ def find_freq(text, n=1, sort=False, filter_pos_tags=[]):
         gram_count_mapping = {k: v for k, v in sorted_gram_count_tuple}
     return gram_count_mapping
 
+
 @st.cache(persist=eval(os.getenv("PERSISTENT")))
 def find_norm_freq(text, n=1, sort=False, filter_pos_tags=[]):
-    gram_count_mapping = find_freq(text=text, n=n, sort=sort, filter_pos_tags=filter_pos_tags)
+    gram_count_mapping = find_freq(
+        text=text, n=n, sort=sort, filter_pos_tags=filter_pos_tags
+    )
     norm_factor = sum(list(gram_count_mapping.values()))
     gram_count_mapping = {k: v / norm_factor for k, v in gram_count_mapping.items()}
     return gram_count_mapping
@@ -79,7 +104,9 @@ def find_norm_freq(text, n=1, sort=False, filter_pos_tags=[]):
 @st.cache(persist=eval(os.getenv("PERSISTENT")))
 def find_productivity(words, text, n=2, normalize=False, filter_pos_tags=[]):
     if normalize:
-        fdist = find_norm_freq(text=text, n=n, sort=True, filter_pos_tags=filter_pos_tags)
+        fdist = find_norm_freq(
+            text=text, n=n, sort=True, filter_pos_tags=filter_pos_tags
+        )
     else:
         fdist = find_freq(text=text, n=n, sort=True, filter_pos_tags=filter_pos_tags)
 
@@ -108,18 +135,34 @@ def find_productivity(words, text, n=2, normalize=False, filter_pos_tags=[]):
 
 
 @st.cache(persist=eval(os.getenv("PERSISTENT")))
-def freq_top_k(text, top_k=20, n=1, normalize=False, filter_pos_tags=[], tfidf=False, remove_keywords_path="./removed_keywords/removedphrases.txt"):
+def freq_top_k(
+    text,
+    top_k=20,
+    n=1,
+    normalize=False,
+    filter_pos_tags=[],
+    tfidf=False,
+    remove_keywords_path="./removed_keywords/removedphrases.txt",
+):
     if tfidf:
-        sorted_gram_count_mapping = get_tfidf_features(text, sort=True, filter_pos_tags=filter_pos_tags)
+        sorted_gram_count_mapping = get_tfidf_features(
+            text, sort=True, filter_pos_tags=filter_pos_tags
+        )
     else:
         if normalize:
-            sorted_gram_count_mapping = find_norm_freq(text, n=n, sort=True, filter_pos_tags=filter_pos_tags)
+            sorted_gram_count_mapping = find_norm_freq(
+                text, n=n, sort=True, filter_pos_tags=filter_pos_tags
+            )
         else:
-            sorted_gram_count_mapping = find_freq(text, n=n, sort=True, filter_pos_tags=filter_pos_tags)
-    
+            sorted_gram_count_mapping = find_freq(
+                text, n=n, sort=True, filter_pos_tags=filter_pos_tags
+            )
+
     if remove_keywords_path is not None and os.path.isfile(remove_keywords_path):
-        sorted_gram_count_mapping = remove_keywords_util(remove_keywords_path, sorted_gram_count_mapping)
-    
+        sorted_gram_count_mapping = remove_keywords_util(
+            remove_keywords_path, sorted_gram_count_mapping
+        )
+
     if top_k < len(sorted_gram_count_mapping):
         sorted_gram_count_mapping = dict(
             islice(sorted_gram_count_mapping.items(), top_k)

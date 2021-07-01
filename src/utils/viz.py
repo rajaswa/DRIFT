@@ -73,8 +73,6 @@ def pyplot_scatter_embeddings(
     return fig
 
 
-
-
 def plotly_scatter(
     x, y, color_by_values=None, text_annot=None, title=None, save_path=None
 ):
@@ -279,18 +277,26 @@ def embs_for_plotting(word, year_path, top_k_sim=10, skip_words=[]):
         keywords,
         embs,
         sim_matrix,
+        unk_sim,
+        unk_emb,
     ) = similarity_acc_matrix.compute_similarity_matrix_keywords(
-        model_path=year_path, keywords=[], all_model_vectors=True
+        model_path=year_path, keywords=[], all_model_vectors=True, return_unk_sim=True
     )
-    word_idx = keywords.index(word)
-    sim_vector = sim_matrix[word_idx]
-    top_sims = np.argsort(sim_vector)
-    top_sims = top_sims[-top_k_sim:]
 
     words = []
     word_embs = []
     words.append(word + "_" + year)
-    word_embs.append(embs[word_idx])
+
+    if word in keywords:
+        word_idx = keywords.index(word)
+        sim_vector = sim_matrix[word_idx]
+        word_embs.append(embs[word_idx])
+    else:
+        sim_vector = unk_sim.reshape(-1)
+        word_embs.append(unk_emb)
+    top_sims = np.argsort(sim_vector)
+    top_sims = top_sims[-top_k_sim:]
+
     skip_words_modified = [skip_word + "_" + year for skip_word in skip_words]
     for top_sim in top_sims:
         if keywords[top_sim] == word or keywords[top_sim] in skip_words_modified:

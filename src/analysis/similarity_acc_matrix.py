@@ -9,7 +9,10 @@ from ..utils import get_word_embeddings
 
 @st.cache(persist=eval(os.getenv("PERSISTENT")))
 def compute_similarity_matrix_keywords(
-    model_path, keywords=[], all_model_vectors=False
+    model_path,
+    keywords=[],
+    all_model_vectors=False,
+    return_unk_sim=False,
 ):
     keywords, word_embs = get_word_embeddings(
         model_path, keywords, all_model_vectors=all_model_vectors, return_words=True
@@ -17,7 +20,14 @@ def compute_similarity_matrix_keywords(
     word_embs = np.array(word_embs)
     sim_matrix = cosine_similarity(word_embs, word_embs)
 
-    return keywords, word_embs, sim_matrix
+    if return_unk_sim:
+        unk_emb = np.mean(
+            [word_embs[i] for i in range(word_embs.shape[0])], axis=0
+        ).reshape(1, -1)
+        sim_with_unk = cosine_similarity(unk_emb, word_embs)
+        return keywords, word_embs, sim_matrix, sim_with_unk, unk_emb.reshape(-1)
+    else:
+        return keywords, word_embs, sim_matrix
 
 
 @st.cache(persist=eval(os.getenv("PERSISTENT")))
@@ -30,7 +40,6 @@ def compute_acceleration_matrix(
     skip_duplicates=True,
 ):
     acceleration_matrix = sim_matrix_2 - sim_matrix_1
-
     acc_matrix_sorted = (-acceleration_matrix).argsort(axis=None)
     acc_matrix_indices = np.unravel_index(acc_matrix_sorted, acceleration_matrix.shape)
     sorted_indices = np.vstack(acc_matrix_indices).T
