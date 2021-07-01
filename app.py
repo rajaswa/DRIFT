@@ -222,9 +222,9 @@ ANALYSIS_METHODS = {
         ABOUT='''A word cloud, or tag cloud, is a textual data visualization which allows anyone to see in a single glance the words which have the highest frequency within a given body of text. Word clouds are typically used as a tool for processing, analyzing and disseminating qualitative sentiment data.
 
 References:
-- https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=6758829
-- https://amueller.github.io/word_cloud/generated/wordcloud.WordCloud.html
-- https://www.freewordcloudgenerator.com
+- [Word Cloud Explorer: Text Analytics based on Word Clouds](https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=6758829)
+- [wordcloud Package](https://amueller.github.io/word_cloud/generated/wordcloud.WordCloud.html)
+- [Free Word Cloud Generator](https://www.freewordcloudgenerator.com)
 ''',
         SUMMARY="WordClouds are visual representation of text data, used to depict the most frequent words in the corpus. The depictions are usually single words, and the frequency is shown with font size.",
         COMPONENTS=dict(
