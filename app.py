@@ -402,10 +402,10 @@ $$
 
 Below, we display the top few pairs between the given start and end year in  dataframe, then one can select years and then select word-pairs in the plot parameters expander. A reduced dimension plot is displayed.
 
-**Note**: They suggest using skip-gram method over CBOW for the model. The use t-SNE representation to view the embeddings. But their way of aligning the embeddings is different. They also use some stability measure to find the best Word2Vec model. The also use *Word2Phrase* which we are planning to add soon.
+**Note**: They suggest using skip-gram method over CBOW for the model. They use t-SNE representation to view the embeddings. But their way of aligning the embeddings is different. They also use some stability measure to find the best Word2Vec model. The also use *Word2Phrase* which we are planning to add soon.
 
 ''',
-        SUMMARY="A pair of words converges/diverges over time. Acceleration is a measure of convergence of a pair of keywords. This module identifies fast converging keywords and depicts this convergence on a t-SNE plot.",
+        SUMMARY="A pair of words converges/diverges over time. Acceleration is a measure of convergence of a pair of keywords. This module identifies fast converging keywords and depicts this convergence on a 2-D plot.",
         COMPONENTS=dict(
             note=dict(
                 component_var=figure1_block,
