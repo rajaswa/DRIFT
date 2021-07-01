@@ -277,13 +277,6 @@ We train LDA on a corpus where each document contains the abstracts of a particu
 In the first bar graph, we show how a year can be decomposed into topics. The graphs below the first one show a decomposition of the relevant topics.
 
 
-## Tasks
-
-- [x] Add Usage.
-- [x] Add Citation(s).
-- [x] Update `README.md`.
-- [x] Add Directory Structure.
-
 ## Citation
 
 You can cite our work as:
