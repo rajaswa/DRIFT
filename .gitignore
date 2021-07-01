@@ -128,7 +128,6 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-data/*
 diachronic-env*
 model*
 twec/*
