@@ -129,9 +129,13 @@ In short, this paper uses normalized term frequency and term producitvity as the
 - **Term Frequency**: This is the normalized frequency of a given term in a given year.
 - **Term Productivity**: This is a measure of the ability of the concept to produce new multi-word terms. In our case we use bigrams. For each year *y* and single-word term *t*, and associated *n* multi-word terms *m*, the productivity is given by the entropy:
 
-![equation](https://latex.codecogs.com/svg.latex?%5Csmall%20e%28t%2Cy%29%20%3D%20-%20%5Csum_%7Bi%3D1%7D%5E%7Bn%7D%20%5Clog_%7B2%7D%28p_%7Bm_%7Bi%7D%2Cy%7D%29.p_%7Bm_%7Bi%7D%2Cy%7D)
+<p align="center">
+  <img src="https://latex.codecogs.com/svg.latex?%5Csmall%20e%28t%2Cy%29%20%3D%20-%20%5Csum_%7Bi%3D1%7D%5E%7Bn%7D%20%5Clog_%7B2%7D%28p_%7Bm_%7Bi%7D%2Cy%7D%29.p_%7Bm_%7Bi%7D%2Cy%7D" alt="prod_plot_1"/>
+</p>
 
-![equation](https://latex.codecogs.com/svg.latex?%5Csmall%20p_%7Bm%2Cy%7D%20%3D%20%5Cfrac%7Bf%28m%29%7D%7B%5Csum_%7Bi%3D1%7D%5E%7Bn%7Df%28m_%7Bi%7D%29%7D)
+<p align="center">
+  <img src="https://latex.codecogs.com/svg.latex?%5Csmall%20p_%7Bm%2Cy%7D%20%3D%20%5Cfrac%7Bf%28m%29%7D%7B%5Csum_%7Bi%3D1%7D%5E%7Bn%7Df%28m_%7Bi%7D%29%7D" alt="prod_plot_2"/>
+</p>
 
 
 Based on these two measures, they hypothesize three kinds of terms:
@@ -151,9 +155,13 @@ This plot is based on the word-pair acceleration over time. Our inspiration for 
 Acceleration is a metric which calculates how quickly the word embeddings for a pair of word get close together or farther apart. If they are getting closer together, it means these two terms have started appearing more frequently in similar contexts, which leads to similar embeddings.
 In the paper, it is described as:
 
-![equation](https://latex.codecogs.com/svg.latex?%5Csmall%20acceleration%28w_%7Bi%7D%2C%20w_%7Bj%7D%29%20%3D%20sim%28w_%7Bi%7D%2C%20w_%7Bj%7D%29%5E%7Bt&plus;1%7D%20-%20sim%28w_%7Bi%7D%2C%20w_%7Bj%7D%29%5E%7Bt%7D)
+<p align="center">
+  <img src="https://latex.codecogs.com/svg.latex?%5Csmall%20acceleration%28w_%7Bi%7D%2C%20w_%7Bj%7D%29%20%3D%20sim%28w_%7Bi%7D%2C%20w_%7Bj%7D%29%5E%7Bt&plus;1%7D%20-%20sim%28w_%7Bi%7D%2C%20w_%7Bj%7D%29%5E%7Bt%7D" alt="acc_plot_1"/>
+</p>
 
-![equation](https://latex.codecogs.com/svg.latex?%5Csmall%20sim%28w_%7Bi%7D%2C%20w_%7Bj%7D%29%20%3D%20cosine%20%28u_%7Bw_%7Bi%7D%7D%2C%20u_%7Bw_%7Bj%7D%7D%29%20%3D%20%5Cfrac%7Bu_%7Bw_%7Bi%7D%7D.u_%7Bw_%7Bj%7D%7D%7D%7B%5Cleft%5ClVert%20u_%7Bw_%7Bi%7D%7D%5Cright%5CrVert%20.%20%5Cleft%5ClVert%20u_%7Bw_%7Bj%7D%7D%5Cright%5CrVert%7D)
+<p align="center">
+  <img src="https://latex.codecogs.com/svg.latex?%5Csmall%20sim%28w_%7Bi%7D%2C%20w_%7Bj%7D%29%20%3D%20cosine%20%28u_%7Bw_%7Bi%7D%7D%2C%20u_%7Bw_%7Bj%7D%7D%29%20%3D%20%5Cfrac%7Bu_%7Bw_%7Bi%7D%7D.u_%7Bw_%7Bj%7D%7D%7D%7B%5Cleft%5ClVert%20u_%7Bw_%7Bi%7D%7D%5Cright%5CrVert%20.%20%5Cleft%5ClVert%20u_%7Bw_%7Bj%7D%7D%5Cright%5CrVert%7D" alt="acc_plot_2"/>
+</p>
 
 
 Below, we display the top few pairs between the given start and end year in  dataframe, then one can select years and then select word-pairs in the plot parameters expander. A reduced dimension plot is displayed.
@@ -167,9 +175,14 @@ This plot represents the change in meaning of a word over time. This shift is re
 To find the drift of a word, we calculate the distance between the embeddings of the word in the final year and in the initial year. We find the drift for all words and sort them in descending order to find the most drifted words.
 We give an option to use one of two distance metrics: Euclidean Distance and Cosine Distance.
 
-![equation](https://latex.codecogs.com/svg.latex?%5Csmall%20euclidean%5C_distance%20%3D%20%5Csqrt%7B%5Cvec%7Bu%7D.%5Cvec%7Bu%7D%20-%202%20%5Ctimes%20%5Cvec%7Bu%7D.%5Cvec%7Bv%7D%20&plus;%20%5Cvec%7Bv%7D.%5Cvec%7Bv%7D%7D)
+<p align="center">
+  <img src="https://latex.codecogs.com/svg.latex?%5Csmall%20euclidean%5C_distance%20%3D%20%5Csqrt%7B%5Cvec%7Bu%7D.%5Cvec%7Bu%7D%20-%202%20%5Ctimes%20%5Cvec%7Bu%7D.%5Cvec%7Bv%7D%20&plus;%20%5Cvec%7Bv%7D.%5Cvec%7Bv%7D%7D" alt="sem_drift_1"/>
+</p>
 
-![equation](https://latex.codecogs.com/svg.latex?%5Csmall%20cosine%5C_distance%20%3D%201%20-%20%5Cfrac%7B%5Cvec%7Bu%7D.%5Cvec%7Bv%7D%7D%7B%7C%7C%5Cvec%7Bu%7D%7C%7C%7C%7C%5Cvec%7Bv%7D%7C%7C%7D)
+<p align="center">
+  <img src="https://latex.codecogs.com/svg.latex?%5Csmall%20cosine%5C_distance%20%3D%201%20-%20%5Cfrac%7B%5Cvec%7Bu%7D.%5Cvec%7Bv%7D%7D%7B%7C%7C%5Cvec%7Bu%7D%7C%7C%7C%7C%5Cvec%7Bv%7D%7C%7C%7D" alt="sem_drift_2"/>
+</p>
+
 
 We plot top-K (sim.) most similar words around the two representations of the selected word.
 
@@ -192,9 +205,13 @@ This plot is based on the word-pair acceleration over time. Our inspiration for 
 Acceleration is a metric which calculates how quickly the word embeddings for a pair of word get close together or farther apart. If they are getting closer together, it means these two terms have started appearing more frequently in similar contexts, which leads to similar embeddings.
 In the paper, it is described as:
 
-![equation](https://latex.codecogs.com/svg.latex?%5Csmall%20acceleration%28w_%7Bi%7D%2C%20w_%7Bj%7D%29%20%3D%20sim%28w_%7Bi%7D%2C%20w_%7Bj%7D%29%5E%7Bt&plus;1%7D%20-%20sim%28w_%7Bi%7D%2C%20w_%7Bj%7D%29%5E%7Bt%7D)
+<p align="center">
+  <img src="https://latex.codecogs.com/svg.latex?%5Csmall%20acceleration%28w_%7Bi%7D%2C%20w_%7Bj%7D%29%20%3D%20sim%28w_%7Bi%7D%2C%20w_%7Bj%7D%29%5E%7Bt&plus;1%7D%20-%20sim%28w_%7Bi%7D%2C%20w_%7Bj%7D%29%5E%7Bt%7D" alt="acc_hm_1"/>
+</p>
 
-![equation](https://latex.codecogs.com/svg.latex?%5Csmall%20sim%28w_%7Bi%7D%2C%20w_%7Bj%7D%29%20%3D%20cosine%20%28u_%7Bw_%7Bi%7D%7D%2C%20u_%7Bw_%7Bj%7D%7D%29%20%3D%20%5Cfrac%7Bu_%7Bw_%7Bi%7D%7D.u_%7Bw_%7Bj%7D%7D%7D%7B%5Cleft%5ClVert%20u_%7Bw_%7Bi%7D%7D%5Cright%5CrVert%20.%20%5Cleft%5ClVert%20u_%7Bw_%7Bj%7D%7D%5Cright%5CrVert%7D)
+<p align="center">
+  <img src="https://latex.codecogs.com/svg.latex?%5Csmall%20sim%28w_%7Bi%7D%2C%20w_%7Bj%7D%29%20%3D%20cosine%20%28u_%7Bw_%7Bi%7D%7D%2C%20u_%7Bw_%7Bj%7D%7D%29%20%3D%20%5Cfrac%7Bu_%7Bw_%7Bi%7D%7D.u_%7Bw_%7Bj%7D%7D%7D%7B%5Cleft%5ClVert%20u_%7Bw_%7Bi%7D%7D%5Cright%5CrVert%20.%20%5Cleft%5ClVert%20u_%7Bw_%7Bj%7D%7D%5Cright%5CrVert%7D" alt="acc_hm_2"/>
+</p>
 
 For all the selected keywords, we display a heatmap, where the brightness of the colour determines the value of the acceleration between that pair, i.e., the brightness is directly proportional to the acceleration value.
 
@@ -218,7 +235,10 @@ In our code, we use an [open source implementation](https://github.com/LIAAD/yak
 
 **NOTE:** Yake returns scores which are indirectly proportional to the keyword importance. Hence, we do the following to report the final scores:
 
-![equation](https://latex.codecogs.com/svg.latex?%5Csmall%20new%5C_score%20%3D%20%5Cfrac%7B1%7D%7B10%5E%7B5%7D%20%5Ctimes%20yake%5C_score%7D)
+
+<p align="center">
+  <img src="https://latex.codecogs.com/svg.latex?%5Csmall%20new%5C_score%20%3D%20%5Cfrac%7B1%7D%7B10%5E%7B5%7D%20%5Ctimes%20yake%5C_score%7D" alt="keyword_viz"/>
+</p>
 
 
 #### LDA Topic Modelling
