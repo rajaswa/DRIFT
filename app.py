@@ -873,7 +873,17 @@ The user has to select a word and click on ```Generate Dataframe```. This gives 
         ),
     ),
     "Keyword Visualisation": dict(
-        ABOUT="",
+        ABOUT=r'''Here, we use the [YAKE Keyword Extraction](https://www.sciencedirect.com/science/article/abs/pii/S0020025519308588) method to extract keywords.
+
+In our code, we use an [open source implementation](https://github.com/LIAAD/yake) of YAKE.
+
+**NOTE:** Yake returns scores which are indirectly proportional to the keyword importance. Hence, we do the following to report the final scores:
+
+$$
+new\_score = \frac{1}{10^{5} \times yake\_score}
+$$
+
+''',
         SUMMARY="Bar Graph visualisations for keywords (words vs score).",
         COMPONENTS=dict(
             data_path=dict(
@@ -912,7 +922,14 @@ The user has to select a word and click on ```Generate Dataframe```. This gives 
         ),
     ),
     "LDA Topic Modelling": dict(
-        ABOUT="",
+        ABOUT=r'''[Latent Dirichlet Allocation](https://www.jmlr.org/papers/volume3/blei03a/blei03a.pdf) is a generative probabilistic model for an assortment of documents, generally used for topic modelling and extraction. LDA clusters the text data into imaginary topics. 
+
+Every topic can be represented as a probability distribution over ngrams and every document can be represented as a probability distribution over these generated topics. 
+
+We train LDA on a corpus where each document contains the abstracts of a particular year. We express every year as a probability distribution of topics.
+
+In the first bar graph, we show how a year can be decomposed into topics. The graphs below the first one show a decomposition of the relevant topics.
+''',
         SUMMARY="LDA clusters the text data into imaginary topics. Every topic can be represented as a probability distribution over ngrams and every document can be represented as a probability distribution over these generated topics.",
         COMPONENTS=dict(
             data_path=dict(
