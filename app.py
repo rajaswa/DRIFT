@@ -501,7 +501,22 @@ Below, we display the top few pairs between the given start and end year in  dat
         ),
     ),
     "Semantic Drift": dict(
-        ABOUT="",
+        ABOUT=r'''This plot represents the change in meaning of a word over time. This shift is represented on a 2-dimensional representation of the embedding space.
+To find the drift of a word, we calculate the distance between the embeddings of the word in the final year and in the initial year. We find the drift for all words and sort them in descending order to find the most drifted words.
+We give an option to use one of two distance metrics: Euclidean Distance and Cosine Distance.
+
+$$
+    euclidean\_distance = \sqrt{\vec{u}.\vec{u} - 2 \times \vec{u}.\vec{v} + \vec{v}.\vec{v}} \\
+    cosine\_distance = 1 - \frac{\vec{u}.\vec{v}}{||\vec{u}||||\vec{v}||}    
+$$
+
+We plot top-K (sim.) most similar words around the two representations of the selected word.
+
+In the ```Plot Parameters``` expander, the user can select the range of years over which the drift will be computed. He/She can also select the dimensionality reduction method for plotting the embeddings.
+
+Below the graph, we provide a list of most drifted words (from the top-K keywords). The user can also choose a custom word.
+
+''',
         SUMMARY="Computing the semantic drift of words, i.e.,  change in meaning, by finding the Euclidean/Cosine Distance between two representations of the word from different years and showing the drift on a t-SNE plot",
         COMPONENTS=dict(
             data_path=dict(
@@ -591,7 +606,11 @@ Below, we display the top few pairs between the given start and end year in  dat
         ),
     ),
     "Tracking Clusters": dict(
-        ABOUT="",
+        ABOUT=r'''Word meanings change over time. They come closer or drift apart. In a certain year, words are clumped together, i.e., they belong to one cluster. But over time, clusters can break into two/coalesce together to form one. Unlike the previous module which tracks movement of one word at a time, here, we track the movement of clusters.
+We plot the formed clusters for all the years lying in the selected range of years.
+**Note:** We give an option to use one of two libraries for clustering: sklearn or faiss. faiss' KMeans implementation is around 10 times faster than sklearn's.
+
+''',
         SUMMARY="Cluster word embeddings for different years and track how these clusters change over a time period.",
         COMPONENTS=dict(
             data_path=dict(
@@ -682,7 +701,20 @@ Below, we display the top few pairs between the given start and end year in  dat
         ),
     ),
     "Acceleration Heatmap": dict(
-        ABOUT="",
+        ABOUT=r'''This plot is based on the word-pair acceleration over time. Our inspiration for this method is [this paper](https://sci-hub.se/10.1109/ijcnn.2019.8852140).
+Acceleration is a metric which calculates how quickly the word embeddings for a pair of word get close together or farther apart. If they are getting closer together, it means these two terms have started appearing more frequently in similar contexts, which leads to similar embeddings.
+In the paper, it is described as:
+
+$$
+    acceleration(w_{i}, w_{j}) = sim(w_{i}, w_{j})^{t+1} - sim(w_{i}, w_{j})^{t}\\
+    sim(w_{i}, w_{j}) = cosine (u_{w_{i}}, u_{w_{j}}) = \frac{u_{w_{i}}.u_{w_{j}}}{\left\lVert u_{w_{i}}\right\rVert . \left\lVert u_{w_{j}}\right\rVert}
+$$
+
+For all the selected keywords, we display a heatmap, where the brightness of the colour determines the value of the acceleration between that pair, i.e., the brightness is directly proportional to the acceleration value.
+
+**Note**: They suggest using skip-gram method over CBOW for the model.
+
+''',
         SUMMARY="A pair of words converges/diverges over time. Acceleration is a measure of convergence of a pair of keywords. This module identifies fast converging keywords and depicts the convergence using a heatmap.",
         COMPONENTS=dict(
             note=dict(
@@ -757,7 +789,12 @@ Below, we display the top few pairs between the given start and end year in  dat
         ),
     ),
     "Track Trends with Similarity": dict(
-        ABOUT="",
+        ABOUT=r'''In this method, we wish to chart the trajectory of a word/topic from year 1 to year 2. 
+
+To accomplish this, we allow the user to pick a word from year 1. At the same time, we ask the user to provide the desired stride. We search for the most similar word in the next stride years. We keep doing this iteratively till we reach year 2, updating the word at each step.
+
+The user has to select a word and click on ```Generate Dataframe```. This gives a list of most similar words in the next stride years. The user can now iteratively select the next word from the drop-down till the final year is reached.
+''',
         SUMMARY="We identify trends by recursively finding most similar words over years. In this way, we are able to chart the trajectory of a word from one year to another.",
         COMPONENTS=dict(
             data_path=dict(
