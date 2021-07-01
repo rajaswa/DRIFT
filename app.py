@@ -119,8 +119,8 @@ def plot(obj, col1, col2, typ="plotly", key="key"):
                 obj.save(save_name)
 
 
-def display_caching_option():
-    col1, col2 = st.beta_columns(2)
+def display_caching_option(element):
+    col1, col2 = element.beta_columns(2)
     if col1.checkbox("Persistent Caching", value=False):
         caching._clear_mem_cache()
         os.environ["PERSISTENT"] = "True"
@@ -157,11 +157,14 @@ def generate_components_from_dict(comp_dict, variable_params):
 
 def generate_analysis_components(analysis_type, variable_params):
     sidebar_summary_text.write(ANALYSIS_METHODS[analysis_type]["SUMMARY"])
-    figure1_title.header(analysis_type)
 
     vars_ = generate_components_from_dict(
         ANALYSIS_METHODS[analysis_type]["COMPONENTS"], variable_params
     )
+    
+    figure1_title.header(analysis_type)
+    with about.beta_expander("About"):
+        st.markdown(ANALYSIS_METHODS[analysis_type]["ABOUT"], unsafe_allow_html=True)
     return vars_
 
 
@@ -180,12 +183,12 @@ main = st.beta_container()
 
 title = main.empty()
 settings = main.empty()
-about = main.empty()
 
 figure1_block = main.beta_container()
 figure2_block = main.beta_container()
 
 figure1_title = figure1_block.empty()
+about = figure1_block.empty()
 figure1_params = figure1_block.beta_container()
 figure1_plot = figure1_block.beta_container()
 
@@ -197,6 +200,7 @@ sidebar = st.sidebar.beta_container()
 sidebar_image = sidebar.empty()
 sidebar_title = sidebar.empty()
 sidebar_mode = sidebar.empty()
+sidebar_settings = sidebar.beta_container()
 sidebar_analysis_type = sidebar.empty()
 sidebar_summary_header = sidebar.empty()
 sidebar_summary_text = sidebar.empty()
@@ -215,8 +219,14 @@ COMMON = dict(
 
 ANALYSIS_METHODS = {
     "WordCloud": dict(
-        ABOUT="",
-        SUMMARY="A tag cloud is a novelty visual representation of text data, typically used to depict keyword metadata on websites, or to visualize free form text. Tags are usually single words, and the importance of each tag is shown with font size or color.",
+        ABOUT='''A word cloud, or tag cloud, is a textual data visualization which allows anyone to see in a single glance the words which have the highest frequency within a given body of text. Word clouds are typically used as a tool for processing, analyzing and disseminating qualitative sentiment data.
+
+References:
+- https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=6758829
+- https://amueller.github.io/word_cloud/generated/wordcloud.WordCloud.html
+- https://www.freewordcloudgenerator.com
+''',
+        SUMMARY="WordClouds are visual representation of text data, used to depict the most frequent words in the corpus. The depictions are usually single words, and the frequency is shown with font size.",
         COMPONENTS=dict(
             data_path=dict(
                 component_var=sidebar_parameters,
@@ -293,7 +303,28 @@ ANALYSIS_METHODS = {
         ),
     ),
     "Productivity/Frequency Plot": dict(
-        ABOUT="",
+        ABOUT=r'''Our main reference for this method is [this paper](https://www.aclweb.org/anthology/W16-2101.pdf).
+In short, this paper uses normalized term frequency and term producitvity as their measures.
+
+- **Term Frequency**: This is the normalized frequency of a given term in a given year.
+- **Term Productivity**: This is a measure of the ability of the concept to produce new multi-word terms. In our case we use bigrams. For each year *y* and single-word term *t*, and associated *n* multi-word terms *m*, the productivity is given by the entropy:
+    
+    $$
+        e(t,y) = - \sum_{i=1}^{n} \log_{2}(p_{m_{i},y}).p_{m_{i},y}
+        \\
+        p_{m,y} = \frac{f(m)}{\sum_{i=1}^{n}f(m_{i})}
+    $$
+
+Based on these two measures, they hypothesize three kinds of terms:
+- **Growing Terms**: Those which have increasing frequency and productivity in the recent years.
+- **Consolidated Terms**: Those that are growing in frequency, but not in productivity.
+- **Terms in Decline**: Those which have reached an upper bound of productivity and are being used less in terms of frequency.
+
+Then, they perform clustering of the terms based on their frequency and productivity curves over the years to test their hypothesis.
+They find that the clusters formed show similar trends as expected.
+
+**Note**: They also evaluate quality of their clusters using pseudo-labels, but we do not use any automated labels here. They also try with and without double-counting multi-word terms, but we stick to double-counting. They suggest it is more explanable.
+''',
         SUMMARY="Term productivity, that is, a measure for the ability of a concept (lexicalised as a singleword term) to produce new, subordinated concepts (lexicalised as multi-word terms).",
         COMPONENTS=dict(
             data_path=dict(
@@ -360,7 +391,20 @@ ANALYSIS_METHODS = {
         ),
     ),
     "Acceleration Plot": dict(
-        ABOUT="",
+        ABOUT=r'''This plot is based on the word-pair acceleration over time. Our inspiration for this method is [this paper](https://sci-hub.se/10.1109/ijcnn.2019.8852140).
+Acceleration is a metric which calculates how quickly the word embeddings for a pair of word get close together or farther apart. If they are getting closer together, it means these two terms have started appearing more frequently in similar contexts, which leads to similar embeddings.
+In the paper, it is described as:
+
+$$
+    acceleration(w_{i}, w_{j}) = sim(w_{i}, w_{j})^{t+1} - sim(w_{i}, w_{j})^{t}\\
+    sim(w_{i}, w_{j}) = cosine (u_{w_{i}}, u_{w_{j}}) = \frac{u_{w_{i}}.u_{w_{j}}}{\left\lVert u_{w_{i}}\right\rVert . \left\lVert u_{w_{j}}\right\rVert}
+$$
+
+Below, we display the top few pairs between the given start and end year in  dataframe, then one can select years and then select word-pairs in the plot parameters expander. A reduced dimension plot is displayed.
+
+**Note**: They suggest using skip-gram method over CBOW for the model. The use t-SNE representation to view the embeddings. But their way of aligning the embeddings is different. They also use some stability measure to find the best Word2Vec model. The also use *Word2Phrase* which we are planning to add soon.
+
+''',
         SUMMARY="A pair of words converges/diverges over time. Acceleration is a measure of convergence of a pair of keywords. This module identifies fast converging keywords and depicts this convergence on a t-SNE plot.",
         COMPONENTS=dict(
             note=dict(
@@ -992,11 +1036,11 @@ sidebar_image.markdown(
     unsafe_allow_html=True,
 )
 
-with settings.beta_expander("App Settings"):
-    display_caching_option()
+# with settings.beta_expander("App Settings"):
+#     display_caching_option()
 
 mode = sidebar_mode.radio(label="Mode", options=["Train", "Analysis"], index=1)
-
+display_caching_option(sidebar_settings)
 if mode == "Train":
     variable_params = get_default_args(train)
     variable_params.update(get_default_args(preprocess_and_save))

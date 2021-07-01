@@ -139,7 +139,7 @@ def freq_top_k(
     text,
     top_k=20,
     n=1,
-    normalize=False,
+    normalize=True,
     filter_pos_tags=[],
     tfidf=False,
     remove_keywords_path="./removed_keywords/removedphrases.txt",
