@@ -17,46 +17,50 @@
 
 </div>
 
-**DRIFT is A Tool for Diachronic Analysis of Scientific Literature**. We would love to know about any issues found on this repository. Please create an issue for any query, or contact us [here](mailto:sharmabhee@gmail.com).
+---
+
+## About
+
+**DRIFT is a tool for Diachronic Analysis of Scientific Literature**. The application offers **user-friendly** and **customizable utilities** for two modes: **[Training](https://github.com/rajaswa/DRIFT#train-mode)** and **[Analysis](https://github.com/rajaswa/DRIFT#analysis-mode)**. Currently, the application supports customizable training of diachronic word embeddings with the **[TWEC model](https://github.com/valedica/twec)**. The application supports a variety of analysis methods to monitor **trends and patterns of development in scientific literature**:
+
+1. [Word Cloud](https://github.com/rajaswa/DRIFT#word-cloud)
+2. [Productivity/Frequency Plot](https://github.com/rajaswa/DRIFT#productivityfrequency-plot)
+3. [Acceleration Plot](https://github.com/rajaswa/DRIFT#acceleration-plot)
+4. [Semantic Drift](https://github.com/rajaswa/DRIFT#semantic-drift)
+5. [Tracking Clusters](https://github.com/rajaswa/DRIFT#tracking-clusters)
+6. [Acceleration Heatmap](https://github.com/rajaswa/DRIFT#acceleration-heatmap)
+7. [Track Trends with Similarity](https://github.com/rajaswa/DRIFT#track-trends-with-similarity)
+8. [Keyword Visualisation](https://github.com/rajaswa/DRIFT#keyword-visualisation)
+9. [LDA Topic Modelling](https://github.com/rajaswa/DRIFT#lda-topic-modelling)
+
+**NOTE**: The [online demo](https://share.streamlit.io/gchhablani/drift/main/app.py) is hosted using [Streamlit sharing](https://docs.streamlit.io/en/stable/deploy_streamlit_app.html). This is a single-instance single-process deployment, accessible to all the visitors publicly **(avoid sharing sensitive information on the demo)**. Hence, **it is highly recommended to use your own independent local deployment of the application for a seamless and private experience. One can alternatively fork this repository and host it using [Streamlit sharing](https://docs.streamlit.io/en/stable/deploy_streamlit_app.html).**
+
+We would love to know about any issues found on this repository. Please submit an [issue](https://github.com/rajaswa/DRIFT/issues/new/choose) for any query, or contact us [here](mailto:sharmabhee@gmail.com).
 
 ---
 
-Pre-print: Coming Soon!
+## Setup
 
-## Abstract
+Clone the repository:
 
-
-## Updates
-- [26 June 2021]: Repository is about to go public!
-
-## Directory Structure
-
-You can find the structure of the repository (i.e., the sub-directories and files) [here](misc/DIRSTRUCTURE.md).
-
-## Usage
-
-### Setting Up
-
-Clone the repository.
-
-```sh
-git clone https://github.com/rajaswa/diachronic-analysis-acl-anthology.git
-cd diachronic-analysis-acl-anthology
+```bash
+git clone https://github.com/rajaswa/DRIFT.git
+cd DRIFT
 ```
 
-Install the requirements.
+Install the requirements:
 
-```sh
+```bash
 make install_req
 ```
 
-### Datasets
+## Data
 
-The dataset we have used for our analysis in the paper was scraped using the arXiv API. We scraped papers from the cs.CL subject. It is available [here](https://drive.google.com/drive/folders/1boRFknjKieEVWxansaoMTO_3YbMf6kr9?usp=sharing).
+The dataset we have used for our demo, and the analysis in the paper was scraped using the `arXiv API` (see [script](https://github.com/rajaswa/DRIFT/blob/main/crawl_arxiv.py)). We scraped papers from the `cs.CL` subject. This dataset is available [here](https://drive.google.com/drive/folders/1boRFknjKieEVWxansaoMTO_3YbMf6kr9?usp=sharing).
 
-The user can upload his/her own dataset. The unprocessed dataset should be present in the following format (as a json file):
+The user can upload their own dataset to the **DRIFT** application. The unprocessed dataset should be present in the following format (as a JSON file):
 
-```sh
+```python
 {
    <year_1>:[
       <paper_1>,
@@ -82,7 +86,7 @@ where ```year_x``` is a string (e.g., ```"1998"```), and ```paper_x``` is a dict
 
 
 
-```sh
+```python
 {
    "url":"http://arxiv.org/abs/cs/9809020v1",
    "date":"1998-09-15 23:49:32+00:00",
@@ -101,17 +105,18 @@ where ```year_x``` is a string (e.g., ```"1998"```), and ```paper_x``` is a dict
 
 The only important key is ```"abstract"```, which has the raw text. The user can name this key differently. See the ```Training``` section below for more details.
 
+---
+
+## Usage
 
 ### Launch the app
 
 To launch the app, run the following command from the terminal:
 
-```sh
+```bash
 streamlit run app.py
 
 ```
-
-The app has two modes: **Train** and **Analysis**.
 
 ### Train Mode
 
@@ -157,7 +162,7 @@ Based on these two measures, they hypothesize three kinds of terms:
 Then, they perform clustering of the terms based on their frequency and productivity curves over the years to test their hypothesis.
 They find that the clusters formed show similar trends as expected.
 
-**Note**: They also evaluate quality of their clusters using pseudo-labels, but we do not use any automated labels here. They also try with and without double-counting multi-word terms, but we stick to double-counting. They suggest it is more explanable.
+**NOTE**: They also evaluate quality of their clusters using pseudo-labels, but we do not use any automated labels here. They also try with and without double-counting multi-word terms, but we stick to double-counting. They suggest it is more explanable.
 
 
 #### Acceleration Plot
@@ -179,7 +184,7 @@ In the paper, it is described as:
 
 Below, we display the top few pairs between the given start and end year in  dataframe, then one can select years and then select word-pairs in the plot parameters expander. A reduced dimension plot is displayed.
 
-**Note**: They suggest using skip-gram method over CBOW for the model. They use t-SNE representation to view the embeddings. But their way of aligning the embeddings is different. They also use some stability measure to find the best Word2Vec model. The also use *Word2Phrase* which we are planning to add soon.
+**NOTE**: They suggest using skip-gram method over CBOW for the model. They use t-SNE representation to view the embeddings. But their way of aligning the embeddings is different. They also use some stability measure to find the best Word2Vec model. The also use *Word2Phrase* which we are planning to add soon.
 
 
 #### Semantic Drift
@@ -213,7 +218,7 @@ Below the graph, we provide a list of most drifted words (from the top-K keyword
 Word meanings change over time. They come closer or drift apart. In a certain year, words are clumped together, i.e., they belong to one cluster. But over time, clusters can break into two/coalesce together to form one. Unlike the previous module which tracks movement of one word at a time, here, we track the movement of clusters.
 
 We plot the formed clusters for all the years lying in the selected range of years.
-**Note:** We give an option to use one of two libraries for clustering: sklearn or faiss. faiss' KMeans implementation is around 10 times faster than sklearn's.
+**NOTE:** We give an option to use one of two libraries for clustering: sklearn or faiss. faiss' KMeans implementation is around 10 times faster than sklearn's.
 
 
 #### Acceleration Heatmap
@@ -234,7 +239,7 @@ In the paper, it is described as:
 
 For all the selected keywords, we display a heatmap, where the brightness of the colour determines the value of the acceleration between that pair, i.e., the brightness is directly proportional to the acceleration value.
 
-**Note**: They suggest using skip-gram method over CBOW for the model.
+**NOTE**: They suggest using skip-gram method over CBOW for the model.
 
 
 #### Track Trends with Similarity
@@ -281,16 +286,17 @@ In the first bar graph, we show how a year can be decomposed into topics. The gr
 
 You can cite our work as:
 
-```sh
-@unpublished{sharma2021DRIFT ,
+```bibtex
+@misc{sharma2021DRIFT ,
 author = {Abheesht Sharma and Gunjan Chhablani and Harshit Pandey and Rajaswa Patil},
 title = {DRIFT: A Tool for Diachronic Analysis of Scientific Literature},
 note = {Under Review at EMNLP 2021 (Demo Track)},
-year = {2021}
+year = {2021},
+url = {https://github.com/rajaswa/DRIFT}
 }
 ```
 OR
 
-```sh
+```bash
 A. Sharma, G. Chhablani, H. Pandey, R. Patil, "DRIFT: A Tool for Diachronic Analysis of Scientific Literature", Under Review at EMNLP 2021 (Demo Track), 2021.
 ```
