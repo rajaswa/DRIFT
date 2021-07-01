@@ -10,7 +10,9 @@
   [![GitHub issues](https://img.shields.io/github/issues/rajaswa/DRIFT)](https://github.com/rajaswa/DRIFT/issues)
   
 </div>
+
 <div align='center'>
+  
 [![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/gchhablani/drift/main/app.py)
 
 </div>
