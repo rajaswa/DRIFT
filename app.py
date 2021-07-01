@@ -66,12 +66,12 @@ colorscale = plotly_template.layout["colorscale"]["diverging"]
 np.random.seed(42)
 
 pos_tag_dict = {}
-with open('nltk_pos_tag_list.txt') as f:
+with open("nltk_pos_tag_list.txt") as f:
     for line in f:
-        line_split = line.strip().split('\t')
+        line_split = line.strip().split("\t")
         tag = line_split[0]
         desc = line_split[1]
-        pos_tag_dict[tag]=desc
+        pos_tag_dict[tag] = desc
 
 # @st.cache(allow_output_mutation=True)
 # def get_sim_dict():
@@ -169,7 +169,7 @@ st.set_page_config(
     page_title="DRIFT",
     layout="wide",
     initial_sidebar_state="expanded",
-    page_icon = "./misc/images/logo_letter_png.png"
+    page_icon="./misc/images/logo_letter_png.png",
 )
 
 state = _get_state()
@@ -335,11 +335,10 @@ ANALYSIS_METHODS = {
                 params=dict(
                     label="POS-Tags Filter",
                     options=list(pos_tag_dict.keys()),
-                    format_func=lambda x:x+' : '+pos_tag_dict[x],
+                    format_func=lambda x: x + " : " + pos_tag_dict[x],
                     help="The POS Tags that should be selected. If empty, no filtering is done.",
                 ),
             ),
-
             tfidf=dict(
                 component_var=sidebar_parameters,
                 typ="checkbox",
@@ -410,11 +409,10 @@ ANALYSIS_METHODS = {
                 params=dict(
                     label="POS-Tags Filter",
                     options=list(pos_tag_dict.keys()),
-                    format_func=lambda x:x+' : '+pos_tag_dict[x],
+                    format_func=lambda x: x + " : " + pos_tag_dict[x],
                     help="The POS Tags that should be selected. If empty, no filtering is done.",
                 ),
             ),
-
             tfidf=dict(
                 component_var=sidebar_parameters,
                 typ="checkbox",
@@ -501,11 +499,10 @@ ANALYSIS_METHODS = {
                 params=dict(
                     label="POS-Tags Filter",
                     options=list(pos_tag_dict.keys()),
-                    format_func=lambda x:x+' : '+pos_tag_dict[x],
+                    format_func=lambda x: x + " : " + pos_tag_dict[x],
                     help="The POS Tags that should be selected. If empty, no filtering is done.",
                 ),
             ),
-
             tfidf=dict(
                 component_var=sidebar_parameters,
                 typ="checkbox",
@@ -591,11 +588,10 @@ ANALYSIS_METHODS = {
                 params=dict(
                     label="POS-Tags Filter",
                     options=list(pos_tag_dict.keys()),
-                    format_func=lambda x:x+' : '+pos_tag_dict[x],
+                    format_func=lambda x: x + " : " + pos_tag_dict[x],
                     help="The POS Tags that should be selected. If empty, no filtering is done.",
                 ),
             ),
-
             tfidf=dict(
                 component_var=sidebar_parameters,
                 typ="checkbox",
@@ -691,11 +687,10 @@ ANALYSIS_METHODS = {
                 params=dict(
                     label="POS-Tags Filter",
                     options=list(pos_tag_dict.keys()),
-                    format_func=lambda x:x+' : '+pos_tag_dict[x],
+                    format_func=lambda x: x + " : " + pos_tag_dict[x],
                     help="The POS Tags that should be selected. If empty, no filtering is done.",
                 ),
             ),
-
             tfidf=dict(
                 component_var=sidebar_parameters,
                 typ="checkbox",
@@ -759,11 +754,10 @@ ANALYSIS_METHODS = {
                 params=dict(
                     label="POS-Tags Filter",
                     options=list(pos_tag_dict.keys()),
-                    format_func=lambda x:x+' : '+pos_tag_dict[x],
+                    format_func=lambda x: x + " : " + pos_tag_dict[x],
                     help="The POS Tags that should be selected. If empty, no filtering is done.",
                 ),
             ),
-
             tfidf=dict(
                 component_var=sidebar_parameters,
                 typ="checkbox",
@@ -993,7 +987,10 @@ TRAIN = dict(
 # SIDEBAR COMMON SETUP
 title.title(COMMON["TITLE"])
 sidebar_title.title(COMMON["SIDEBAR_TITLE"])
-sidebar_image.markdown('<img src="https://i.ibb.co/FV8rwYd/Driftlogo1.png" style="display: block;margin-left: auto;margin-right: auto;width:65px;height:120px;">',unsafe_allow_html=True)
+sidebar_image.markdown(
+    '<img src="https://i.ibb.co/FV8rwYd/Driftlogo1.png" style="display: block;margin-left: auto;margin-right: auto;width:65px;height:120px;">',
+    unsafe_allow_html=True,
+)
 
 with settings.beta_expander("App Settings"):
     display_caching_option()
@@ -1068,8 +1065,8 @@ elif mode == "Analysis":
             top_k=vars_["top_k"],
             n=vars_["n"],
             normalize=vars_["normalize"],
-            filter_pos_tags = vars_["filter_pos_tags"],
-            tfidf = vars_["tfidf"]
+            filter_pos_tags=vars_["filter_pos_tags"],
+            tfidf=vars_["tfidf"],
         )
         choose_list = list(choose_list_freq.keys())
 
@@ -1189,8 +1186,8 @@ elif mode == "Analysis":
             top_k=vars_["top_k"],
             n=1,
             normalize=False,
-            filter_pos_tags = vars_["filter_pos_tags"],
-            tfidf = vars_["tfidf"]
+            filter_pos_tags=vars_["filter_pos_tags"],
+            tfidf=vars_["tfidf"],
         )
         choose_list = list(choose_list_freq.keys())
 
@@ -1314,8 +1311,8 @@ elif mode == "Analysis":
             top_k=vars_["top_k"],
             n=1,
             normalize=False,
-            filter_pos_tags = vars_["filter_pos_tags"],
-            tfidf = vars_["tfidf"]
+            filter_pos_tags=vars_["filter_pos_tags"],
+            tfidf=vars_["tfidf"],
         )
         list_top_k_freq = list(list_top_k_freq.keys())
 
@@ -1382,8 +1379,13 @@ elif mode == "Analysis":
             )
         selected_years = [str(i) for i in range(int(year1), int(year2) + 1)]
 
-        choose_list_freq = freq_top_k(compass_text, top_k=vars_["top_k"], n=1, filter_pos_tags = vars_["filter_pos_tags"],
-            tfidf = vars_["tfidf"])
+        choose_list_freq = freq_top_k(
+            compass_text,
+            top_k=vars_["top_k"],
+            n=1,
+            filter_pos_tags=vars_["filter_pos_tags"],
+            tfidf=vars_["tfidf"],
+        )
 
         keywords_list = list(choose_list_freq.keys())
 
@@ -1456,8 +1458,8 @@ elif mode == "Analysis":
             top_k=vars_["top_k"],
             n=1,
             normalize=False,
-            filter_pos_tags = vars_["filter_pos_tags"],
-            tfidf = vars_["tfidf"]
+            filter_pos_tags=vars_["filter_pos_tags"],
+            tfidf=vars_["tfidf"],
         )
         choose_list = list(choose_list_freq.keys())
         figure1_params_expander = figure1_params.beta_expander("Plot Parameters")

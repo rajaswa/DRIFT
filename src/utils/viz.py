@@ -73,7 +73,6 @@ def pyplot_scatter_embeddings(
     return fig
 
 
-
 def plotly_scatter(
     df,
     x_col,
