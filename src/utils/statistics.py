@@ -108,7 +108,7 @@ def find_productivity(words, text, n=2, normalize=False, filter_pos_tags=[]):
 
 
 @st.cache(persist=eval(os.getenv("PERSISTENT")))
-def freq_top_k(text, top_k=20, n=1, normalize=False, filter_pos_tags=[], tfidf=False):
+def freq_top_k(text, top_k=20, n=1, normalize=False, filter_pos_tags=[], tfidf=False, remove_keywords_path="./removed_keywords/removedphrases.txt"):
     if tfidf:
         sorted_gram_count_mapping = get_tfidf_features(text, sort=True, filter_pos_tags=filter_pos_tags)
     else:
@@ -116,7 +116,10 @@ def freq_top_k(text, top_k=20, n=1, normalize=False, filter_pos_tags=[], tfidf=F
             sorted_gram_count_mapping = find_norm_freq(text, n=n, sort=True, filter_pos_tags=filter_pos_tags)
         else:
             sorted_gram_count_mapping = find_freq(text, n=n, sort=True, filter_pos_tags=filter_pos_tags)
-
+    
+    if remove_keywords_path is not None and os.path.isfile(remove_keywords_path):
+        sorted_gram_count_mapping = remove_keywords_util(remove_keywords_path, sorted_gram_count_mapping)
+    
     if top_k < len(sorted_gram_count_mapping):
         sorted_gram_count_mapping = dict(
             islice(sorted_gram_count_mapping.items(), top_k)
