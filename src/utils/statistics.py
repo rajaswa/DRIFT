@@ -157,14 +157,11 @@ def freq_top_k(
             sorted_gram_count_mapping = find_freq(
                 text, n=n, sort=True, filter_pos_tags=filter_pos_tags
             )
-<<<<<<< HEAD
-=======
 
     if remove_keywords_path is not None and os.path.isfile(remove_keywords_path):
         sorted_gram_count_mapping = remove_keywords_util(
             remove_keywords_path, sorted_gram_count_mapping
         )
->>>>>>> upstream/main
 
     if top_k < len(sorted_gram_count_mapping):
         sorted_gram_count_mapping = dict(
