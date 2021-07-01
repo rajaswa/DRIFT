@@ -441,7 +441,7 @@ ANALYSIS_METHODS = {
                     label="K (acc.)",
                     min_value=1,
                     format="%d",
-                    help="Top-K words for accuracy.",
+                    help="Top-K words to be reported for acceleration.",
                 ),
             ),
             p2f=dict(
