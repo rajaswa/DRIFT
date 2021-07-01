@@ -1219,7 +1219,7 @@ elif mode == "Analysis":
             plot_word_2 = st.selectbox("Select word pair", index=1, options=choose_list)
             target_calc_words = [plot_word_1, plot_word_2]
             typ = st.selectbox(
-                "Dimensionality Reduction Method", options=["tsne", "pca", "umap"]
+                "Dimensionality Reduction Method", options=["umap", "pca", "tsne"]
             )
             plot_title = st.text_input(
                 label="Plot Title",
@@ -1300,7 +1300,7 @@ elif mode == "Analysis":
             )
 
             typ = st.selectbox(
-                "Dimensionality Reduction Method", options=["tsne", "pca", "umap"]
+                "Dimensionality Reduction Method", options=["umap", "pca", "tsne"]
             )
             plot_title = st.text_input(
                 label="Plot Title", value=f"{analysis_type} for range {year1}-{year2}"
@@ -1394,7 +1394,7 @@ elif mode == "Analysis":
                 "Selected N-grams", default=keywords_list, options=keywords_list
             )
             typ = st.selectbox(
-                "Dimensionality Reduction Method", options=["tsne", "pca", "umap"]
+                "Dimensionality Reduction Method", options=["umap", "pca", "tsne"]
             )
 
         for selected_year in selected_years:
