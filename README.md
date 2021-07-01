@@ -35,7 +35,7 @@
 
 **NOTE**: The [online demo](https://share.streamlit.io/gchhablani/drift/main/app.py) is hosted using [Streamlit sharing](https://docs.streamlit.io/en/stable/deploy_streamlit_app.html). This is a single-instance single-process deployment, accessible to all the visitors publicly **(avoid sharing sensitive information on the demo)**. Hence, **it is highly recommended to use your own independent local deployment of the application for a seamless and private experience. One can alternatively fork this repository and host it using [Streamlit sharing](https://docs.streamlit.io/en/stable/deploy_streamlit_app.html).**
 
-We would love to know about any issues found on this repository. Please submit an [issue](https://github.com/rajaswa/DRIFT/issues/new/choose) for any query, or contact us [here](mailto:sharmabhee@gmail.com).
+We would love to know about any issues found on this repository. Please submit an [issue](https://github.com/rajaswa/DRIFT/issues/new/choose) for any query, or contact us [here](mailto:sharmabhee@gmail.com). If you use this application in your work, you can cite this repository and the paper [here](https://github.com/rajaswa/DRIFT#citation).
 
 ---
 
@@ -125,7 +125,9 @@ streamlit run app.py
 
 #### Word Cloud
 
-![WC Demo](./misc/GIFs/WordCloud_2x.gif)
+<p align="center">
+  <img src="./misc/GIFs/WordCloud_2x.gif" alt="word_cloud_usage" height=65% width=65%/>
+</p>
 
 A word cloud, or tag cloud, is a textual data visualization which allows anyone to see in a single glance the words which have the highest frequency within a given body of text. Word clouds are typically used as a tool for processing, analyzing and disseminating qualitative sentiment data.
 
@@ -137,7 +139,9 @@ References:
 
 #### Productivity/Frequency Plot
 
-![Prod Demo](./misc/GIFs/Prod_2x.gif)
+<p align="center">
+  <img src="./misc/GIFs/Prod_2x.gif" alt="prod_freq_usage" height=65% width=65%/>
+</p>
 
 Our main reference for this method is [this paper](https://www.aclweb.org/anthology/W16-2101.pdf).
 In short, this paper uses normalized term frequency and term producitvity as their measures.
@@ -167,7 +171,9 @@ They find that the clusters formed show similar trends as expected.
 
 #### Acceleration Plot
 
-![Acc Demo](./misc/GIFs/Acc_Plot_2x.gif)
+<p align="center">
+  <img src="./misc/GIFs/Acc_Plot_2x.gif" alt="acceleration_plot_usage" height=65% width=65%/>
+</p>
 
 This plot is based on the word-pair acceleration over time. Our inspiration for this method is [this paper](https://sci-hub.se/10.1109/ijcnn.2019.8852140).
 Acceleration is a metric which calculates how quickly the word embeddings for a pair of word get close together or farther apart. If they are getting closer together, it means these two terms have started appearing more frequently in similar contexts, which leads to similar embeddings.
@@ -189,7 +195,9 @@ Below, we display the top few pairs between the given start and end year in  dat
 
 #### Semantic Drift
 
-![Sem Drift Demo](./misc/GIFs/Semantic_Drift_2x.gif)
+<p align="center">
+  <img src="./misc/GIFs/Semantic_Drift_2x.gif" alt="semantic_drift_usage" height=65% width=65%/>
+</p>
 
 This plot represents the change in meaning of a word over time. This shift is represented on a 2-dimensional representation of the embedding space.
 To find the drift of a word, we calculate the distance between the embeddings of the word in the final year and in the initial year. We find the drift for all words and sort them in descending order to find the most drifted words.
@@ -213,7 +221,9 @@ Below the graph, we provide a list of most drifted words (from the top-K keyword
 
 #### Tracking Clusters
 
-![Track Clusters Demo](./misc/GIFs/Track_Clusters_2x.gif)
+<p align="center">
+  <img src="./misc/GIFs/Track_Clusters_2x.gif" alt="track_clusters_usage" height=65% width=65%/>
+</p>
 
 Word meanings change over time. They come closer or drift apart. In a certain year, words are clumped together, i.e., they belong to one cluster. But over time, clusters can break into two/coalesce together to form one. Unlike the previous module which tracks movement of one word at a time, here, we track the movement of clusters.
 
@@ -223,7 +233,9 @@ We plot the formed clusters for all the years lying in the selected range of yea
 
 #### Acceleration Heatmap
 
-![Acc Heatmap Demo](./misc/GIFs/Acc_Heatmap_2x.gif)
+<p align="center">
+  <img src="./misc/GIFs/Acc_Heatmap_2x.gif" alt="acceleration_heatmap_usage" height=65% width=65%/>
+</p>
 
 This plot is based on the word-pair acceleration over time. Our inspiration for this method is [this paper](https://sci-hub.se/10.1109/ijcnn.2019.8852140).
 Acceleration is a metric which calculates how quickly the word embeddings for a pair of word get close together or farther apart. If they are getting closer together, it means these two terms have started appearing more frequently in similar contexts, which leads to similar embeddings.
@@ -244,7 +256,9 @@ For all the selected keywords, we display a heatmap, where the brightness of the
 
 #### Track Trends with Similarity
 
-![Track Trends Demo](./misc/GIFs/Track_Trends_2x.gif)
+<p align="center">
+  <img src="./misc/GIFs/Track_Trends_2x.gif" alt="track_trends_usage" height=65% width=65%/>
+</p>
 
 In this method, we wish to chart the trajectory of a word/topic from year 1 to year 2. 
 
@@ -255,7 +269,9 @@ The user has to select a word and click on ```Generate Dataframe```. This gives 
 
 #### Keyword Visualisation
 
-![Keyword Viz Demo](./misc/GIFs/Keyword_Viz_2x.gif)
+<p align="center">
+  <img src="./misc/GIFs/Keyword_Viz_2x.gif" alt="keyword_viz_usage" height=65% width=65%/>
+</p>
 
 Here, we use the [YAKE Keyword Extraction](https://www.sciencedirect.com/science/article/abs/pii/S0020025519308588) method to extract keywords. You can read more about YAKE [here](https://amitness.com/keyphrase-extraction/).
 
@@ -271,7 +287,9 @@ In our code, we use an [open source implementation](https://github.com/LIAAD/yak
 
 #### LDA Topic Modelling
 
-![LDA Demo](./misc/GIFs/LDA_2x.gif)
+<p align="center">
+  <img src="./misc/GIFs/LDA_2x.gif" alt="lda_usage" height=65% width=65%/>
+</p>
 
 [Latent Dirichlet Allocation](https://www.jmlr.org/papers/volume3/blei03a/blei03a.pdf) is a generative probabilistic model for an assortment of documents, generally used for topic modelling and extraction. LDA clusters the text data into imaginary topics. 
 
