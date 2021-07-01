@@ -16,6 +16,7 @@
 [![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/gchhablani/drift/main/app.py)
 
 </div>
+
 **DRIFT is A Tool for Diachronic Analysis of Scientific Literature**. We would love to know about any issues found on this repository. Please create an issue for any query, or contact us [here](mailto:sharmabhee@gmail.com).
 
 ---
