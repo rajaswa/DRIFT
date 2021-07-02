@@ -121,7 +121,7 @@ streamlit run app.py
 ### Train Mode
 
 #### Preprocesing
-The preprocessing stage takesn an a JSON file structured as shown in the [Data](https://github.com/rajaswa/DRIFT#data) section. They key for raw text is provided on which preprocessing takes place. During the preprocessing of the text, year-wise text files are created in a desired directory. During the preprocessing:
+The preprocessing stage takes a JSON file structured as shown in the [Data](https://github.com/rajaswa/DRIFT#data) section. They key for raw text is provided on which preprocessing takes place. During the preprocessing of the text, year-wise text files are created in a desired directory. During the preprocessing:
 - All html tags are removed from the text.
 - Contractions are replaced (e.g. 'don't' is converted to 'do not')
 - Punctuations, non-ascii characters, stopwords are removed.
