@@ -13,7 +13,7 @@
 
 <div align='center'>
   
-[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/gchhablani/drift/main/app.py)
+[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/rajaswa/drift/main/app.py)
 
 </div>
 
