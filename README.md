@@ -120,8 +120,25 @@ streamlit run app.py
 
 ### Train Mode
 
-### Analysis Mode
+#### Preprocesing
+The preprocessing stage takesn an a JSON file structured as shown in the [Data](https://github.com/rajaswa/DRIFT#data) section. They key for raw text is provided on which preprocessing takes place. During the preprocessing of the text, year-wise text files are created in a desired directory. During the preprocessing:
+- All html tags are removed from the text.
+- Contractions are replaced (e.g. 'don't' is converted to 'do not')
+- Punctuations, non-ascii characters, stopwords are removed.
+- All verbs are lemmatized.
 
+After this, each processed text is stored in the respective year file separated by a new-line, along with all the data in a single file as `compass.txt`
+
+#### Training
+
+<p align="center">
+  <img src="./misc/GIFs/Training_2x.gif" alt="word_cloud_usage" height=65% width=65%/>
+</p>
+
+The training mode uses the path where the processed text files are stored, and trains the TWEC model on the given text. The TWEC model trains a Word2Vec model on `compass.txt` and then the respective time-slices are trained on this model to get corresponding word vectors. In the sidebar, we provide several options like - whether to use Skipgram over CBOW, number of dynamic iterations for training, number of static iterations for training, negative sampling, etc. After training, we store the models at the specified path, which are used later in the analysis.
+
+
+### Analysis Mode
 
 #### Word Cloud
 
