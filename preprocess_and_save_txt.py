@@ -7,7 +7,7 @@ from src.utils.preprocess import preprocess_text
 
 
 def preprocess_and_save(
-    json_path="../acl_anthology_xml.json",
+    json_path="./unprocessed.json",
     text_key="abstract",
     save_dir="./data",
     streamlit=False,
