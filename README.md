@@ -14,6 +14,7 @@
 <div align='center'>
   
 [![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/rajaswa/drift/main/app.py)
+[![arXiv](https://img.shields.io/badge/arXiv-2107.01198-b31b1b.svg)](http://arxiv.org/abs/2107.01198)
 
 </div>
 
@@ -322,16 +323,17 @@ In the first bar graph, we show how a year can be decomposed into topics. The gr
 You can cite our work as:
 
 ```bibtex
-@misc{sharma2021DRIFT ,
-author = {Abheesht Sharma and Gunjan Chhablani and Harshit Pandey and Rajaswa Patil},
-title = {DRIFT: A Tool for Diachronic Analysis of Scientific Literature},
-note = {Under Review at EMNLP 2021 (Demo Track)},
-year = {2021},
-url = {https://github.com/rajaswa/DRIFT}
+@misc{sharma2021drift,
+      title={DRIFT: A Toolkit for Diachronic Analysis of Scientific Literature}, 
+      author={Abheesht Sharma and Gunjan Chhablani and Harshit Pandey and Rajaswa Patil},
+      year={2021},
+      eprint={2107.01198},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL}
 }
 ```
 OR
 
 ```bash
-A. Sharma, G. Chhablani, H. Pandey, R. Patil, "DRIFT: A Tool for Diachronic Analysis of Scientific Literature", Under Review at EMNLP 2021 (Demo Track), 2021.
+Sharma, A., Chhablani, G., Pandey, H., & Patil, R. (2021). DRIFT: A Toolkit for Diachronic Analysis of Scientific Literature.
 ```
