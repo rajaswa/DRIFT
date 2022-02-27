@@ -1,0 +1,36 @@
+cff-version: 1.2.0
+message: "If you use this software in your work, please cite it as below."
+authors:
+- family-names: "Sharma"
+  given-names: "Abheesht"
+- family-names: "Chhablani"
+  given-names: "Gunjan"
+- family-names: "Pandey"
+  given-names: "Harshit"
+- family-names: "Patil"
+  given-names: "Rajaswa"
+title: "DRIFT: A Toolkit for Diachronic Analysis of Scientific Literature"
+doi: 10.18653/v1/2021.emnlp-demo.40
+date-released: 2021-11-30
+url: "https://aclanthology.org/2021.emnlp-demo.40/"
+conference-paper:
+  type: inproceedings
+  authors:
+    - family-names: "Sharma"
+      given-names: "Abheesht"
+    - family-names: "Chhablani"
+      given-names: "Gunjan"
+    - family-names: "Pandey"
+      given-names: "Harshit"
+    - family-names: "Patil"
+      given-names: "Rajaswa"
+  journal: "Proceedings of the 2021 Conference on Empirical Methods in Natural Language Processing: System Demonstrations"
+  doi: "10.18653/v1/2021.emnlp-demo.40"
+  month: 11
+  start: 361 # First page number
+  end: 371 # Last page number
+  title: "DRIFT: A Toolkit for Diachronic Analysis of Scientific Literature"
+  volume: Proceedings of the 2021 Conference on Empirical Methods in Natural Language Processing: System Demonstrations
+  year: 2021
+  address: "Punta Cana, Dominican Republic"
+  publisher: "Association for Computational Linguistics"
