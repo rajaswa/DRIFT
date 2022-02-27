@@ -323,17 +323,24 @@ In the first bar graph, we show how a year can be decomposed into topics. The gr
 You can cite our work as:
 
 ```bibtex
-@misc{sharma2021drift,
-      title={DRIFT: A Toolkit for Diachronic Analysis of Scientific Literature}, 
-      author={Abheesht Sharma and Gunjan Chhablani and Harshit Pandey and Rajaswa Patil},
-      year={2021},
-      eprint={2107.01198},
-      archivePrefix={arXiv},
-      primaryClass={cs.CL}
+@inproceedings{sharma-etal-2021-drift,
+    title = "{DRIFT}: A Toolkit for Diachronic Analysis of Scientific Literature",
+    author = "Sharma, Abheesht  and
+      Chhablani, Gunjan  and
+      Pandey, Harshit  and
+      Patil, Rajaswa",
+    booktitle = "Proceedings of the 2021 Conference on Empirical Methods in Natural Language Processing: System Demonstrations",
+    month = nov,
+    year = "2021",
+    address = "Online and Punta Cana, Dominican Republic",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2021.emnlp-demo.40",
+    doi = "10.18653/v1/2021.emnlp-demo.40",
+    pages = "361--371",
 }
 ```
 OR
 
 ```bash
-Sharma, A., Chhablani, G., Pandey, H., & Patil, R. (2021). DRIFT: A Toolkit for Diachronic Analysis of Scientific Literature.
+Abheesht Sharma, Gunjan Chhablani, Harshit Pandey, and Rajaswa Patil. 2021. DRIFT: A Toolkit for Diachronic Analysis of Scientific Literature. In Proceedings of the 2021 Conference on Empirical Methods in Natural Language Processing: System Demonstrations, pages 361–371, Online and Punta Cana, Dominican Republic. Association for Computational Linguistics.
 ```
