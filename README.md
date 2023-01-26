@@ -193,7 +193,7 @@ They find that the clusters formed show similar trends as expected.
   <img src="https://drive.google.com/uc?export=view&id=1aldBPCyqHJjG67tTAYzFXLuGhzpzopZb" alt="acceleration_plot_usage" height=65% width=65%/>
 </p>
 
-This plot is based on the word-pair acceleration over time. Our inspiration for this method is [this paper](https://sci-hub.se/10.1109/ijcnn.2019.8852140).
+This plot is based on the word-pair acceleration over time. Our inspiration for this method is [this paper](https://ieeexplore.ieee.org/document/8852140).
 Acceleration is a metric which calculates how quickly the word embeddings for a pair of word get close together or farther apart. If they are getting closer together, it means these two terms have started appearing more frequently in similar contexts, which leads to similar embeddings.
 In the paper, it is described as:
 
