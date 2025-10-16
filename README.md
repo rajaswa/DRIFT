@@ -144,7 +144,7 @@ The training mode uses the path where the processed text files are stored, and t
 #### Word Cloud
 
 <p align="center">
-  <img src="https://drive.google.com/uc?export=view&id=13v5KHWjn_JXylf1xrYRgCUGTlCM5RyTx" alt="word_cloud_usage" height=65% width=65%/>
+  <img src="./misc/images/word_cloud_usage.gif" alt="word_cloud_usage" height=65% width=65%/>
 </p>
 
 A word cloud, or tag cloud, is a textual data visualization which allows anyone to see in a single glance the words which have the highest frequency within a given body of text. Word clouds are typically used as a tool for processing, analyzing and disseminating qualitative sentiment data.
