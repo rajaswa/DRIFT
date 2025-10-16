@@ -306,7 +306,7 @@ In our code, we use an [open source implementation](https://github.com/LIAAD/yak
 #### LDA Topic Modelling
 
 <p align="center">
-  <img src="https://drive.google.com/uc?export=view&id=1Lsjfm1gwRswB4hrJJ4bGaFGUKbsTN1nd" alt="lda_usage" height=65% width=65%/>
+  <img src="./misc/images/lda_usage.png" alt="lda_usage" height=65% width=65%/>
 </p>
 
 [Latent Dirichlet Allocation](https://www.jmlr.org/papers/volume3/blei03a/blei03a.pdf) is a generative probabilistic model for an assortment of documents, generally used for topic modelling and extraction. LDA clusters the text data into imaginary topics. 
