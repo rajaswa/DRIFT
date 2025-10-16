@@ -252,7 +252,7 @@ We plot the formed clusters for all the years lying in the selected range of yea
 #### Acceleration Heatmap
 
 <p align="center">
-  <img src="https://drive.google.com/uc?export=view&id=11xdjnckFuzCgiJ8ihTosAH_tfSeec41c" alt="acceleration_heatmap_usage" height=65% width=65%/>
+  <img src="./misc/images/acceleration_heatmap_usage.gif" alt="acceleration_heatmap_usage" height=65% width=65%/>
 </p>
 
 This plot is based on the word-pair acceleration over time. Our inspiration for this method is [this paper](https://sci-hub.se/10.1109/ijcnn.2019.8852140).
