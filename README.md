@@ -275,7 +275,7 @@ For all the selected keywords, we display a heatmap, where the brightness of the
 #### Track Trends with Similarity
 
 <p align="center">
-  <img src="https://drive.google.com/uc?export=view&id=1pxDhkDXLE84QH_QhZR2VEbNGM6QlPAxg" alt="track_trends_usage" height=65% width=65%/>
+  <img src="./misc/images/track_trends_usage.png" alt="track_trends_usage" height=65% width=65%/>
 </p>
 
 In this method, we wish to chart the trajectory of a word/topic from year 1 to year 2. 
