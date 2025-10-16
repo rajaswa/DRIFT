@@ -158,7 +158,7 @@ References:
 #### Productivity/Frequency Plot
 
 <p align="center">
-  <img src="https://drive.google.com/uc?export=view&id=1YrKsMmw9MmgrzPI47c5Y-GVk4gMCPPoy" alt="prod_freq_usage" height=65% width=65%/>
+  <img src="./misc/images/prod_freq_usage.png" alt="prod_freq_usage" height=65% width=65%/>
 </p>
 
 Our main reference for this method is [this paper](https://www.aclweb.org/anthology/W16-2101.pdf).
