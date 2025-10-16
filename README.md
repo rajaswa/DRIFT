@@ -288,7 +288,7 @@ The user has to select a word and click on ```Generate Dataframe```. This gives 
 #### Keyword Visualisation
 
 <p align="center">
-  <img src="https://drive.google.com/uc?export=view&id=1Ds45T3I05wKod6Gtdjy6tJeJODcTeuGj" alt="keyword_viz_usage" height=65% width=65%/>
+  <img src="./misc/images/keyword_viz_usage.gif" alt="keyword_viz_usage" height=65% width=65%/>
 </p>
 
 Here, we use the [YAKE Keyword Extraction](https://www.sciencedirect.com/science/article/abs/pii/S0020025519308588) method to extract keywords. You can read more about YAKE [here](https://amitness.com/keyphrase-extraction/).
