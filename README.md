@@ -133,7 +133,7 @@ After this, each processed text is stored in the respective year file separated 
 #### Training
 
 <p align="center">
-  <img src="https://drive.google.com/uc?export=view&id=1TKic-Z50mGC0JBMqc04RFkT1Shsnmpj-" alt="word_cloud_usage" height=65% width=65%/>
+  <img src="./misc/images/word_cloud_usage.gif" alt="word_cloud_usage" height=65% width=65%/>
 </p>
 
 The training mode uses the path where the processed text files are stored, and trains the TWEC model on the given text. The TWEC model trains a Word2Vec model on `compass.txt` and then the respective time-slices are trained on this model to get corresponding word vectors. In the sidebar, we provide several options like - whether to use Skipgram over CBOW, number of dynamic iterations for training, number of static iterations for training, negative sampling, etc. After training, we store the models at the specified path, which are used later in the analysis.
