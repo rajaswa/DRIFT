@@ -214,7 +214,7 @@ Below, we display the top few pairs between the given start and end year in  dat
 #### Semantic Drift
 
 <p align="center">
-  <img src="https://drive.google.com/uc?export=view&id=1hwltBpJh3fVEA0sR7Zi4GRINr9Wrq_y8" alt="semantic_drift_usage" height=65% width=65%/>
+  <img src="./misc/images/semantic_drift_usage.gif" alt="semantic_drift_usage" height=65% width=65%/>
 </p>
 
 This plot represents the change in meaning of a word over time. This shift is represented on a 2-dimensional representation of the embedding space.
