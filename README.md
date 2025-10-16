@@ -190,7 +190,7 @@ They find that the clusters formed show similar trends as expected.
 #### Acceleration Plot
 
 <p align="center">
-  <img src="https://drive.google.com/uc?export=view&id=1aldBPCyqHJjG67tTAYzFXLuGhzpzopZb" alt="acceleration_plot_usage" height=65% width=65%/>
+  <img src="./misc/images/acceleration_plot_usage.png" alt="acceleration_plot_usage" height=65% width=65%/>
 </p>
 
 This plot is based on the word-pair acceleration over time. Our inspiration for this method is [this paper](https://ieeexplore.ieee.org/document/8852140).
