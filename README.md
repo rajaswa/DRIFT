@@ -133,7 +133,7 @@ After this, each processed text is stored in the respective year file separated 
 #### Training
 
 <p align="center">
-  <img src="https://drive.google.com/uc?export=view&id=1TKic-Z50mGC0JBMqc04RFkT1Shsnmpj-" alt="word_cloud_usage" height=65% width=65%/>
+  <img src="./misc/images/training_demo.gif" alt="training_demo" height=65% width=65%/>
 </p>
 
 The training mode uses the path where the processed text files are stored, and trains the TWEC model on the given text. The TWEC model trains a Word2Vec model on `compass.txt` and then the respective time-slices are trained on this model to get corresponding word vectors. In the sidebar, we provide several options like - whether to use Skipgram over CBOW, number of dynamic iterations for training, number of static iterations for training, negative sampling, etc. After training, we store the models at the specified path, which are used later in the analysis.
@@ -144,7 +144,7 @@ The training mode uses the path where the processed text files are stored, and t
 #### Word Cloud
 
 <p align="center">
-  <img src="https://drive.google.com/uc?export=view&id=13v5KHWjn_JXylf1xrYRgCUGTlCM5RyTx" alt="word_cloud_usage" height=65% width=65%/>
+  <img src="./misc/images/word_cloud_usage.gif" alt="word_cloud_usage" height=65% width=65%/>
 </p>
 
 A word cloud, or tag cloud, is a textual data visualization which allows anyone to see in a single glance the words which have the highest frequency within a given body of text. Word clouds are typically used as a tool for processing, analyzing and disseminating qualitative sentiment data.
@@ -158,7 +158,7 @@ References:
 #### Productivity/Frequency Plot
 
 <p align="center">
-  <img src="https://drive.google.com/uc?export=view&id=1YrKsMmw9MmgrzPI47c5Y-GVk4gMCPPoy" alt="prod_freq_usage" height=65% width=65%/>
+  <img src="./misc/images/prod_freq_usage.png" alt="prod_freq_usage" height=65% width=65%/>
 </p>
 
 Our main reference for this method is [this paper](https://www.aclweb.org/anthology/W16-2101.pdf).
@@ -190,7 +190,7 @@ They find that the clusters formed show similar trends as expected.
 #### Acceleration Plot
 
 <p align="center">
-  <img src="https://drive.google.com/uc?export=view&id=1aldBPCyqHJjG67tTAYzFXLuGhzpzopZb" alt="acceleration_plot_usage" height=65% width=65%/>
+  <img src="./misc/images/acceleration_plot_usage.png" alt="acceleration_plot_usage" height=65% width=65%/>
 </p>
 
 This plot is based on the word-pair acceleration over time. Our inspiration for this method is [this paper](https://ieeexplore.ieee.org/document/8852140).
@@ -214,7 +214,7 @@ Below, we display the top few pairs between the given start and end year in  dat
 #### Semantic Drift
 
 <p align="center">
-  <img src="https://drive.google.com/uc?export=view&id=1hwltBpJh3fVEA0sR7Zi4GRINr9Wrq_y8" alt="semantic_drift_usage" height=65% width=65%/>
+  <img src="./misc/images/semantic_drift_usage.gif" alt="semantic_drift_usage" height=65% width=65%/>
 </p>
 
 This plot represents the change in meaning of a word over time. This shift is represented on a 2-dimensional representation of the embedding space.
@@ -240,7 +240,7 @@ Below the graph, we provide a list of most drifted words (from the top-K keyword
 #### Tracking Clusters
 
 <p align="center">
-  <img src="https://drive.google.com/uc?export=view&id=1iZ8BVx3woyKnF9KLxiQMAUyZQL0NcYdC" alt="track_clusters_usage" height=65% width=65%/>
+  <img src="./misc/images/track_clusters_usage.png" alt="track_clusters_usage" height=65% width=65%/>
 </p>
 
 Word meanings change over time. They come closer or drift apart. In a certain year, words are clumped together, i.e., they belong to one cluster. But over time, clusters can break into two/coalesce together to form one. Unlike the previous module which tracks movement of one word at a time, here, we track the movement of clusters.
@@ -252,7 +252,7 @@ We plot the formed clusters for all the years lying in the selected range of yea
 #### Acceleration Heatmap
 
 <p align="center">
-  <img src="https://drive.google.com/uc?export=view&id=11xdjnckFuzCgiJ8ihTosAH_tfSeec41c" alt="acceleration_heatmap_usage" height=65% width=65%/>
+  <img src="./misc/images/acceleration_heatmap_usage.gif" alt="acceleration_heatmap_usage" height=65% width=65%/>
 </p>
 
 This plot is based on the word-pair acceleration over time. Our inspiration for this method is [this paper](https://sci-hub.se/10.1109/ijcnn.2019.8852140).
@@ -275,7 +275,7 @@ For all the selected keywords, we display a heatmap, where the brightness of the
 #### Track Trends with Similarity
 
 <p align="center">
-  <img src="https://drive.google.com/uc?export=view&id=1pxDhkDXLE84QH_QhZR2VEbNGM6QlPAxg" alt="track_trends_usage" height=65% width=65%/>
+  <img src="./misc/images/track_trends_usage.png" alt="track_trends_usage" height=65% width=65%/>
 </p>
 
 In this method, we wish to chart the trajectory of a word/topic from year 1 to year 2. 
@@ -288,7 +288,7 @@ The user has to select a word and click on ```Generate Dataframe```. This gives 
 #### Keyword Visualisation
 
 <p align="center">
-  <img src="https://drive.google.com/uc?export=view&id=1Ds45T3I05wKod6Gtdjy6tJeJODcTeuGj" alt="keyword_viz_usage" height=65% width=65%/>
+  <img src="./misc/images/keyword_viz_usage.gif" alt="keyword_viz_usage" height=65% width=65%/>
 </p>
 
 Here, we use the [YAKE Keyword Extraction](https://www.sciencedirect.com/science/article/abs/pii/S0020025519308588) method to extract keywords. You can read more about YAKE [here](https://amitness.com/keyphrase-extraction/).
@@ -306,7 +306,7 @@ In our code, we use an [open source implementation](https://github.com/LIAAD/yak
 #### LDA Topic Modelling
 
 <p align="center">
-  <img src="https://drive.google.com/uc?export=view&id=1Lsjfm1gwRswB4hrJJ4bGaFGUKbsTN1nd" alt="lda_usage" height=65% width=65%/>
+  <img src="./misc/images/lda_usage.png" alt="lda_usage" height=65% width=65%/>
 </p>
 
 [Latent Dirichlet Allocation](https://www.jmlr.org/papers/volume3/blei03a/blei03a.pdf) is a generative probabilistic model for an assortment of documents, generally used for topic modelling and extraction. LDA clusters the text data into imaginary topics. 
