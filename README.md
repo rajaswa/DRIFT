@@ -240,7 +240,7 @@ Below the graph, we provide a list of most drifted words (from the top-K keyword
 #### Tracking Clusters
 
 <p align="center">
-  <img src="https://drive.google.com/uc?export=view&id=1iZ8BVx3woyKnF9KLxiQMAUyZQL0NcYdC" alt="track_clusters_usage" height=65% width=65%/>
+  <img src="./misc/images/track_clusters_usage.png" alt="track_clusters_usage" height=65% width=65%/>
 </p>
 
 Word meanings change over time. They come closer or drift apart. In a certain year, words are clumped together, i.e., they belong to one cluster. But over time, clusters can break into two/coalesce together to form one. Unlike the previous module which tracks movement of one word at a time, here, we track the movement of clusters.
